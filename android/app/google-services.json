@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "169245053017",
+    "project_id": "vecino-app-devsignx",
+    "storage_bucket": "vecino-app-devsignx.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169245053017:android:ed455d24e9b3305fa6a148",
+        "android_client_info": {
+          "package_name": "com.gates.gates_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBdvkbRo97vJixoByOrWBk-B-vMA-KASg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
