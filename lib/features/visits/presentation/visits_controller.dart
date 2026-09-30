@@ -8,6 +8,11 @@ final visitsRepositoryProvider = Provider<VisitsRepository>((ref) {
   return VisitsRepository(ref.watch(supabaseClientProvider));
 });
 
-final visitsListProvider = FutureProvider.family<List<Visit>, String>(
-  (ref, unitId) => ref.watch(visitsRepositoryProvider).fetchVisits(unitId),
+final visitsListProvider = StreamProvider.family<List<Visit>, String>(
+  (ref, unitId) => ref.watch(visitsRepositoryProvider).watchVisits(unitId),
+);
+
+final lastMovementProvider = FutureProvider.family<AccessMovement?, String>(
+  (ref, visitId) =>
+      ref.watch(visitsRepositoryProvider).fetchLastMovement(visitId),
 );

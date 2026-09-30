@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-enum GatesButtonStyle { primary, secondary }
+enum GatesButtonStyle { primary, secondary, destructive }
 
 class GatesButton extends StatelessWidget {
   const GatesButton({
@@ -19,14 +19,15 @@ class GatesButton extends StatelessWidget {
   final bool loading;
 
   bool get _isPrimary => style == GatesButtonStyle.primary;
+  bool get _isSecondary => style == GatesButtonStyle.secondary;
 
   @override
   Widget build(BuildContext context) {
     final interactionDisabled = onPressed == null || loading;
     final disabled = onPressed == null;
-    final foreground = _isPrimary
-        ? GatesColors.textInverse
-        : GatesColors.textBrand;
+    final foreground = _isSecondary
+        ? GatesColors.textBrand
+        : GatesColors.textInverse;
 
     final background = WidgetStateProperty.resolveWith<Color>((states) {
       if (disabled) return GatesColors.bgSubtle;
@@ -34,12 +35,13 @@ class GatesButton extends StatelessWidget {
         if (states.contains(WidgetState.pressed)) return GatesColors.bgPressed;
         return GatesColors.bgBrand;
       }
+      if (style == GatesButtonStyle.destructive) return GatesColors.statusError;
       if (states.contains(WidgetState.pressed)) return GatesColors.bgAccent;
       return GatesColors.bgSurface;
     });
 
     final side = WidgetStateProperty.resolveWith<BorderSide?>((states) {
-      if (_isPrimary) return null;
+      if (!_isSecondary) return null;
       if (disabled) return const BorderSide(color: GatesColors.bgSubtle);
       if (states.contains(WidgetState.focused)) {
         return const BorderSide(color: GatesColors.borderFocus, width: 2);

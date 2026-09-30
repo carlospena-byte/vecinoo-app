@@ -9,9 +9,22 @@ final incidentsRepositoryProvider = Provider<IncidentsRepository>((ref) {
 });
 
 final incidentsListProvider = FutureProvider.family<List<Incident>, String>(
-  (ref, residentialId) => ref.watch(incidentsRepositoryProvider).fetchIncidents(residentialId),
+  (ref, residentialId) =>
+      ref.watch(incidentsRepositoryProvider).fetchIncidents(residentialId),
 );
 
 final incidentTypesProvider = FutureProvider.family<List<IncidentType>, String>(
-  (ref, residentialId) => ref.watch(incidentsRepositoryProvider).fetchIncidentTypes(residentialId),
+  (ref, residentialId) =>
+      ref.watch(incidentsRepositoryProvider).fetchIncidentTypes(residentialId),
 );
+
+final incidentDetailProvider = FutureProvider.family<Incident, String>(
+  (ref, incidentId) =>
+      ref.watch(incidentsRepositoryProvider).fetchIncident(incidentId),
+);
+
+final incidentAttachmentsProvider =
+    FutureProvider.family<List<IncidentAttachment>, String>(
+      (ref, incidentId) =>
+          ref.watch(incidentsRepositoryProvider).fetchAttachments(incidentId),
+    );

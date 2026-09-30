@@ -19,7 +19,77 @@ class IncidentsRepository {
         .select('*, incident_types(name)')
         .eq('residential_id', residentialId)
         .order('created_at', ascending: false);
-    return (rows as List).map((row) => Incident.fromMap(row as Map<String, dynamic>)).toList();
+    return (rows as List)
+        .map((row) => Incident.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<Incident> fetchIncident(String incidentId) async {
+    final row = await _client
+        .from('incidents')
+        .select('*, incident_types(name)')
+        .eq('id', incidentId)
+        .single();
+    return Incident.fromMap(row);
+  }
+
+  Future<List<IncidentAttachment>> fetchAttachments(String incidentId) async {
+    final rows = await _client
+        .from('incident_attachments')
+        .select('id, storage_path')
+        .eq('incident_id', incidentId)
+        .order('created_at', ascending: true);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    if (list.isEmpty) return const [];
+    final signed = await _client.storage
+        .from('incident-attachments')
+        .createSignedUrlsResult([
+          for (final r in list) r['storage_path'] as String,
+        ], 60 * 60);
+    final urls = {
+      for (final result in signed)
+        if (result is SignedUrlSuccess) result.path: result.signedUrl,
+    };
+    return [
+      for (final r in list)
+        if (urls[r['storage_path']] != null)
+          IncidentAttachment(
+            id: r['id'] as String,
+            storagePath: r['storage_path'] as String,
+            url: urls[r['storage_path']]!,
+          ),
+    ];
+  }
+
+  Future<void> updateIncident({
+    required String incidentId,
+    required String title,
+    String? description,
+    String? incidentTypeId,
+  }) async {
+    await _client
+        .from('incidents')
+        .update({
+          'title': title,
+          'description': description,
+          'incident_type_id': incidentTypeId,
+        })
+        .eq('id', incidentId);
+  }
+
+  Future<void> deleteAttachment(IncidentAttachment attachment) async {
+    await _client.from('incident_attachments').delete().eq('id', attachment.id);
+    await _client.storage.from('incident-attachments').remove([
+      attachment.storagePath,
+    ]);
+  }
+
+  /// Keeps the row (and its history); only flips the status.
+  Future<void> cancelIncident(String incidentId) async {
+    await _client
+        .from('incidents')
+        .update({'status': 'cancelled'})
+        .eq('id', incidentId);
   }
 
   /// Active incident types configured for this residential (Ajustes >
@@ -30,22 +100,27 @@ class IncidentsRepository {
         .select('id, name')
         .eq('residential_id', residentialId)
         .eq('is_active', true)
-        .order('name');
-    return (rows as List).map((row) => IncidentType.fromMap(row as Map<String, dynamic>)).toList();
+        .order('name', ascending: true);
+    return (rows as List)
+        .map((row) => IncidentType.fromMap(row as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<String> reportIncident({
+  /// Inserts the incident row only; photos are uploaded one by one through
+  /// [uploadPhoto] so the report screen can show per-photo progress and retry.
+  Future<String> createIncident({
     required String residentialId,
     required String unitId,
     required String title,
     String? description,
     String? incidentTypeId,
     String? location,
-    required IncidentPriority priority,
-    List<File> photos = const [],
+    IncidentPriority priority = IncidentPriority.medium,
   }) async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw StateError('reportIncident called with no signed-in user');
+    if (userId == null) {
+      throw StateError('createIncident called with no signed-in user');
+    }
     final inserted = await _client
         .from('incidents')
         .insert({
@@ -60,21 +135,29 @@ class IncidentsRepository {
         })
         .select('id')
         .single();
-    final incidentId = inserted['id'] as String;
+    return inserted['id'] as String;
+  }
 
-    for (final photo in photos) {
-      final ext = photo.path.split('.').last;
-      final storagePath =
-          '$residentialId/$incidentId-${DateTime.now().millisecondsSinceEpoch}.$ext';
-      await _client.storage.from('incident-attachments').upload(storagePath, photo);
-      await _client.from('incident_attachments').insert({
-        'incident_id': incidentId,
-        'residential_id': residentialId,
-        'storage_path': storagePath,
-        'uploaded_by': userId,
-      });
+  Future<void> uploadPhoto({
+    required String residentialId,
+    required String incidentId,
+    required File photo,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('uploadPhoto called with no signed-in user');
     }
-
-    return incidentId;
+    final ext = photo.path.split('.').last;
+    final storagePath =
+        '$residentialId/$incidentId-${DateTime.now().microsecondsSinceEpoch}.$ext';
+    await _client.storage
+        .from('incident-attachments')
+        .upload(storagePath, photo);
+    await _client.from('incident_attachments').insert({
+      'incident_id': incidentId,
+      'residential_id': residentialId,
+      'storage_path': storagePath,
+      'uploaded_by': userId,
+    });
   }
 }

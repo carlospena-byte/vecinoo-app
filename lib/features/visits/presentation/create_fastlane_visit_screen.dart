@@ -1,35 +1,106 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/gates_button.dart';
+import '../../../core/widgets/gates_calendar.dart';
+import '../../../core/widgets/gates_text_area.dart';
+import '../../../core/widgets/gates_text_field.dart';
+import '../../../core/widgets/gates_time_picker.dart';
 import '../../session/presentation/session_controller.dart';
+import '../domain/visit.dart';
 import 'visits_controller.dart';
+import '../../../core/widgets/gates_toast.dart';
 
-class CreateFastlaneVisitScreen extends ConsumerStatefulWidget {
-  const CreateFastlaneVisitScreen({super.key});
+const _notesMaxLength = 120;
 
-  @override
-  ConsumerState<CreateFastlaneVisitScreen> createState() => _CreateFastlaneVisitScreenState();
+/// Shared with [VisitPendingDetailScreen] so both show identical date text.
+String formatVisitDate(DateTime date) {
+  final now = DateTime.now();
+  final isToday =
+      date.year == now.year && date.month == now.month && date.day == now.day;
+  final formatted = DateFormat('d MMM y', 'es').format(date);
+  return isToday ? 'Hoy, $formatted' : formatted;
 }
 
-class _CreateFastlaneVisitScreenState extends ConsumerState<CreateFastlaneVisitScreen> {
+String formatArrivalTime(TimeOfDay time) {
+  final asDateTime = DateTime(2000, 1, 1, time.hour, time.minute);
+  return DateFormat('h:mm a', 'es').format(asDateTime);
+}
+
+/// FastLane invite flow — Figma "10 · Visitas / FastLane residente"
+/// (node 116:186). F01 asks for a reference name, visit date and expected
+/// arrival time; on success it swaps in F02, showing the self-registration
+/// link the resident shares themselves via the OS share sheet (F03) instead
+/// of a backend-sent SMS/WhatsApp message.
+class CreateFastlaneVisitScreen extends ConsumerStatefulWidget {
+  const CreateFastlaneVisitScreen({super.key, this.editing});
+
+  /// When set, the form is prefilled from this pending invitation and saving
+  /// updates it instead of creating a new one.
+  final Visit? editing;
+
+  @override
+  ConsumerState<CreateFastlaneVisitScreen> createState() =>
+      _CreateFastlaneVisitScreenState();
+}
+
+class _CreateFastlaneVisitScreenState
+    extends ConsumerState<CreateFastlaneVisitScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
+  final _nameController = TextEditingController();
   final _notesController = TextEditingController();
 
   DateTime _visitDate = DateTime.now();
-  String _channel = 'whatsapp';
+  TimeOfDay _arrivalTime = TimeOfDay.now();
   bool _isSubmitting = false;
-  String? _accessCode;
-  bool? _notificationSent;
-  String? _notificationError;
+
+  bool get _isEditing => widget.editing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final editing = widget.editing;
+    if (editing != null) {
+      _nameController.text = editing.name ?? '';
+      _notesController.text = editing.notes ?? '';
+      _visitDate = editing.validFrom;
+      _arrivalTime = TimeOfDay.fromDateTime(editing.validFrom);
+    }
+  }
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _nameController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickVisitDate() async {
+    // Must be UTC-normalized: TableCalendar normalizes firstDay/lastDay via
+    // `DateTime.utc(y, m, d)` internally, so a local-time "today" here would
+    // sit hours ahead of UTC midnight in negative UTC-offset timezones and
+    // make today read as before firstDay (disabled).
+    final now = DateTime.now();
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final picked = await showGatesDatePicker(
+      context,
+      initialDate: _visitDate,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 365)),
+      title: 'Fecha de visita',
+    );
+    if (picked != null) setState(() => _visitDate = picked);
+  }
+
+  Future<void> _pickArrivalTime() async {
+    final picked = await showGatesTimePicker(
+      context,
+      initialTime: _arrivalTime,
+    );
+    if (picked != null) setState(() => _arrivalTime = picked);
   }
 
   Future<void> _submit() async {
@@ -38,25 +109,66 @@ class _CreateFastlaneVisitScreenState extends ConsumerState<CreateFastlaneVisitS
     if (membership == null) return;
 
     setState(() => _isSubmitting = true);
+    final editing = widget.editing;
+    if (editing != null) {
+      try {
+        await ref
+            .read(visitsRepositoryProvider)
+            .updateFastlaneVisit(
+              visitId: editing.id,
+              name: _nameController.text.trim(),
+              visitDate: _visitDate,
+              arrivalTime: _arrivalTime,
+              notes: _notesController.text.trim().isEmpty
+                  ? null
+                  : _notesController.text.trim(),
+            );
+        if (!mounted) return;
+        context.pop();
+        showGatesToast(
+          context,
+          type: GatesToastType.success,
+          title: 'Invitación actualizada',
+        );
+      } catch (_) {
+        if (mounted) {
+          showGatesToast(
+            context,
+            type: GatesToastType.error,
+            title: 'No pudimos guardar los cambios',
+            message: 'Intenta de nuevo.',
+          );
+          setState(() => _isSubmitting = false);
+        }
+      }
+      return;
+    }
     try {
-      final result = await ref.read(visitsRepositoryProvider).createFastlaneVisit(
+      final result = await ref
+          .read(visitsRepositoryProvider)
+          .createFastlaneVisit(
             residentialId: membership.residentialId,
             unitId: membership.unitId,
-            phone: _phoneController.text.trim(),
+            name: _nameController.text.trim(),
             visitDate: _visitDate,
-            notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-            channel: _channel,
+            arrivalTime: _arrivalTime,
+            notes: _notesController.text.trim().isEmpty
+                ? null
+                : _notesController.text.trim(),
           );
       if (!mounted) return;
-      setState(() {
-        _accessCode = result.accessCode;
-        _notificationSent = result.notificationSent;
-        _notificationError = result.notificationError;
-      });
+      // Land on the shared F02 screen (share / copy / edit / cancel) with the
+      // visits list underneath, so its back arrow returns to the list.
+      final router = GoRouter.of(context);
+      router.go('/');
+      router.push('/visits/${result.id}?created=1', extra: result);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo crear el acceso. Intenta de nuevo.')),
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: 'No pudimos crear la invitación',
+          message: 'Intenta de nuevo.',
         );
       }
     } finally {
@@ -66,129 +178,146 @@ class _CreateFastlaneVisitScreenState extends ConsumerState<CreateFastlaneVisitS
 
   @override
   Widget build(BuildContext context) {
-    if (_accessCode != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Acceso FastLane creado')),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('El visitante recibirá un link para llenar sus propios datos.'),
-                const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Código de acceso', style: TextStyle(fontSize: 12)),
-                        const SizedBox(height: 4),
-                        Text(
-                          _accessCode!,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (_notificationSent == false)
-                  Text(
-                    _notificationError ?? 'No se pudo enviar la notificación.',
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  )
-                else if (_notificationSent == true)
-                  const Text('Notificación enviada.'),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: _accessCode!));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Código copiado')),
-                    );
-                  },
-                  icon: const Icon(Icons.copy_outlined),
-                  label: const Text('Copiar código'),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Listo'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+    return _buildForm(context);
+  }
+
+  Widget _buildForm(BuildContext context) {
+    final membership = ref.watch(selectedMembershipProvider).value;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('FastLane')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: Text(_isEditing ? 'Editar invitación' : 'Invitar con FastLane'),
+      ),
       body: SafeArea(
+        top: false,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(GatesSpacing.space24),
             children: [
-              const Text('Envía un link para que el visitante llene su nombre, placa y foto de identificación.'),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Teléfono de contacto'),
-                keyboardType: TextInputType.phone,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+              if (membership != null) ...[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('UNIDAD', style: GatesTypography.caption),
+                    const SizedBox(height: GatesSpacing.space4),
+                    Text(
+                      membership.label,
+                      style: GatesTypography.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: GatesSpacing.space16),
+              ],
+              GatesTextField(
+                controller: _nameController,
+                label: 'Nombre de referencia *',
+                hintText: 'Visita de...',
+                textCapitalization: TextCapitalization.words,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Escribe un nombre para identificar la visita.'
+                    : null,
               ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _visitDate,
-                    firstDate: DateTime.now().subtract(const Duration(days: 1)),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  if (picked != null) setState(() => _visitDate = picked);
-                },
-                child: Text('Fecha de visita: ${DateFormat('d MMM y', 'es').format(_visitDate)}'),
+              const SizedBox(height: GatesSpacing.space16),
+              _TapField(
+                label: 'Fecha de visita',
+                value: formatVisitDate(_visitDate),
+                helper: 'Fecha prevista para la visita.',
+                icon: Icons.calendar_month_outlined,
+                onTap: _pickVisitDate,
               ),
-              const SizedBox(height: 12),
-              const Text('Enviar por'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('WhatsApp'),
-                    selected: _channel == 'whatsapp',
-                    onSelected: (_) => setState(() => _channel = 'whatsapp'),
-                  ),
-                  ChoiceChip(
-                    label: const Text('SMS'),
-                    selected: _channel == 'sms',
-                    onSelected: (_) => setState(() => _channel = 'sms'),
-                  ),
-                ],
+              const SizedBox(height: GatesSpacing.space16),
+              _TapField(
+                label: 'Hora de llegada prevista *',
+                value: formatArrivalTime(_arrivalTime),
+                onTap: _pickArrivalTime,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
+              const SizedBox(height: GatesSpacing.space16),
+              GatesTextArea(
                 controller: _notesController,
-                decoration: const InputDecoration(labelText: 'Notas para la portería'),
-                maxLength: 120,
-                maxLines: 3,
+                maxLength: _notesMaxLength,
               ),
-              const SizedBox(height: 8),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Crear y enviar'),
-              ),
+              const SizedBox(height: GatesSpacing.space8),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.all(GatesSpacing.space24),
+        child: GatesButton(
+          label: _isEditing ? 'Guardar cambios' : 'Crear invitación',
+          loading: _isSubmitting,
+          onPressed: _isSubmitting ? null : _submit,
+        ),
+      ),
+    );
+  }
+}
+
+/// "Field / IFTA" style tappable row — used for the date and arrival-time
+/// pickers, which show their value like a Field/IFTA but open a native
+/// picker on tap instead of accepting keyboard input.
+class _TapField extends StatelessWidget {
+  const _TapField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.helper,
+    this.icon,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+  final String? helper;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(GatesRadius.radius16),
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: GatesColors.bgSurface,
+              border: Border.all(color: GatesColors.borderDefault),
+              borderRadius: BorderRadius.circular(GatesRadius.radius16),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: GatesSpacing.space16,
+              vertical: GatesSpacing.space12,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(label, style: GatesTypography.caption),
+                      const SizedBox(height: GatesSpacing.space4),
+                      Text(value, style: GatesTypography.body),
+                    ],
+                  ),
+                ),
+                if (icon != null)
+                  Icon(icon, size: 20, color: GatesColors.textBrand),
+              ],
+            ),
+          ),
+        ),
+        if (helper != null) ...[
+          const SizedBox(height: GatesSpacing.space4),
+          Text(helper!, style: GatesTypography.caption),
+        ],
+      ],
     );
   }
 }

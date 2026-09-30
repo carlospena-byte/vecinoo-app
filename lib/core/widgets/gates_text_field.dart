@@ -27,6 +27,7 @@ class GatesTextField extends StatefulWidget {
     this.textInputAction,
     this.inputFormatters,
     this.autofillHints,
+    this.autofocus = false,
   });
 
   final String label;
@@ -43,6 +44,7 @@ class GatesTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
   final Iterable<String>? autofillHints;
+  final bool autofocus;
 
   @override
   State<GatesTextField> createState() => _GatesTextFieldState();
@@ -73,12 +75,17 @@ class _GatesTextFieldState extends State<GatesTextField> {
       validator: widget.validator,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       builder: (field) {
-        final hasError = widget.errorText != null && widget.errorText!.isNotEmpty || field.hasError;
-        final errorMessage = (widget.errorText != null && widget.errorText!.isNotEmpty)
+        final hasError =
+            widget.errorText != null && widget.errorText!.isNotEmpty ||
+            field.hasError;
+        final errorMessage =
+            (widget.errorText != null && widget.errorText!.isNotEmpty)
             ? widget.errorText
             : field.errorText;
         final isFocused = _focusNode.hasFocus;
-        final labelColor = hasError ? GatesColors.statusError : GatesColors.textSecondary;
+        final labelColor = hasError
+            ? GatesColors.statusError
+            : GatesColors.textSecondary;
 
         Color borderColor;
         double borderWidth;
@@ -101,7 +108,9 @@ class _GatesTextFieldState extends State<GatesTextField> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: widget.enabled ? GatesColors.bgSurface : GatesColors.bgSubtle,
+                color: widget.enabled
+                    ? GatesColors.bgSurface
+                    : GatesColors.bgSubtle,
                 borderRadius: BorderRadius.circular(GatesRadius.radius16),
                 border: Border.all(color: borderColor, width: borderWidth),
               ),
@@ -113,10 +122,14 @@ class _GatesTextFieldState extends State<GatesTextField> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(widget.label, style: GatesTypography.caption.copyWith(color: labelColor)),
+                  Text(
+                    widget.label,
+                    style: GatesTypography.caption.copyWith(color: labelColor),
+                  ),
                   const SizedBox(height: GatesSpacing.space4),
                   TextField(
                     focusNode: _focusNode,
+                    autofocus: widget.autofocus,
                     controller: widget.controller,
                     keyboardType: widget.keyboardType,
                     textCapitalization: widget.textCapitalization,
@@ -130,7 +143,9 @@ class _GatesTextFieldState extends State<GatesTextField> {
                       widget.onChanged?.call(value);
                     },
                     style: GatesTypography.body.copyWith(
-                      color: widget.enabled ? GatesColors.textPrimary : GatesColors.textSecondary,
+                      color: widget.enabled
+                          ? GatesColors.textPrimary
+                          : GatesColors.textSecondary,
                     ),
                     cursorColor: GatesColors.borderFocus,
                     decoration: InputDecoration(
@@ -138,19 +153,24 @@ class _GatesTextFieldState extends State<GatesTextField> {
                       isCollapsed: true,
                       border: InputBorder.none,
                       hintText: widget.hintText,
-                      hintStyle: GatesTypography.body.copyWith(color: GatesColors.textSecondary),
+                      hintStyle: GatesTypography.body.copyWith(
+                        color: GatesColors.textSecondary,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             if ((errorMessage != null && errorMessage.isNotEmpty) ||
-                (widget.helperText != null && widget.helperText!.isNotEmpty)) ...[
+                (widget.helperText != null &&
+                    widget.helperText!.isNotEmpty)) ...[
               const SizedBox(height: GatesSpacing.space4),
               Text(
                 hasError ? errorMessage! : widget.helperText!,
                 style: GatesTypography.caption.copyWith(
-                  color: hasError ? GatesColors.statusError : GatesColors.textSecondary,
+                  color: hasError
+                      ? GatesColors.statusError
+                      : GatesColors.textSecondary,
                 ),
               ),
             ],

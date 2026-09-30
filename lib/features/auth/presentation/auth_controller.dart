@@ -18,5 +18,6 @@ final authStateChangesProvider = StreamProvider<AuthState>((ref) {
 /// also seeded with the current session so the first frame is correct.
 final currentUserProvider = Provider<User?>((ref) {
   final authState = ref.watch(authStateChangesProvider).value;
-  return authState?.session?.user ?? ref.watch(authRepositoryProvider).currentUser;
+  return authState?.session?.user ??
+      ref.watch(authRepositoryProvider).currentUser;
 });

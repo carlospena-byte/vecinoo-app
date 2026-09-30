@@ -66,18 +66,13 @@ class EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 40,
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            Icon(icon, size: 40, color: Theme.of(context).colorScheme.outline),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: Theme.of(context).colorScheme.outline),
             ),
           ],
         ),

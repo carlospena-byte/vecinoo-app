@@ -1,8 +1,26 @@
+import 'package:flutter/material.dart' show TimeOfDay;
+
 enum VisitType { frequent, delivery, fastlane }
 
-enum VisitStatus { pendingRegistration, scheduled, active, inside, completed, cancelled, rejected }
+enum VisitStatus {
+  pendingRegistration,
+  scheduled,
+  active,
+  inside,
+  completed,
+  cancelled,
+  rejected,
+  expired,
+}
 
-enum VisitorRole { familiar, entrenador, empleado, proveedor, visitante, invitado }
+enum VisitorRole {
+  familiar,
+  entrenador,
+  empleado,
+  proveedor,
+  visitante,
+  invitado,
+}
 
 enum ProviderKind { proveedor, delivery, paqueteria }
 
@@ -11,7 +29,10 @@ enum Recurrence { monFri, monSat, daily, custom }
 enum ScheduleType { allDay, custom }
 
 VisitType visitTypeFromString(String value) {
-  return VisitType.values.firstWhere((t) => t.name == value, orElse: () => VisitType.frequent);
+  return VisitType.values.firstWhere(
+    (t) => t.name == value,
+    orElse: () => VisitType.frequent,
+  );
 }
 
 VisitStatus visitStatusFromString(String value) {
@@ -30,6 +51,8 @@ VisitStatus visitStatusFromString(String value) {
       return VisitStatus.cancelled;
     case 'rejected':
       return VisitStatus.rejected;
+    case 'expired':
+      return VisitStatus.expired;
     default:
       return VisitStatus.scheduled;
   }
@@ -51,6 +74,8 @@ String visitStatusLabel(VisitStatus status) {
       return 'Cancelada';
     case VisitStatus.rejected:
       return 'Rechazada';
+    case VisitStatus.expired:
+      return 'Expirada';
   }
 }
 
@@ -115,10 +140,66 @@ const _recurrenceDbValues = {
   Recurrence.custom: 'custom',
 };
 
-String recurrenceToDb(Recurrence recurrence) => _recurrenceDbValues[recurrence]!;
+String recurrenceToDb(Recurrence recurrence) =>
+    _recurrenceDbValues[recurrence]!;
 
 Recurrence recurrenceFromString(String value) {
-  return _recurrenceDbValues.entries.firstWhere((e) => e.value == value, orElse: () => const MapEntry(Recurrence.daily, 'daily')).key;
+  return _recurrenceDbValues.entries
+      .firstWhere(
+        (e) => e.value == value,
+        orElse: () => const MapEntry(Recurrence.daily, 'daily'),
+      )
+      .key;
+}
+
+/// Day keys as stored in `recurrence_days` / `schedule_blocks`, Monday first.
+const weekdayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+const weekdayShortLabels = {
+  'mon': 'Lun',
+  'tue': 'Mar',
+  'wed': 'Mié',
+  'thu': 'Jue',
+  'fri': 'Vie',
+  'sat': 'Sáb',
+  'sun': 'Dom',
+};
+
+/// One "Bloque de horario": a group of weekdays sharing the same access window.
+class ScheduleBlock {
+  const ScheduleBlock({
+    required this.days,
+    required this.start,
+    required this.end,
+  });
+
+  final Set<String> days;
+  final TimeOfDay start;
+  final TimeOfDay end;
+
+  Map<String, dynamic> toMap() => {
+    'days': [
+      for (final day in weekdayKeys)
+        if (days.contains(day)) day,
+    ],
+    'start': timeToDb(start),
+    'end': timeToDb(end),
+  };
+
+  factory ScheduleBlock.fromMap(Map<String, dynamic> map) => ScheduleBlock(
+    days: {for (final day in (map['days'] as List)) day as String},
+    start: timeFromDb(map['start'] as String),
+    end: timeFromDb(map['end'] as String),
+  );
+}
+
+/// `TimeOfDay` <-> Postgres `time` ("08:00:00").
+String timeToDb(TimeOfDay time) =>
+    '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+
+TimeOfDay timeFromDb(String value) {
+  final parts = value.split(':');
+  return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
 }
 
 class Visit {
@@ -133,7 +214,14 @@ class Visit {
     this.visitorRole,
     this.providerKind,
     this.recurrence,
+    this.recurrenceDays,
     this.scheduleType,
+    this.scheduleStart,
+    this.scheduleEnd,
+    this.scheduleBlocks,
+    this.hasVehicle = false,
+    this.notifyOnArrival = false,
+    this.idPhotoPath,
     this.notes,
     this.accessCode,
     required this.validFrom,
@@ -151,7 +239,14 @@ class Visit {
   final VisitorRole? visitorRole;
   final ProviderKind? providerKind;
   final Recurrence? recurrence;
+  final List<String>? recurrenceDays;
   final ScheduleType? scheduleType;
+  final TimeOfDay? scheduleStart;
+  final TimeOfDay? scheduleEnd;
+  final List<ScheduleBlock>? scheduleBlocks;
+  final bool hasVehicle;
+  final bool notifyOnArrival;
+  final String? idPhotoPath;
   final String? notes;
   final String? accessCode;
   final DateTime validFrom;
@@ -169,12 +264,35 @@ class Visit {
       visitType: visitTypeFromString(map['visit_type'] as String),
       visitorRole: (map['visitor_role'] as String?) == null
           ? null
-          : VisitorRole.values.firstWhere((r) => r.name == map['visitor_role'], orElse: () => VisitorRole.visitante),
+          : VisitorRole.values.firstWhere(
+              (r) => r.name == map['visitor_role'],
+              orElse: () => VisitorRole.visitante,
+            ),
       providerKind: (map['provider_kind'] as String?) == null
           ? null
-          : ProviderKind.values.firstWhere((k) => k.name == map['provider_kind'], orElse: () => ProviderKind.delivery),
-      recurrence: (map['recurrence'] as String?) == null ? null : recurrenceFromString(map['recurrence'] as String),
-      scheduleType: (map['schedule_type'] as String?) == 'custom' ? ScheduleType.custom : ScheduleType.allDay,
+          : ProviderKind.values.firstWhere(
+              (k) => k.name == map['provider_kind'],
+              orElse: () => ProviderKind.delivery,
+            ),
+      recurrence: (map['recurrence'] as String?) == null
+          ? null
+          : recurrenceFromString(map['recurrence'] as String),
+      recurrenceDays: (map['recurrence_days'] as List?)?.cast<String>(),
+      scheduleType: (map['schedule_type'] as String?) == 'custom'
+          ? ScheduleType.custom
+          : ScheduleType.allDay,
+      scheduleStart: (map['schedule_start'] as String?) == null
+          ? null
+          : timeFromDb(map['schedule_start'] as String),
+      scheduleEnd: (map['schedule_end'] as String?) == null
+          ? null
+          : timeFromDb(map['schedule_end'] as String),
+      scheduleBlocks: (map['schedule_blocks'] as List?)
+          ?.map((b) => ScheduleBlock.fromMap(b as Map<String, dynamic>))
+          .toList(),
+      hasVehicle: (map['has_vehicle'] as bool?) ?? false,
+      notifyOnArrival: (map['notify_on_arrival'] as bool?) ?? false,
+      idPhotoPath: map['id_photo_path'] as String?,
       notes: map['notes'] as String?,
       accessCode: map['access_code'] as String?,
       validFrom: DateTime.parse(map['valid_from'] as String).toLocal(),

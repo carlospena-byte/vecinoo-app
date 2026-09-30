@@ -26,7 +26,10 @@ class UnitSelectorScreen extends ConsumerWidget {
                 alignment: Alignment.centerRight,
                 child: IconButton(
                   tooltip: 'Cerrar sesión',
-                  icon: const Icon(Icons.logout, color: GatesColors.textSecondary),
+                  icon: const Icon(
+                    Icons.logout,
+                    color: GatesColors.textSecondary,
+                  ),
                   onPressed: () => ref.read(authRepositoryProvider).signOut(),
                 ),
               ),
@@ -34,7 +37,12 @@ class UnitSelectorScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('gates', style: GatesTypography.headingMedium.copyWith(color: GatesColors.textBrand)),
+                  Text(
+                    'gates',
+                    style: GatesTypography.headingMedium.copyWith(
+                      color: GatesColors.textBrand,
+                    ),
+                  ),
                   const SizedBox(height: GatesSpacing.space4),
                   Text('PARA RESIDENTES', style: GatesTypography.caption),
                 ],
@@ -44,7 +52,9 @@ class UnitSelectorScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Text(
                 'Elige la unidad que quieres consultar.',
-                style: GatesTypography.body.copyWith(color: GatesColors.textSecondary),
+                style: GatesTypography.body.copyWith(
+                  color: GatesColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 32),
               Expanded(
@@ -54,8 +64,11 @@ class UnitSelectorScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final membership = memberships[index];
                     return _UnitTile(
-                      label: '${membership.unitName} · ${membership.residentialName}',
-                      onTap: () => ref.read(selectedMembershipProvider.notifier).select(membership),
+                      label:
+                          '${membership.unitName} · ${membership.residentialName}',
+                      onTap: () => ref
+                          .read(selectedMembershipProvider.notifier)
+                          .select(membership),
                     );
                   },
                 ),
@@ -91,19 +104,27 @@ class _UnitTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: GatesSpacing.space16,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
                   child: Text(
                     label,
-                    style: GatesTypography.label.copyWith(color: GatesColors.textBrand),
+                    style: GatesTypography.label.copyWith(
+                      color: GatesColors.textBrand,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(width: GatesSpacing.space8),
-                const Icon(Icons.arrow_forward, size: 16, color: GatesColors.textBrand),
+                const Icon(
+                  Icons.arrow_forward,
+                  size: 16,
+                  color: GatesColors.textBrand,
+                ),
               ],
             ),
           ),

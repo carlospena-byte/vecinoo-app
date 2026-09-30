@@ -19,10 +19,7 @@ class AuthRepository {
     return _client.auth.signInWithOtp(email: email);
   }
 
-  Future<void> verifyEmailOtp({
-    required String email,
-    required String token,
-  }) {
+  Future<void> verifyEmailOtp({required String email, required String token}) {
     return _client.auth.verifyOTP(
       email: email,
       token: token,
@@ -36,10 +33,7 @@ class AuthRepository {
     return _client.auth.signInWithOtp(phone: phone);
   }
 
-  Future<void> verifyPhoneOtp({
-    required String phone,
-    required String token,
-  }) {
+  Future<void> verifyPhoneOtp({required String phone, required String token}) {
     return _client.auth.verifyOTP(
       phone: phone,
       token: token,

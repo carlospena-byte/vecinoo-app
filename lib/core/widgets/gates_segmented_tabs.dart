@@ -1,0 +1,90 @@
+import 'package:flutter/material.dart';
+
+import '../theme/app_theme.dart';
+
+/// One option in a [GatesSegmentedTabs] bar.
+class GatesSegmentedTabOption<T> {
+  const GatesSegmentedTabOption({required this.value, required this.label});
+
+  final T value;
+  final String label;
+}
+
+/// Pill-shaped segmented tab bar — the standard way to switch between a
+/// small, fixed set of views (visit kind, booking status...). Previously
+/// reimplemented per screen with drifting styles; this is the single
+/// source of truth, styled after "Tabs / Visitas" (Figma node `337:1682`).
+class GatesSegmentedTabs<T> extends StatelessWidget {
+  const GatesSegmentedTabs({
+    super.key,
+    required this.options,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final List<GatesSegmentedTabOption<T>> options;
+  final T selected;
+  final ValueChanged<T> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.all(GatesSpacing.space8),
+      decoration: BoxDecoration(
+        color: GatesColors.bgSubtle,
+        borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < options.length; i++) ...[
+            if (i > 0) const SizedBox(width: GatesSpacing.space4),
+            Expanded(
+              child: _GatesTabPill(
+                label: options[i].label,
+                selected: options[i].value == selected,
+                onTap: () => onSelect(options[i].value),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GatesTabPill extends StatelessWidget {
+  const _GatesTabPill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? GatesColors.bgBrand : Colors.transparent,
+      borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: GatesSpacing.space8),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GatesTypography.label.copyWith(
+              color: selected
+                  ? GatesColors.textInverse
+                  : GatesColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

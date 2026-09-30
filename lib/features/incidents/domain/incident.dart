@@ -1,6 +1,6 @@
 enum IncidentPriority { low, medium, high, urgent }
 
-enum IncidentStatus { newIncident, inProgress, resolved, closed }
+enum IncidentStatus { newIncident, inProgress, resolved, closed, cancelled }
 
 IncidentPriority priorityFromString(String value) {
   return IncidentPriority.values.firstWhere(
@@ -19,6 +19,8 @@ IncidentStatus statusFromString(String value) {
       return IncidentStatus.resolved;
     case 'closed':
       return IncidentStatus.closed;
+    case 'cancelled':
+      return IncidentStatus.cancelled;
     default:
       return IncidentStatus.newIncident;
   }
@@ -34,6 +36,8 @@ String statusLabel(IncidentStatus status) {
       return 'Resuelta';
     case IncidentStatus.closed:
       return 'Cerrada';
+    case IncidentStatus.cancelled:
+      return 'Cancelada';
   }
 }
 
@@ -61,6 +65,7 @@ class Incident {
     required this.priority,
     required this.status,
     required this.createdAt,
+    this.reportedBy,
   });
 
   final String id;
@@ -72,6 +77,11 @@ class Incident {
   final IncidentPriority priority;
   final IncidentStatus status;
   final DateTime createdAt;
+  final String? reportedBy;
+
+  /// The reporter can still change or cancel the report while nobody has
+  /// started working on it.
+  bool get isEditable => status == IncidentStatus.newIncident;
 
   factory Incident.fromMap(Map<String, dynamic> map) {
     final incidentType = map['incident_types'] as Map<String, dynamic>?;
@@ -85,6 +95,7 @@ class Incident {
       priority: priorityFromString(map['priority'] as String),
       status: statusFromString(map['status'] as String),
       createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
+      reportedBy: map['reported_by'] as String?,
     );
   }
 }
@@ -98,4 +109,18 @@ class IncidentType {
   factory IncidentType.fromMap(Map<String, dynamic> map) {
     return IncidentType(id: map['id'] as String, name: map['name'] as String);
   }
+}
+
+class IncidentAttachment {
+  const IncidentAttachment({
+    required this.id,
+    required this.storagePath,
+    required this.url,
+  });
+
+  final String id;
+  final String storagePath;
+
+  /// Short-lived signed URL (the bucket is private).
+  final String url;
 }

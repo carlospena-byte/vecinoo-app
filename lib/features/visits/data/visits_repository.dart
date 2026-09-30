@@ -1,6 +1,20 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/env/env.dart';
 import '../domain/visit.dart';
+
+/// The FastLane self-registration link the resident shares with their
+/// visitor — same `#fastlane/<code>` scheme the send-visit-notification
+/// Edge Function builds server-side for the admin's SMS/WhatsApp flow.
+String fastlaneLink(String accessCode) {
+  final base = Env.publicAppUrl.endsWith('/')
+      ? Env.publicAppUrl
+      : '${Env.publicAppUrl}/';
+  return '$base#fastlane/$accessCode';
+}
 
 class VisitsRepository {
   VisitsRepository(this._client);
@@ -16,7 +30,80 @@ class VisitsRepository {
         .select()
         .eq('unit_id', unitId)
         .order('created_at', ascending: false);
-    return (rows as List).map((row) => Visit.fromMap(row as Map<String, dynamic>)).toList();
+    return (rows as List)
+        .map((row) => Visit.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Same rows as [fetchVisits], but live: Supabase Realtime pushes any
+  /// insert/update/delete on this unit's visitors (e.g. a guard's check-in
+  /// flipping status to "inside") straight into this stream, so the list
+  /// updates without a manual pull-to-refresh.
+  Stream<List<Visit>> watchVisits(String unitId) {
+    return _client
+        .from('visitors')
+        .stream(primaryKey: ['id'])
+        .eq('unit_id', unitId)
+        .order('created_at', ascending: false)
+        .map((rows) => rows.map(Visit.fromMap).toList());
+  }
+
+  /// Uploads the visitor's ID photo to the private `visitor-id-photos` bucket
+  /// (folder = residential id, which the member-insert policy checks) and
+  /// returns its storage path.
+  Future<String> uploadVisitorDocument({
+    required String residentialId,
+    required File file,
+  }) async {
+    final ext = file.path.split('.').last.toLowerCase();
+    final storagePath =
+        '$residentialId/frequent-${DateTime.now().millisecondsSinceEpoch}.$ext';
+    await _client.storage.from('visitor-id-photos').upload(storagePath, file);
+    return storagePath;
+  }
+
+  /// Columns a frequent visit's form controls, shared by create and update.
+  /// Custom frequency is described by its blocks; the legacy columns get the
+  /// union of their days and the first block's window.
+  Map<String, dynamic> _frequentFields({
+    required String name,
+    String? phone,
+    required VisitorRole visitorRole,
+    required bool hasVehicle,
+    String? plate,
+    required Recurrence recurrence,
+    required ScheduleType scheduleType,
+    TimeOfDay? scheduleStart,
+    TimeOfDay? scheduleEnd,
+    List<ScheduleBlock>? scheduleBlocks,
+    required bool notifyOnArrival,
+    String? notes,
+  }) {
+    final isCustom = recurrence == Recurrence.custom;
+    final blocks = isCustom ? scheduleBlocks! : null;
+    final customSchedule = isCustom || scheduleType == ScheduleType.custom;
+    final start = isCustom ? blocks!.first.start : scheduleStart;
+    final end = isCustom ? blocks!.first.end : scheduleEnd;
+    return {
+      'name': name,
+      'phone': phone,
+      'plate': hasVehicle ? plate : null,
+      'has_vehicle': hasVehicle,
+      'visitor_role': visitorRole.name,
+      'recurrence': recurrenceToDb(recurrence),
+      'recurrence_days': isCustom
+          ? [
+              for (final day in weekdayKeys)
+                if (blocks!.any((b) => b.days.contains(day))) day,
+            ]
+          : null,
+      'schedule_type': customSchedule ? 'custom' : 'all_day',
+      'schedule_start': customSchedule ? timeToDb(start!) : null,
+      'schedule_end': customSchedule ? timeToDb(end!) : null,
+      'schedule_blocks': blocks?.map((b) => b.toMap()).toList(),
+      'notify_on_arrival': notifyOnArrival,
+      'notes': notes,
+    };
   }
 
   Future<void> createFrequentVisit({
@@ -24,13 +111,16 @@ class VisitsRepository {
     required String unitId,
     required String name,
     String? phone,
-    String? plate,
     required VisitorRole visitorRole,
+    required String idPhotoPath,
+    required bool hasVehicle,
+    String? plate,
     required Recurrence recurrence,
-    List<String>? recurrenceDays,
     required ScheduleType scheduleType,
-    String? scheduleStart,
-    String? scheduleEnd,
+    TimeOfDay? scheduleStart,
+    TimeOfDay? scheduleEnd,
+    List<ScheduleBlock>? scheduleBlocks,
+    required bool notifyOnArrival,
     String? notes,
   }) async {
     final userId = _client.auth.currentUser?.id;
@@ -38,21 +128,71 @@ class VisitsRepository {
       'residential_id': residentialId,
       'unit_id': unitId,
       'invited_by': userId,
-      'name': name,
-      'phone': phone,
-      'plate': plate,
+      'id_photo_path': idPhotoPath,
       'visit_type': 'frequent',
-      'visitor_role': visitorRole.name,
-      'recurrence': recurrenceToDb(recurrence),
-      'recurrence_days': recurrence == Recurrence.custom ? recurrenceDays : null,
-      'schedule_type': scheduleType == ScheduleType.custom ? 'custom' : 'all_day',
-      'schedule_start': scheduleType == ScheduleType.custom ? scheduleStart : null,
-      'schedule_end': scheduleType == ScheduleType.custom ? scheduleEnd : null,
-      'notes': notes,
-      // Open-ended: active until an admin cancels it, not tied to one date.
+      ..._frequentFields(
+        name: name,
+        phone: phone,
+        visitorRole: visitorRole,
+        hasVehicle: hasVehicle,
+        plate: plate,
+        recurrence: recurrence,
+        scheduleType: scheduleType,
+        scheduleStart: scheduleStart,
+        scheduleEnd: scheduleEnd,
+        scheduleBlocks: scheduleBlocks,
+        notifyOnArrival: notifyOnArrival,
+        notes: notes,
+      ),
+      // Open-ended: active until the resident cancels it.
       'valid_from': DateTime.now().toIso8601String(),
       'valid_until': DateTime(2099, 12, 31).toIso8601String(),
     });
+  }
+
+  /// Edits a still-active frequent visit. [idPhotoPath] is only sent when the
+  /// resident replaced the document. `.select().single()` makes a
+  /// silently-filtered (0 rows) update surface as an error.
+  Future<void> updateFrequentVisit({
+    required String visitId,
+    required String name,
+    String? phone,
+    required VisitorRole visitorRole,
+    String? idPhotoPath,
+    required bool hasVehicle,
+    String? plate,
+    required Recurrence recurrence,
+    required ScheduleType scheduleType,
+    TimeOfDay? scheduleStart,
+    TimeOfDay? scheduleEnd,
+    List<ScheduleBlock>? scheduleBlocks,
+    required bool notifyOnArrival,
+    String? notes,
+  }) async {
+    await _client
+        .from('visitors')
+        .update({
+          'id_photo_path': ?idPhotoPath,
+          ..._frequentFields(
+            name: name,
+            phone: phone,
+            visitorRole: visitorRole,
+            hasVehicle: hasVehicle,
+            plate: plate,
+            recurrence: recurrence,
+            scheduleType: scheduleType,
+            scheduleStart: scheduleStart,
+            scheduleEnd: scheduleEnd,
+            scheduleBlocks: scheduleBlocks,
+            notifyOnArrival: notifyOnArrival,
+            notes: notes,
+          ),
+        })
+        .eq('id', visitId)
+        .eq('visit_type', 'frequent')
+        .inFilter('status', ['scheduled', 'active', 'inside'])
+        .select()
+        .single();
   }
 
   Future<void> createDeliveryVisit({
@@ -64,10 +204,21 @@ class VisitsRepository {
     required ProviderKind providerKind,
     required DateTime visitDate,
     String? notes,
+    // Narrows access to start at this time of day instead of midnight —
+    // used by the "Hora de llegada" field on delivery/paquetería visits.
+    DateTime? arrivalTime,
   }) async {
     final userId = _client.auth.currentUser?.id;
-    final dayStart = DateTime(visitDate.year, visitDate.month, visitDate.day);
-    final dayEnd = dayStart.add(const Duration(hours: 23, minutes: 59, seconds: 59));
+    final dayStart =
+        arrivalTime ?? DateTime(visitDate.year, visitDate.month, visitDate.day);
+    final dayEnd = DateTime(
+      visitDate.year,
+      visitDate.month,
+      visitDate.day,
+      23,
+      59,
+      59,
+    );
     await _client.from('visitors').insert({
       'residential_id': residentialId,
       'unit_id': unitId,
@@ -84,42 +235,139 @@ class VisitsRepository {
   }
 
   /// Creates the FastLane row via the create_fastlane_visit RPC (so
-  /// access_code is always server-generated) then immediately triggers the
-  /// SMS/WhatsApp send. Returns whether the notification actually went out —
-  /// Twilio being unconfigured is a normal, surfaced outcome, not an error.
-  Future<({String visitId, String accessCode, bool notificationSent, String? notificationError})> createFastlaneVisit({
+  /// access_code is always server-generated) and returns the shareable
+  /// self-registration link. The resident shares it themselves through the
+  /// device's native share sheet — this no longer triggers a backend
+  /// SMS/WhatsApp send, so there's no phone number to collect.
+  Future<Visit> createFastlaneVisit({
     required String residentialId,
     required String unitId,
-    required String phone,
+    required String name,
     required DateTime visitDate,
+    required TimeOfDay arrivalTime,
     String? notes,
-    required String channel,
   }) async {
     final created = await _client
-        .rpc('create_fastlane_visit', params: {
-          '_residential_id': residentialId,
-          '_unit_id': unitId,
-          '_phone': phone,
-          '_visit_date':
-              '${visitDate.year.toString().padLeft(4, '0')}-${visitDate.month.toString().padLeft(2, '0')}-${visitDate.day.toString().padLeft(2, '0')}',
-          '_notes': notes,
-        })
+        .rpc(
+          'create_fastlane_visit',
+          params: {
+            '_residential_id': residentialId,
+            '_unit_id': unitId,
+            '_visit_date':
+                '${visitDate.year.toString().padLeft(4, '0')}-${visitDate.month.toString().padLeft(2, '0')}-${visitDate.day.toString().padLeft(2, '0')}',
+            '_name': name,
+            '_arrival_time':
+                '${arrivalTime.hour.toString().padLeft(2, '0')}:${arrivalTime.minute.toString().padLeft(2, '0')}:00',
+            '_notes': notes,
+            // So the server can compute valid_from/valid_until against this
+            // resident's own local midnight instead of UTC midnight — see
+            // 20261102000000_fastlane_visit_local_tz.sql.
+            '_tz_offset_minutes': visitDate.timeZoneOffset.inMinutes,
+          },
+        )
         .single();
 
-    final visitId = created['id'] as String;
-    final accessCode = created['access_code'] as String;
-
-    final response = await _client.functions.invoke(
-      'send-visit-notification',
-      body: {'visitId': visitId, 'channel': channel},
-    );
-    final data = response.data as Map<String, dynamic>? ?? const {};
-
-    return (
-      visitId: visitId,
-      accessCode: accessCode,
-      notificationSent: data['notificationSent'] as bool? ?? false,
-      notificationError: data['error'] as String?,
-    );
+    return Visit.fromMap(created);
   }
+
+  /// Edits a still-pending FastLane invitation. Mirrors what
+  /// create_fastlane_visit computes server-side: valid_from is the chosen
+  /// day at the arrival time, valid_until is the end of that day, both in the
+  /// resident's own timezone (sent as UTC instants). The "members update own
+  /// unit" RLS policy allows this direct update; `.select().single()` makes a
+  /// silently-filtered (0 rows) update surface as an error instead.
+  Future<void> updateFastlaneVisit({
+    required String visitId,
+    required String name,
+    required DateTime visitDate,
+    required TimeOfDay arrivalTime,
+    String? notes,
+  }) async {
+    final validFrom = DateTime(
+      visitDate.year,
+      visitDate.month,
+      visitDate.day,
+      arrivalTime.hour,
+      arrivalTime.minute,
+    );
+    final validUntil = DateTime(
+      visitDate.year,
+      visitDate.month,
+      visitDate.day,
+      23,
+      59,
+      59,
+    );
+    await _client
+        .from('visitors')
+        .update({
+          'name': name,
+          'notes': notes,
+          'valid_from': validFrom.toUtc().toIso8601String(),
+          'valid_until': validUntil.toUtc().toIso8601String(),
+        })
+        .eq('id', visitId)
+        .eq('status', 'pending_registration')
+        .select()
+        .single();
+  }
+
+  /// Cancels a visit that hasn't happened yet: a FastLane invitation still
+  /// waiting for its data (its link stops working because fastlane-submit only
+  /// accepts `pending_registration` rows) or a scheduled/active delivery.
+  /// `.select().single()` surfaces a silently-filtered update as an error.
+  Future<void> cancelVisit(String visitId) async {
+    await _client
+        .from('visitors')
+        .update({'status': 'cancelled'})
+        .eq('id', visitId)
+        .inFilter('status', ['pending_registration', 'scheduled', 'active'])
+        .select()
+        .single();
+  }
+
+  /// Ends a frequent visit's standing access. The row stays (with status
+  /// `cancelled`) so its history is kept; `.select().single()` surfaces a
+  /// silently-filtered update as an error.
+  Future<void> cancelFrequentVisit(String visitId) async {
+    await _client
+        .from('visitors')
+        .update({'status': 'cancelled'})
+        .eq('id', visitId)
+        .eq('visit_type', 'frequent')
+        .inFilter('status', ['scheduled', 'active', 'inside'])
+        .select()
+        .single();
+  }
+
+  /// The visitor's most recent gate movement (check-in, and check-out if any),
+  /// or null if they haven't come in yet.
+  Future<AccessMovement?> fetchLastMovement(String visitId) async {
+    final rows = await _client
+        .from('access_logs')
+        .select('checked_in_at, checked_out_at')
+        .eq('visitor_id', visitId)
+        .not('checked_in_at', 'is', null)
+        .order('checked_in_at', ascending: false)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return AccessMovement.fromMap(rows.first);
+  }
+}
+
+/// One row of the guard's access log for a visitor.
+class AccessMovement {
+  const AccessMovement({required this.checkedInAt, this.checkedOutAt});
+
+  final DateTime checkedInAt;
+  final DateTime? checkedOutAt;
+
+  bool get isInside => checkedOutAt == null;
+
+  factory AccessMovement.fromMap(Map<String, dynamic> map) => AccessMovement(
+    checkedInAt: DateTime.parse(map['checked_in_at'] as String).toLocal(),
+    checkedOutAt: (map['checked_out_at'] as String?) == null
+        ? null
+        : DateTime.parse(map['checked_out_at'] as String).toLocal(),
+  );
 }

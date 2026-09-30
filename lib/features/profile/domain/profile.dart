@@ -18,7 +18,10 @@ class Profile {
       (lastName?.trim().isNotEmpty ?? false);
 
   String get displayName {
-    final full = [firstName, lastName].where((s) => (s ?? '').trim().isNotEmpty).join(' ');
+    final full = [
+      firstName,
+      lastName,
+    ].where((s) => (s ?? '').trim().isNotEmpty).join(' ');
     return full.isNotEmpty ? full : (email ?? phone ?? 'Residente');
   }
 

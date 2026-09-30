@@ -1,6 +1,9 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
+
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 
 /// Firebase project: vecino-app-devsignx (Android + iOS apps registered via
 /// `firebase apps:create`, config pulled via `firebase apps:sdkconfig`).

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,7 +7,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../auth/presentation/auth_controller.dart';
-import '../../auth/presentation/register_screen.dart' show pendingInvitationCodePrefsKey;
+import '../../auth/presentation/register_screen.dart'
+    show pendingInvitationCodePrefsKey;
 import 'session_controller.dart';
 
 /// Shown when the resident has signed in but no admin has linked them to
@@ -79,7 +81,10 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                 alignment: Alignment.centerRight,
                 child: IconButton(
                   tooltip: 'Cerrar sesión',
-                  icon: const Icon(Icons.logout, color: GatesColors.textSecondary),
+                  icon: const Icon(
+                    Icons.logout,
+                    color: GatesColors.textSecondary,
+                  ),
                   onPressed: () => ref.read(authRepositoryProvider).signOut(),
                 ),
               ),
@@ -87,7 +92,12 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('gates', style: GatesTypography.headingMedium.copyWith(color: GatesColors.textBrand)),
+                  Text(
+                    'gates',
+                    style: GatesTypography.headingMedium.copyWith(
+                      color: GatesColors.textBrand,
+                    ),
+                  ),
                   const SizedBox(height: GatesSpacing.space4),
                   Text('PARA RESIDENTES', style: GatesTypography.caption),
                 ],
@@ -98,21 +108,29 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
               Text(
                 'Todavía no tienes una unidad vinculada. Pide al administrador que te '
                 'vincule o ingresa un código de invitación.',
-                style: GatesTypography.body.copyWith(color: GatesColors.textSecondary),
+                style: GatesTypography.body.copyWith(
+                  color: GatesColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 32),
               GatesTextField(
                 label: 'Código de invitación',
                 controller: _codeController,
-                textCapitalization: TextCapitalization.characters,
-                helperText: '8 caracteres alfanuméricos.',
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
+                helperText: '6 dígitos.',
                 errorText: _errorText,
                 enabled: !_isRedeeming,
               ),
               const SizedBox(height: 16),
               GatesButton(
                 label: 'Usar código',
-                onPressed: _isRedeeming ? null : () => _redeem(_codeController.text),
+                onPressed: _isRedeeming
+                    ? null
+                    : () => _redeem(_codeController.text),
                 loading: _isRedeeming,
               ),
               const SizedBox(height: 12),

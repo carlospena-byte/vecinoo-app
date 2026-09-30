@@ -53,5 +53,5 @@ class SelectedMembershipController extends AsyncNotifier<Membership?> {
 
 final selectedMembershipProvider =
     AsyncNotifierProvider<SelectedMembershipController, Membership?>(
-  SelectedMembershipController.new,
-);
+      SelectedMembershipController.new,
+    );

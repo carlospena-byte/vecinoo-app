@@ -30,22 +30,33 @@ class ProfileScreen extends ConsumerWidget {
               CircleAvatar(
                 radius: 32,
                 child: Text(
-                  profile.displayName.isNotEmpty ? profile.displayName[0].toUpperCase() : '?',
+                  profile.displayName.isNotEmpty
+                      ? profile.displayName[0].toUpperCase()
+                      : '?',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
               ),
               const SizedBox(height: 12),
               Center(
-                child: Text(profile.displayName, style: Theme.of(context).textTheme.titleLarge),
+                child: Text(
+                  profile.displayName,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
               const SizedBox(height: 24),
               Card(
                 child: Column(
                   children: [
                     if (profile.email != null)
-                      ListTile(leading: const Icon(Icons.email_outlined), title: Text(profile.email!)),
+                      ListTile(
+                        leading: const Icon(Icons.email_outlined),
+                        title: Text(profile.email!),
+                      ),
                     if (profile.phone != null)
-                      ListTile(leading: const Icon(Icons.phone_outlined), title: Text(profile.phone!)),
+                      ListTile(
+                        leading: const Icon(Icons.phone_outlined),
+                        title: Text(profile.phone!),
+                      ),
                     if (membership != null)
                       ListTile(
                         leading: const Icon(Icons.apartment_outlined),
@@ -58,7 +69,8 @@ class ProfileScreen extends ConsumerWidget {
               if (memberships.length > 1) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: () => ref.read(selectedMembershipProvider.notifier).clear(),
+                  onPressed: () =>
+                      ref.read(selectedMembershipProvider.notifier).clear(),
                   icon: const Icon(Icons.swap_horiz),
                   label: const Text('Cambiar unidad'),
                 ),
