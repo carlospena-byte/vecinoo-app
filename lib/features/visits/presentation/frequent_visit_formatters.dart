@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../l10n/l10n.dart';
-import '../data/visits_repository.dart';
+import '../domain/access_movement.dart';
 import '../domain/visit.dart';
 
 /// "08:00 AM" — how the Figma time fields show a time.

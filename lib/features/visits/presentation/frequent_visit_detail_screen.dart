@@ -10,7 +10,7 @@ import '../../../core/widgets/gates_toast.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
-import '../data/visits_repository.dart';
+import '../domain/access_movement.dart';
 import '../domain/visit.dart';
 import 'frequent_visit_formatters.dart';
 import 'visits_controller.dart';

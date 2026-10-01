@@ -841,18 +841,6 @@
       }
     }
   },
-  "visitsClose": "Cerrar",
-  "visitsCancel": "Cancelar",
-  "visitsDone": "Listo",
-  "visitsDetailsDateAndTime": "Fecha y horario",
-  "visitsCalendarMonth": "Mes",
-  "visitsCalendarDowMon": "L",
-  "visitsCalendarDowTue": "M",
-  "visitsCalendarDowWed": "X",
-  "visitsCalendarDowThu": "J",
-  "visitsCalendarDowFri": "V",
-  "visitsCalendarDowSat": "S",
-  "visitsCalendarDowSun": "D",
   "visitsDetailsAuthorizedToast": "Visita autorizada",
   "visitsDetailsAuthorizeError": "No pudimos autorizar la visita",
   "visitsDetailsTitle": "Detalles de la visita",

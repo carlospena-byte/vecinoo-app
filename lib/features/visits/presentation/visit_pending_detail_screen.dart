@@ -14,7 +14,7 @@ import '../../../core/widgets/state_views.dart';
 import '../../../l10n/l10n.dart';
 import '../../home/home_shell.dart';
 import '../../session/presentation/session_controller.dart';
-import '../data/visits_repository.dart';
+import 'fastlane_link.dart';
 import '../domain/visit.dart';
 import 'visits_controller.dart';
 

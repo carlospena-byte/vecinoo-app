@@ -1,35 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_calendar.dart';
 import '../../../core/widgets/gates_text_area.dart';
+import '../../../core/widgets/gates_tap_field.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../../core/widgets/gates_time_picker.dart';
 import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/visit.dart';
+import 'frequent_visit_formatters.dart';
+import 'visit_date_formatters.dart';
 import 'visits_controller.dart';
 import '../../../core/widgets/gates_toast.dart';
 
 const _notesMaxLength = 120;
-
-/// Shared with [VisitPendingDetailScreen] so both show identical date text.
-String formatVisitDate(AppLocalizations l10n, DateTime date) {
-  final now = DateTime.now();
-  final isToday =
-      date.year == now.year && date.month == now.month && date.day == now.day;
-  final formatted = DateFormat('d MMM y', 'es').format(date);
-  return isToday ? l10n.visitsDateToday(formatted) : formatted;
-}
-
-String formatArrivalTime(TimeOfDay time) {
-  final asDateTime = DateTime(2000, 1, 1, time.hour, time.minute);
-  return DateFormat('h:mm a', 'es').format(asDateTime);
-}
 
 /// FastLane invite flow — Figma "10 · Visitas / FastLane residente"
 /// (node 116:186). F01 asks for a reference name, visit date and expected
@@ -231,7 +219,7 @@ class _CreateFastlaneVisitScreenState
                     : null,
               ),
               const SizedBox(height: GatesSpacing.space16),
-              _TapField(
+              GatesTapField(
                 label: context.l10n.visitsFastlaneVisitDate,
                 value: formatVisitDate(context.l10n, _visitDate),
                 helper: context.l10n.visitsFastlaneDateHelper,
@@ -239,9 +227,9 @@ class _CreateFastlaneVisitScreenState
                 onTap: _pickVisitDate,
               ),
               const SizedBox(height: GatesSpacing.space16),
-              _TapField(
+              GatesTapField(
                 label: context.l10n.visitsFastlaneArrivalLabel,
-                value: formatArrivalTime(_arrivalTime),
+                value: formatClockText(_arrivalTime),
                 onTap: _pickArrivalTime,
               ),
               const SizedBox(height: GatesSpacing.space16),
@@ -264,70 +252,6 @@ class _CreateFastlaneVisitScreenState
           onPressed: _isSubmitting ? null : _submit,
         ),
       ),
-    );
-  }
-}
-
-/// "Field / IFTA" style tappable row — used for the date and arrival-time
-/// pickers, which show their value like a Field/IFTA but open a native
-/// picker on tap instead of accepting keyboard input.
-class _TapField extends StatelessWidget {
-  const _TapField({
-    required this.label,
-    required this.value,
-    required this.onTap,
-    this.helper,
-    this.icon,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-  final String? helper;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(GatesRadius.radius16),
-          onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.palette.bgSurface,
-              border: Border.all(color: context.palette.borderDefault),
-              borderRadius: BorderRadius.circular(GatesRadius.radius16),
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: GatesSpacing.space16,
-              vertical: GatesSpacing.space12,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(label, style: context.gatesText.caption),
-                      const SizedBox(height: GatesSpacing.space4),
-                      Text(value, style: GatesTypography.body),
-                    ],
-                  ),
-                ),
-                if (icon != null)
-                  Icon(icon, size: 20, color: context.palette.textBrand),
-              ],
-            ),
-          ),
-        ),
-        if (helper != null) ...[
-          const SizedBox(height: GatesSpacing.space4),
-          Text(helper!, style: context.gatesText.caption),
-        ],
-      ],
     );
   }
 }

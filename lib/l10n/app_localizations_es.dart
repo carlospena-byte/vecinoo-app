@@ -1692,42 +1692,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get visitsClose => 'Cerrar';
-
-  @override
-  String get visitsCancel => 'Cancelar';
-
-  @override
-  String get visitsDone => 'Listo';
-
-  @override
-  String get visitsDetailsDateAndTime => 'Fecha y horario';
-
-  @override
-  String get visitsCalendarMonth => 'Mes';
-
-  @override
-  String get visitsCalendarDowMon => 'L';
-
-  @override
-  String get visitsCalendarDowTue => 'M';
-
-  @override
-  String get visitsCalendarDowWed => 'X';
-
-  @override
-  String get visitsCalendarDowThu => 'J';
-
-  @override
-  String get visitsCalendarDowFri => 'V';
-
-  @override
-  String get visitsCalendarDowSat => 'S';
-
-  @override
-  String get visitsCalendarDowSun => 'D';
-
-  @override
   String get visitsDetailsAuthorizedToast => 'Visita autorizada';
 
   @override

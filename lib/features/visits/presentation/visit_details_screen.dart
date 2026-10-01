@@ -1,282 +1,35 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:table_calendar/table_calendar.dart';
 
+import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
-import '../../../core/widgets/gates_segmented_tabs.dart';
+import '../../../core/widgets/gates_calendar.dart';
 import '../../../core/widgets/gates_sheet.dart';
-import '../../../core/widgets/state_views.dart';
-import '../../../l10n/l10n.dart';
-import 'providers_catalog_controller.dart';
-import '../../../core/widgets/gates_text_field.dart';
-import '../../session/presentation/session_controller.dart';
-import '../domain/provider_catalog_item.dart';
-import '../domain/visit.dart';
-import 'visits_controller.dart';
+import '../../../core/widgets/gates_switch_row.dart';
+import '../../../core/widgets/gates_tap_field.dart';
+import '../../../core/widgets/gates_text_area.dart';
+import '../../../core/widgets/gates_time_picker.dart';
 import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
+import '../../session/presentation/session_controller.dart';
+import '../domain/visit.dart';
+import 'frequent_visit_formatters.dart';
+import 'visit_date_formatters.dart';
+import 'visit_details_controller.dart';
+import 'visit_provider_sheet.dart';
+
+export 'visit_details_controller.dart' show VisitDetailsArgs;
 
 const _notesMaxLength = 120;
-
-/// Args for [VisitDetailsScreen]: either a catalog [provider] was picked in
-/// [SelectProviderScreen], or the resident chose "Otro" / a no-results
-/// fallback, in which case [provider] is null and the screen asks for a
-/// free-text name instead.
-class VisitDetailsArgs {
-  const VisitDetailsArgs({required this.kind, this.provider});
-
-  final ProviderKind kind;
-  final ProviderCatalogItem? provider;
-}
-
-String _dateLabel(AppLocalizations l10n, DateTime date) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final tomorrow = today.add(const Duration(days: 1));
-  final day = DateTime(date.year, date.month, date.day);
-  final formatted = DateFormat('d MMM y', 'es').format(date);
-  if (day == today) return l10n.visitsDateToday(formatted);
-  if (day == tomorrow) return l10n.visitsDateTomorrow(formatted);
-  return formatted;
-}
-
-String _timeLabel(TimeOfDay t) =>
-    '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
-/// "Octubre 2026" — capitalized month name plus year (see
-/// booking_date_time_sheet.dart for the same helper in the amenities flow).
-String _monthTitle(DateTime date) {
-  final month = DateFormat('MMMM', 'es').format(date);
-  return '${month[0].toUpperCase()}${month.substring(1)} ${date.year}';
-}
-
-Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
-  var selectedDay = initial;
-  var focusedDay = initial;
-  return showModalBottomSheet<DateTime>(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(GatesRadius.radius24),
-      ),
-    ),
-    builder: (context) => StatefulBuilder(
-      builder: (context, setSheetState) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            GatesSpacing.space24,
-            GatesSpacing.space24,
-            GatesSpacing.space24,
-            GatesSpacing.space16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    context.l10n.visitsDetailsDateAndTime,
-                    style: GatesTypography.headingMedium,
-                  ),
-                  IconButton(
-                    tooltip: context.l10n.visitsClose,
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: GatesSpacing.space16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(GatesSpacing.space16),
-                decoration: BoxDecoration(
-                  color: context.palette.bgSurface,
-                  borderRadius: BorderRadius.circular(GatesRadius.radius24),
-                ),
-                child: TableCalendar(
-                  startingDayOfWeek: StartingDayOfWeek.monday,
-                  firstDay: DateTime.now().subtract(const Duration(days: 1)),
-                  lastDay: DateTime.now().add(const Duration(days: 180)),
-                  focusedDay: focusedDay,
-                  locale: 'es',
-                  daysOfWeekHeight: 24,
-                  rowHeight: 44,
-                  selectedDayPredicate: (day) => isSameDay(day, selectedDay),
-                  onDaySelected: (selected, focused) {
-                    setSheetState(() {
-                      selectedDay = selected;
-                      focusedDay = focused;
-                    });
-                  },
-                  enabledDayPredicate: (day) => !day.isBefore(
-                    DateTime.now().subtract(const Duration(days: 1)),
-                  ),
-                  calendarFormat: CalendarFormat.month,
-                  availableCalendarFormats: {
-                    CalendarFormat.month: context.l10n.visitsCalendarMonth,
-                  },
-                  headerStyle: HeaderStyle(
-                    titleCentered: true,
-                    formatButtonVisible: false,
-                    titleTextStyle: GatesTypography.label,
-                    titleTextFormatter: (date, locale) => _monthTitle(date),
-                    leftChevronIcon: Icon(
-                      Icons.chevron_left,
-                      size: 20,
-                      color: context.palette.textPrimary,
-                    ),
-                    rightChevronIcon: Icon(
-                      Icons.chevron_right,
-                      size: 20,
-                      color: context.palette.textPrimary,
-                    ),
-                    headerPadding: EdgeInsets.zero,
-                  ),
-                  daysOfWeekStyle: DaysOfWeekStyle(
-                    weekdayStyle: context.gatesText.caption,
-                    weekendStyle: context.gatesText.caption,
-                  ),
-                  calendarBuilders: CalendarBuilders(
-                    dowBuilder: (context, day) {
-                      final l10n = context.l10n;
-                      final labels = [
-                        l10n.visitsCalendarDowMon,
-                        l10n.visitsCalendarDowTue,
-                        l10n.visitsCalendarDowWed,
-                        l10n.visitsCalendarDowThu,
-                        l10n.visitsCalendarDowFri,
-                        l10n.visitsCalendarDowSat,
-                        l10n.visitsCalendarDowSun,
-                      ];
-                      return Center(
-                        child: Text(
-                          labels[day.weekday - 1],
-                          style: context.gatesText.caption,
-                        ),
-                      );
-                    },
-                  ),
-                  calendarStyle: CalendarStyle(
-                    outsideDaysVisible: true,
-                    cellMargin: EdgeInsets.zero,
-                    defaultTextStyle: GatesTypography.body,
-                    weekendTextStyle: GatesTypography.body,
-                    outsideTextStyle: GatesTypography.body,
-                    todayDecoration: BoxDecoration(
-                      color: Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: Border.fromBorderSide(
-                        BorderSide(color: context.palette.bgBrand),
-                      ),
-                    ),
-                    todayTextStyle: GatesTypography.body,
-                    selectedDecoration: BoxDecoration(
-                      color: context.palette.bgBrand,
-                      shape: BoxShape.circle,
-                      border: Border.fromBorderSide(
-                        BorderSide(
-                          color: context.palette.borderSelectedBrand,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    selectedTextStyle: GatesTypography.body.copyWith(
-                      color: context.palette.textOnBrand,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: GatesSpacing.space24),
-              SizedBox(
-                width: double.infinity,
-                child: GatesButton(
-                  label: context.l10n.visitsContinue,
-                  onPressed: () => Navigator.of(context).pop(selectedDay),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-/// A scrolling-wheel time picker, matching the one in
-/// booking_date_time_sheet.dart's amenities flow.
-Future<TimeOfDay?> _showArrivalTimeSheet(
-  BuildContext context,
-  TimeOfDay initial,
-) {
-  var selected = initial;
-  return showModalBottomSheet<TimeOfDay>(
-    context: context,
-    backgroundColor: context.palette.bgElevated,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(GatesRadius.radius24),
-      ),
-    ),
-    builder: (context) => SafeArea(
-      top: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(context.l10n.visitsCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(selected),
-                child: Text(context.l10n.visitsDone),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 216,
-            child: CupertinoTheme(
-              data: CupertinoThemeData(
-                textTheme: CupertinoTextThemeData(
-                  dateTimePickerTextStyle: GatesTypography.headingSmall
-                      .copyWith(fontWeight: FontWeight.w500),
-                ),
-              ),
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.time,
-                use24hFormat: true,
-                minuteInterval: 5,
-                initialDateTime: DateTime(
-                  2000,
-                  1,
-                  1,
-                  initial.hour,
-                  initial.minute,
-                ),
-                onDateTimeChanged: (value) {
-                  selected = TimeOfDay(hour: value.hour, minute: value.minute);
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
 /// Merges Figma's "D01 · Entrega" (`119:371`, delivery/paquetería — has a
 /// "Hora de llegada" field) and "D02 · Proveedor" (`339:3037`, proveedor —
 /// has a free-text "Nombre de la visita" instead) into one screen, since
-/// they only differ in those two fields.
+/// they only differ in those two fields. State and the authorize call live
+/// in [VisitDetailsController].
 class VisitDetailsScreen extends ConsumerStatefulWidget {
   const VisitDetailsScreen({super.key, required this.args});
 
@@ -287,124 +40,114 @@ class VisitDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
+  StreamSubscription<VisitDetailsEvent>? _events;
 
-  DateTime _visitDate = DateTime.now();
-  TimeOfDay? _arrivalTime = TimeOfDay.now();
-  bool _notifyOnArrival = true;
-  bool _isSubmitting = false;
-
-  // Start from what the catalog screen passed, but let the resident change it
-  // here (via the "¿Quién viene?" sheet) if they picked the wrong one.
-  late ProviderCatalogItem? _provider = widget.args.provider;
-  late ProviderKind _kind = widget.args.kind;
+  VisitDetailsController get _controller =>
+      ref.read(visitDetailsControllerProvider(widget.args).notifier);
 
   @override
   void initState() {
     super.initState();
+    _events = _controller.events.listen(_onEvent);
     // Arrived via "Otro": go straight to typing the name.
-    if (_provider == null) {
+    if (widget.args.provider == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _changeProvider();
       });
     }
   }
 
-  bool get _needsTime => _kind != ProviderKind.proveedor;
+  @override
+  void dispose() {
+    _events?.cancel();
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _onEvent(VisitDetailsEvent event) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (event) {
+      case NeedsProvider():
+        _changeProvider();
+      case VisitAuthorized():
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        showGatesToast(
+          context,
+          type: GatesToastType.success,
+          title: l10n.visitsDetailsAuthorizedToast,
+        );
+      case AuthorizeFailed(:final failure):
+        final detail = failureDetail(l10n, failure);
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.visitsDetailsAuthorizeError,
+          message: detail == null
+              ? l10n.visitsTryAgain
+              : '$detail ${l10n.visitsTryAgain}',
+        );
+    }
+  }
 
   Future<void> _changeProvider() async {
     final membership = ref.read(selectedMembershipProvider).value;
     if (membership == null) return;
-    final result = await showGatesSheet<_ProviderChoice>(
+    final state = ref.read(visitDetailsControllerProvider(widget.args));
+    final result = await showGatesSheet<ProviderChoice>(
       context,
-      (_) => _ProviderSheet(
+      (_) => ProviderSheet(
         residentialId: membership.residentialId,
-        initialKind: _kind,
-        selectedId: _provider?.id,
-        customName: _provider == null ? _nameController.text.trim() : '',
+        initialKind: state.kind,
+        selectedId: state.provider?.id,
+        customName: state.provider == null ? _nameController.text.trim() : '',
       ),
     );
     if (result == null) return;
     setState(() {
-      _provider = result.provider;
-      _kind = result.kind;
       if (result.provider == null) _nameController.text = result.customName;
     });
+    _controller.changeProvider(result.provider, result.kind);
   }
 
   Future<void> _pickDate() async {
-    final picked = await _showVisitDateSheet(context, _visitDate);
-    if (picked != null) setState(() => _visitDate = picked);
+    // Must be UTC-normalized: TableCalendar normalizes firstDay/lastDay via
+    // `DateTime.utc(y, m, d)` internally, so a local-time "today" would sit
+    // hours ahead of UTC midnight in negative UTC-offset timezones and make
+    // today read as before firstDay (disabled).
+    final now = DateTime.now();
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final picked = await showGatesDatePicker(
+      context,
+      initialDate: ref
+          .read(visitDetailsControllerProvider(widget.args))
+          .visitDate,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 180)),
+      title: context.l10n.visitsFastlaneVisitDate,
+    );
+    if (picked != null) _controller.setVisitDate(picked);
   }
 
   Future<void> _pickArrivalTime() async {
-    final picked = await _showArrivalTimeSheet(
+    final current = ref
+        .read(visitDetailsControllerProvider(widget.args))
+        .arrivalTime;
+    final picked = await showGatesTimePicker(
       context,
-      _arrivalTime ?? const TimeOfDay(hour: 9, minute: 0),
+      initialTime: current ?? const TimeOfDay(hour: 9, minute: 0),
     );
-    if (picked != null) setState(() => _arrivalTime = picked);
-  }
-
-  Future<void> _submit() async {
-    final provider = _provider;
-    if (provider == null && _nameController.text.trim().isEmpty) {
-      _changeProvider();
-      return;
-    }
-
-    final membership = ref.read(selectedMembershipProvider).value;
-    if (membership == null) return;
-
-    setState(() => _isSubmitting = true);
-    try {
-      final arrivalDateTime = _arrivalTime == null
-          ? null
-          : DateTime(
-              _visitDate.year,
-              _visitDate.month,
-              _visitDate.day,
-              _arrivalTime!.hour,
-              _arrivalTime!.minute,
-            );
-      await ref
-          .read(visitsRepositoryProvider)
-          .createDeliveryVisit(
-            residentialId: membership.residentialId,
-            unitId: membership.unitId,
-            name: provider?.name ?? _nameController.text.trim(),
-            providerKind: _kind,
-            visitDate: _visitDate,
-            arrivalTime: _needsTime ? arrivalDateTime : null,
-            notes: _notesController.text.trim().isEmpty
-                ? null
-                : _notesController.text.trim(),
-          );
-      if (!mounted) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      showGatesToast(
-        context,
-        type: GatesToastType.success,
-        title: context.l10n.visitsDetailsAuthorizedToast,
-      );
-    } catch (_) {
-      if (mounted) {
-        showGatesToast(
-          context,
-          type: GatesToastType.error,
-          title: context.l10n.visitsDetailsAuthorizeError,
-          message: context.l10n.visitsTryAgain,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+    if (picked != null) _controller.setArrivalTime(picked);
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = _provider;
+    final l10n = context.l10n;
+    final state = ref.watch(visitDetailsControllerProvider(widget.args));
+    final provider = state.provider;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -426,7 +169,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                     width: 44,
                     height: 44,
                     child: IconButton(
-                      tooltip: context.l10n.visitsBack,
+                      tooltip: l10n.visitsBack,
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.arrow_back, size: 24),
                       onPressed: () => Navigator.of(context).pop(),
@@ -434,7 +177,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                   ),
                   const SizedBox(width: GatesSpacing.space12),
                   Text(
-                    context.l10n.visitsDetailsTitle,
+                    l10n.visitsDetailsTitle,
                     style: GatesTypography.headingMedium,
                   ),
                 ],
@@ -442,55 +185,61 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(
-                    GatesSpacing.space24,
-                    0,
-                    GatesSpacing.space24,
-                    GatesSpacing.space16,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  GatesSpacing.space24,
+                  0,
+                  GatesSpacing.space24,
+                  GatesSpacing.space16,
+                ),
+                children: [
+                  GatesTapField(
+                    label: state.kind == ProviderKind.proveedor
+                        ? l10n.visitsDetailsService
+                        : l10n.visitsNewTypeTitle,
+                    value:
+                        provider?.name ??
+                        (_nameController.text.trim().isEmpty
+                            ? l10n.visitsCatalogOther
+                            : _nameController.text.trim()),
+                    icon: Icons.expand_more,
+                    iconColor: context.palette.textSecondary,
+                    onTap: _changeProvider,
                   ),
-                  children: [
-                    _SelectedCatalogField(
-                      label: _kind == ProviderKind.proveedor
-                          ? context.l10n.visitsDetailsService
-                          : context.l10n.visitsNewTypeTitle,
-                      value:
-                          provider?.name ??
-                          (_nameController.text.trim().isEmpty
-                              ? context.l10n.visitsCatalogOther
-                              : _nameController.text.trim()),
-                      onTap: _changeProvider,
-                    ),
+                  const SizedBox(height: GatesSpacing.space16),
+                  GatesTapField(
+                    label: l10n.visitsFastlaneVisitDate,
+                    value: formatVisitDate(l10n, state.visitDate),
+                    icon: Icons.calendar_today_outlined,
+                    helper: l10n.visitsDetailsDateHelper,
+                    onTap: _pickDate,
+                  ),
+                  if (state.needsTime) ...[
                     const SizedBox(height: GatesSpacing.space16),
-                    _PickerField(
-                      label: context.l10n.visitsFastlaneVisitDate,
-                      value: _dateLabel(context.l10n, _visitDate),
-                      icon: Icons.calendar_today_outlined,
-                      helper: context.l10n.visitsDetailsDateHelper,
-                      onTap: _pickDate,
-                    ),
-                    if (_needsTime) ...[
-                      const SizedBox(height: GatesSpacing.space16),
-                      _PickerField(
-                        label: context.l10n.visitsFrequentScheduleLabel,
-                        value: _arrivalTime == null
-                            ? context.l10n.visitsDetailsPickTime
-                            : _timeLabel(_arrivalTime!),
-                        icon: Icons.access_time,
-                        onTap: _pickArrivalTime,
-                      ),
-                    ],
-                    const SizedBox(height: GatesSpacing.space16),
-                    _NotesField(controller: _notesController),
-                    const SizedBox(height: GatesSpacing.space16),
-                    _NotifySwitch(
-                      value: _notifyOnArrival,
-                      onChanged: (v) => setState(() => _notifyOnArrival = v),
+                    GatesTapField(
+                      label: l10n.visitsFrequentScheduleLabel,
+                      value: state.arrivalTime == null
+                          ? l10n.visitsDetailsPickTime
+                          : formatClockText(state.arrivalTime!),
+                      icon: Icons.access_time,
+                      onTap: _pickArrivalTime,
                     ),
                   ],
-                ),
+                  const SizedBox(height: GatesSpacing.space16),
+                  GatesTextArea(
+                    controller: _notesController,
+                    maxLength: _notesMaxLength,
+                    label: l10n.visitsDetailsNotesLabel,
+                    hintText: l10n.visitsDetailsNotesHint,
+                  ),
+                  const SizedBox(height: GatesSpacing.space16),
+                  GatesSwitchRow(
+                    label: l10n.visitsFrequentNotifyLabel,
+                    description: l10n.visitsFrequentNotifyHint,
+                    value: state.notifyOnArrival,
+                    onChanged: _controller.setNotifyOnArrival,
+                  ),
+                ],
               ),
             ),
             Padding(
@@ -503,441 +252,18 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: GatesButton(
-                  label: context.l10n.visitsDetailsAuthorize,
-                  loading: _isSubmitting,
-                  onPressed: _isSubmitting ? null : _submit,
+                  label: l10n.visitsDetailsAuthorize,
+                  loading: state.isSubmitting,
+                  onPressed: state.isSubmitting
+                      ? null
+                      : () => _controller.submit(
+                          customName: _nameController.text,
+                          notes: _notesController.text,
+                        ),
                 ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// "Selected catalog" field — Figma node `I119:380;24:15`: read-only, tap
-/// to go back and change the catalog pick.
-class _SelectedCatalogField extends StatelessWidget {
-  const _SelectedCatalogField({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(GatesRadius.radius16),
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 64),
-        padding: const EdgeInsets.symmetric(
-          horizontal: GatesSpacing.space16,
-          vertical: GatesSpacing.space12,
-        ),
-        decoration: BoxDecoration(
-          color: context.palette.bgSurface,
-          border: Border.all(color: context.palette.borderDefault),
-          borderRadius: BorderRadius.circular(GatesRadius.radius16),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: context.gatesText.caption),
-                  const SizedBox(height: GatesSpacing.space4),
-                  Text(value, style: GatesTypography.body),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.expand_more,
-              size: 20,
-              color: context.palette.textSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// "Date picker / IFTA" and "Time picker / IFTA" fields — Figma nodes
-/// `29:87` / `33:115`, unified since they only differ by icon and helper.
-class _PickerField extends StatelessWidget {
-  const _PickerField({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.onTap,
-    this.helper,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final String? helper;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(GatesRadius.radius16),
-          onTap: onTap,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 64),
-            padding: const EdgeInsets.symmetric(
-              horizontal: GatesSpacing.space16,
-              vertical: GatesSpacing.space12,
-            ),
-            decoration: BoxDecoration(
-              color: context.palette.bgSurface,
-              border: Border.all(color: context.palette.borderDefault),
-              borderRadius: BorderRadius.circular(GatesRadius.radius16),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(label, style: context.gatesText.caption),
-                      const SizedBox(height: GatesSpacing.space4),
-                      Text(value, style: GatesTypography.body),
-                    ],
-                  ),
-                ),
-                Icon(icon, size: 20, color: context.palette.textBrand),
-              ],
-            ),
-          ),
-        ),
-        if (helper != null) ...[
-          const SizedBox(height: GatesSpacing.space8),
-          Text(helper!, style: context.gatesText.caption),
-        ],
-      ],
-    );
-  }
-}
-
-/// "Textarea / IFTA" — Figma node `26:6`.
-class _NotesField extends StatefulWidget {
-  const _NotesField({required this.controller});
-
-  final TextEditingController controller;
-
-  @override
-  State<_NotesField> createState() => _NotesFieldState();
-}
-
-class _NotesFieldState extends State<_NotesField> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_onChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onChanged);
-    super.dispose();
-  }
-
-  void _onChanged() => setState(() {});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(GatesSpacing.space16),
-          decoration: BoxDecoration(
-            color: context.palette.bgSurface,
-            border: Border.all(color: context.palette.borderDefault),
-            borderRadius: BorderRadius.circular(GatesRadius.radius16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.visitsDetailsNotesLabel,
-                style: context.gatesText.caption,
-              ),
-              const SizedBox(height: GatesSpacing.space8),
-              TextField(
-                controller: widget.controller,
-                maxLines: 3,
-                maxLength: _notesMaxLength,
-                buildCounter: (
-                  context, {
-                  required currentLength,
-                  required isFocused,
-                  maxLength,
-                }) => null,
-                decoration: InputDecoration(
-                  isDense: true,
-                  isCollapsed: true,
-                  border: InputBorder.none,
-                  hintText: context.l10n.visitsDetailsNotesHint,
-                  hintStyle: GatesTypography.body,
-                ),
-                style: GatesTypography.body,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: GatesSpacing.space8),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            '${widget.controller.text.length}/$_notesMaxLength',
-            style: context.gatesText.caption,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// "Switch" — Figma node `24:185`.
-class _NotifySwitch extends StatelessWidget {
-  const _NotifySwitch({required this.value, required this.onChanged});
-
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(GatesRadius.radius16),
-      onTap: () => onChanged(!value),
-      child: Container(
-        height: 88,
-        padding: const EdgeInsets.all(GatesSpacing.space16),
-        decoration: BoxDecoration(
-          color: context.palette.bgSurface,
-          border: Border.all(color: context.palette.borderDefault),
-          borderRadius: BorderRadius.circular(GatesRadius.radius16),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.l10n.visitsFrequentNotifyLabel,
-                    style: GatesTypography.label,
-                  ),
-                  const SizedBox(height: GatesSpacing.space4),
-                  Text(
-                    context.l10n.visitsFrequentNotifyHint,
-                    style: context.gatesText.caption,
-                  ),
-                ],
-              ),
-            ),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeTrackColor: context.palette.bgBrand,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProviderChoice {
-  const _ProviderChoice(this.kind, this.provider, [this.customName = '']);
-
-  final ProviderKind kind;
-
-  /// Null means "Otro": the resident typed [customName] instead.
-  final ProviderCatalogItem? provider;
-  final String customName;
-}
-
-/// Bottom sheet listing every catalog option (with kind tabs) plus an "Otro"
-/// entry that expands an input for a custom name, so a wrong "¿Quién viene?"
-/// pick can be changed without going back.
-class _ProviderSheet extends ConsumerStatefulWidget {
-  const _ProviderSheet({
-    required this.residentialId,
-    required this.initialKind,
-    required this.selectedId,
-    required this.customName,
-  });
-
-  final String residentialId;
-  final ProviderKind initialKind;
-  final String? selectedId;
-
-  /// Name already typed under "Otro" (empty if none).
-  final String customName;
-
-  @override
-  ConsumerState<_ProviderSheet> createState() => _ProviderSheetState();
-}
-
-class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
-  late ProviderKind _kind = widget.initialKind;
-  late final _nameController = TextEditingController(text: widget.customName);
-
-  /// Whether "Otro" is expanded. Starts open when nothing from the catalog is
-  /// selected (arrived via "Otro", or already using a custom name).
-  late bool _otherOpen = widget.selectedId == null;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  void _confirmOther() {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
-    Navigator.of(context).pop(_ProviderChoice(_kind, null, name));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final catalogAsync = ref.watch(
-      providersCatalogProvider((
-        residentialId: widget.residentialId,
-        kind: _kind,
-      )),
-    );
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(bottom: keyboard),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: (MediaQuery.sizeOf(context).height * 0.75 - keyboard)
-              .clamp(320.0, double.infinity),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space24)
-              .copyWith(bottom: GatesSpacing.space24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GatesSheetHeader(title: context.l10n.visitsDetailsChange),
-              const SizedBox(height: GatesSpacing.space8),
-              GatesSegmentedTabs<ProviderKind>(
-                options: [
-                  for (final kind in ProviderKind.values)
-                    GatesSegmentedTabOption(
-                      value: kind,
-                      label: providerKindLabel(context.l10n, kind),
-                    ),
-                ],
-                selected: _kind,
-                onSelect: (kind) => setState(() => _kind = kind),
-              ),
-              const SizedBox(height: GatesSpacing.space8),
-              Expanded(
-                child: catalogAsync.when(
-                  loading: () => const LoadingView(),
-                  error: (e, _) => ErrorView(
-                    message: context.l10n.visitsCatalogLoadError,
-                    onRetry: () => ref.invalidate(
-                      providersCatalogProvider((
-                        residentialId: widget.residentialId,
-                        kind: _kind,
-                      )),
-                    ),
-                  ),
-                  data: (items) => ListView(
-                    children: [
-                      for (final item in items)
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: context.palette.bgSubtle,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              providerInitials(item.name),
-                              style: GatesTypography.label.copyWith(
-                                color: context.palette.textBrand,
-                              ),
-                            ),
-                          ),
-                          title: Text(item.name, style: GatesTypography.body),
-                          trailing: item.id == widget.selectedId
-                              ? Icon(
-                                  Icons.check,
-                                  color: context.palette.textBrand,
-                                )
-                              : null,
-                          onTap: () =>
-                              Navigator.of(context)
-                                  .pop(_ProviderChoice(_kind, item)),
-                        ),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Icon(Icons.edit_outlined),
-                        ),
-                        title: Text(
-                          context.l10n.visitsCatalogOther,
-                          style: GatesTypography.body,
-                        ),
-                        trailing: Icon(
-                          _otherOpen ? Icons.expand_less : Icons.expand_more,
-                          color: context.palette.textSecondary,
-                        ),
-                        onTap: () => setState(() => _otherOpen = !_otherOpen),
-                      ),
-                      if (_otherOpen) ...[
-                        GatesTextField(
-                          label: context.l10n.visitsFrequentNameLabel,
-                          hintText: context.l10n.visitsDetailsNameHint,
-                          autofocus: true,
-                          controller: _nameController,
-                          textCapitalization: TextCapitalization.words,
-                          textInputAction: TextInputAction.done,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: GatesSpacing.space16),
-                        GatesButton(
-                          label: context.l10n.visitsDetailsUseName,
-                          onPressed: _nameController.text.trim().isEmpty
-                              ? null
-                              : _confirmOther,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

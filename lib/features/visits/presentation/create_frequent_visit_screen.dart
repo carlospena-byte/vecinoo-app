@@ -288,7 +288,8 @@ class _CreateFrequentVisitScreenState
           ? null
           : await repository.uploadVisitorDocument(
               residentialId: membership.residentialId,
-              file: document,
+              bytes: await document.readAsBytes(),
+              extension: document.path.split('.').last,
             );
       final digits = _phoneController.text.trim();
       final phone = digits.isEmpty
