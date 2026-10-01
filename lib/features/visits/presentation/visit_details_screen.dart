@@ -8,7 +8,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_calendar.dart';
 import '../../../core/widgets/gates_sheet.dart';
-import '../../../core/widgets/gates_switch_row.dart';
 import '../../../core/widgets/gates_tap_field.dart';
 import '../../../core/widgets/gates_text_area.dart';
 import '../../../core/widgets/gates_time_picker.dart';
@@ -231,13 +230,6 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                     maxLength: _notesMaxLength,
                     label: l10n.visitsDetailsNotesLabel,
                     hintText: l10n.visitsDetailsNotesHint,
-                  ),
-                  const SizedBox(height: GatesSpacing.space16),
-                  GatesSwitchRow(
-                    label: l10n.visitsFrequentNotifyLabel,
-                    description: l10n.visitsFrequentNotifyHint,
-                    value: state.notifyOnArrival,
-                    onChanged: _controller.setNotifyOnArrival,
                   ),
                 ],
               ),

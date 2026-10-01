@@ -25,7 +25,6 @@ class VisitDetailsState {
     required this.provider,
     required this.visitDate,
     required this.arrivalTime,
-    this.notifyOnArrival = true,
     this.isSubmitting = false,
   });
 
@@ -35,7 +34,6 @@ class VisitDetailsState {
   final ProviderCatalogItem? provider;
   final DateTime visitDate;
   final TimeOfDay? arrivalTime;
-  final bool notifyOnArrival;
   final bool isSubmitting;
 
   /// Providers (vendors) get access for the whole day; deliveries need an
@@ -47,7 +45,6 @@ class VisitDetailsState {
     Object? provider = _keep,
     DateTime? visitDate,
     TimeOfDay? arrivalTime,
-    bool? notifyOnArrival,
     bool? isSubmitting,
   }) {
     return VisitDetailsState(
@@ -57,7 +54,6 @@ class VisitDetailsState {
           : provider as ProviderCatalogItem?,
       visitDate: visitDate ?? this.visitDate,
       arrivalTime: arrivalTime ?? this.arrivalTime,
-      notifyOnArrival: notifyOnArrival ?? this.notifyOnArrival,
       isSubmitting: isSubmitting ?? this.isSubmitting,
     );
   }
@@ -118,9 +114,6 @@ class VisitDetailsController extends Notifier<VisitDetailsState> {
 
   void setArrivalTime(TimeOfDay time) =>
       state = state.copyWith(arrivalTime: time);
-
-  void setNotifyOnArrival(bool value) =>
-      state = state.copyWith(notifyOnArrival: value);
 
   /// [customName] is the free-text name used when no catalog provider is
   /// selected ("Otro").
