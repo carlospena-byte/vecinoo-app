@@ -154,12 +154,14 @@ class _HeaderRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         _CircleIconButton(
+          semanticLabel: 'Notificaciones',
           onTap: onBellTap,
           backgroundColor: context.palette.bgSurface,
           child: const GatesSvgIcon('assets/icons/home/bell.svg', size: 20),
         ),
         const SizedBox(width: 12),
         _CircleIconButton(
+          semanticLabel: 'Perfil',
           onTap: onAvatarTap,
           backgroundColor: context.palette.bgAccent,
           child: Text(
@@ -177,23 +179,31 @@ class _HeaderRow extends StatelessWidget {
 class _CircleIconButton extends StatelessWidget {
   const _CircleIconButton({
     required this.onTap,
+    required this.semanticLabel,
     required this.backgroundColor,
     required this.child,
   });
 
   final VoidCallback onTap;
+  final String semanticLabel;
   final Color backgroundColor;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: backgroundColor,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: SizedBox(width: 44, height: 44, child: Center(child: child)),
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: backgroundColor,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: SizedBox(width: 44, height: 44, child: Center(child: child)),
+        ),
       ),
     );
   }

@@ -71,6 +71,7 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                     ),
                   ),
                   GatesAddButton(
+                    semanticLabel: 'Reportar incidencia',
                     onTap: () async {
                       await context.push('/incidents/report');
                       ref.invalidate(incidentsListProvider(residentialId));

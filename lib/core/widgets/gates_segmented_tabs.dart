@@ -29,25 +29,32 @@ class GatesSegmentedTabs<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
-      padding: const EdgeInsets.all(GatesSpacing.space8),
+      constraints: const BoxConstraints(minHeight: 56),
+      // 6pt top/bottom keeps each pill at the 44pt minimum touch target.
+      padding: const EdgeInsets.symmetric(
+        horizontal: GatesSpacing.space8,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
         color: context.palette.bgSubtle,
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
       ),
-      child: Row(
-        children: [
-          for (var i = 0; i < options.length; i++) ...[
-            if (i > 0) const SizedBox(width: GatesSpacing.space4),
-            Expanded(
-              child: _GatesTabPill(
-                label: options[i].label,
-                selected: options[i].value == selected,
-                onTap: () => onSelect(options[i].value),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < options.length; i++) ...[
+              if (i > 0) const SizedBox(width: GatesSpacing.space4),
+              Expanded(
+                child: _GatesTabPill(
+                  label: options[i].label,
+                  selected: options[i].value == selected,
+                  onTap: () => onSelect(options[i].value),
+                ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -66,29 +73,40 @@ class _GatesTabPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? context.palette.bgBrand : Colors.transparent,
-      // Outline marks the selection without relying on the fill alone.
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: selected
-              ? context.palette.borderSelectedBrand
-              : Colors.transparent,
-          width: 2,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: selected ? context.palette.bgBrand : Colors.transparent,
+        // Outline marks the selection without relying on the fill alone.
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: selected
+                ? context.palette.borderSelectedBrand
+                : Colors.transparent,
+            width: 2,
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: GatesSpacing.space8),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GatesTypography.label.copyWith(
-              color: selected
-                  ? context.palette.textOnBrand
-                  : context.palette.textSecondary,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: GatesSpacing.space8,
+              ),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: GatesTypography.label.copyWith(
+                  color: selected
+                      ? context.palette.textOnBrand
+                      : context.palette.textSecondary,
+                ),
+              ),
             ),
           ),
         ),

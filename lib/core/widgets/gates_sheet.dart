@@ -34,6 +34,7 @@ class GatesSheetHeader extends StatelessWidget {
       children: [
         Text(title, style: GatesTypography.headingSmall),
         IconButton(
+          tooltip: 'Cerrar',
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),

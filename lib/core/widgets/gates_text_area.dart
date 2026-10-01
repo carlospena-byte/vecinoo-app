@@ -35,27 +35,32 @@ class GatesTextArea extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: context.gatesText.caption),
+                ExcludeSemantics(
+                  child: Text(label, style: context.gatesText.caption),
+                ),
                 const SizedBox(height: GatesSpacing.space8),
-                TextField(
-                  controller: controller,
-                  maxLines: 4,
-                  maxLength: maxLength,
-                  textCapitalization: TextCapitalization.sentences,
-                  buildCounter: (
-                    _, {
-                    required currentLength,
-                    required isFocused,
-                    maxLength,
-                  }) => null,
-                  style: GatesTypography.body,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: hintText,
-                    hintStyle: GatesTypography.body.copyWith(
-                      color: context.palette.textSecondary,
+                Semantics(
+                  label: label,
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 4,
+                    maxLength: maxLength,
+                    textCapitalization: TextCapitalization.sentences,
+                    buildCounter: (
+                      _, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => null,
+                    style: GatesTypography.body,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: hintText,
+                      hintStyle: GatesTypography.body.copyWith(
+                        color: context.palette.textSecondary,
+                      ),
                     ),
                   ),
                 ),

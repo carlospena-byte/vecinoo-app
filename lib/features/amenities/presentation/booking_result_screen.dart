@@ -98,7 +98,11 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                           width: 80,
                           height: 80,
                           child: thumbnailUrl != null
-                              ? Image.network(thumbnailUrl, fit: BoxFit.cover)
+                              ? Image.network(
+                                  thumbnailUrl,
+                                  fit: BoxFit.cover,
+                                  excludeFromSemantics: true,
+                                )
                               : Container(
                                   color: context.palette.bgSubtle,
                                   alignment: Alignment.center,

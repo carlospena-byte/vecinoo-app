@@ -96,6 +96,7 @@ class _AmenityDetailContent extends ConsumerWidget {
                   width: 44,
                   height: 44,
                   child: IconButton(
+                    tooltip: 'Volver',
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.arrow_back, size: 20),
                     onPressed: () => Navigator.of(context).pop(),
@@ -237,14 +238,21 @@ class _GalleryState extends ConsumerState<_Gallery> {
                 controller: _pageController,
                 itemCount: photoUrls.length,
                 onPageChanged: (page) => setState(() => _page = page),
-                itemBuilder: (context, index) => GestureDetector(
+                itemBuilder: (context, index) => Semantics(
+                  button: true,
+                  label: 'Fotografía ${index + 1} de ${photoUrls.length}',
+                  hint: 'Toca dos veces para ampliar',
+                  excludeSemantics: true,
                   onTap: () => _openViewer(context, photoUrls, index),
-                  child: Image.network(
-                    photoUrls[index],
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    loadingBuilder: (context, child, progress) =>
-                        progress == null ? child : const LoadingView(),
+                  child: GestureDetector(
+                    onTap: () => _openViewer(context, photoUrls, index),
+                    child: Image.network(
+                      photoUrls[index],
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      loadingBuilder: (context, child, progress) =>
+                          progress == null ? child : const LoadingView(),
+                    ),
                   ),
                 ),
               ),
@@ -329,7 +337,11 @@ class _PhotoViewer extends StatelessWidget {
         itemCount: photoUrls.length,
         itemBuilder: (context, index) => InteractiveViewer(
           child: Center(
-            child: Image.network(photoUrls[index], fit: BoxFit.contain),
+            child: Image.network(
+              photoUrls[index],
+              fit: BoxFit.contain,
+              semanticLabel: 'Fotografía ${index + 1} de ${photoUrls.length}',
+            ),
           ),
         ),
       ),
@@ -447,6 +459,7 @@ class _AllServicesSheet extends StatelessWidget {
                   style: GatesTypography.headingSmall,
                 ),
                 IconButton(
+                  tooltip: 'Cerrar',
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
                 ),

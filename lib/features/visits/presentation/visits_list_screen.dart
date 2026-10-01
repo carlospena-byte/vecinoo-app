@@ -149,6 +149,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                     ),
                   ),
                   GatesAddButton(
+                    semanticLabel: 'Nueva visita',
                     onTap: () async {
                       await context.push('/visits/new');
                       ref.invalidate(visitsListProvider(membership.unitId));

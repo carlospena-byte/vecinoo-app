@@ -122,41 +122,47 @@ class _GatesTextFieldState extends State<GatesTextField> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    widget.label,
-                    style: context.gatesText.caption.copyWith(
-                      color: labelColor,
+                  ExcludeSemantics(
+                    child: Text(
+                      widget.label,
+                      style: context.gatesText.caption.copyWith(
+                        color: labelColor,
+                      ),
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),
-                  TextField(
-                    focusNode: _focusNode,
-                    autofocus: widget.autofocus,
-                    controller: widget.controller,
-                    keyboardType: widget.keyboardType,
-                    textCapitalization: widget.textCapitalization,
-                    enabled: widget.enabled,
-                    obscureText: widget.obscureText,
-                    textInputAction: widget.textInputAction,
-                    inputFormatters: widget.inputFormatters,
-                    autofillHints: widget.autofillHints,
-                    onChanged: (value) {
-                      field.didChange(value);
-                      widget.onChanged?.call(value);
-                    },
-                    style: GatesTypography.body.copyWith(
-                      color: widget.enabled
-                          ? context.palette.textPrimary
-                          : context.palette.textSecondary,
-                    ),
-                    cursorColor: context.palette.borderFocus,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      hintText: widget.hintText,
-                      hintStyle: GatesTypography.body.copyWith(
-                        color: context.palette.textSecondary,
+                  Semantics(
+                    label: widget.label,
+                    hint: hasError ? errorMessage : widget.helperText,
+                    child: TextField(
+                      focusNode: _focusNode,
+                      autofocus: widget.autofocus,
+                      controller: widget.controller,
+                      keyboardType: widget.keyboardType,
+                      textCapitalization: widget.textCapitalization,
+                      enabled: widget.enabled,
+                      obscureText: widget.obscureText,
+                      textInputAction: widget.textInputAction,
+                      inputFormatters: widget.inputFormatters,
+                      autofillHints: widget.autofillHints,
+                      onChanged: (value) {
+                        field.didChange(value);
+                        widget.onChanged?.call(value);
+                      },
+                      style: GatesTypography.body.copyWith(
+                        color: widget.enabled
+                            ? context.palette.textPrimary
+                            : context.palette.textSecondary,
+                      ),
+                      cursorColor: context.palette.borderFocus,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        hintText: widget.hintText,
+                        hintStyle: GatesTypography.body.copyWith(
+                          color: context.palette.textSecondary,
+                        ),
                       ),
                     ),
                   ),
@@ -167,12 +173,16 @@ class _GatesTextFieldState extends State<GatesTextField> {
                 (widget.helperText != null &&
                     widget.helperText!.isNotEmpty)) ...[
               const SizedBox(height: GatesSpacing.space4),
-              Text(
-                hasError ? errorMessage! : widget.helperText!,
-                style: context.gatesText.caption.copyWith(
-                  color: hasError
-                      ? context.palette.statusError
-                      : context.palette.textSecondary,
+              Semantics(
+                // Errors are announced as soon as they appear.
+                liveRegion: hasError,
+                child: Text(
+                  hasError ? errorMessage! : widget.helperText!,
+                  style: context.gatesText.caption.copyWith(
+                    color: hasError
+                        ? context.palette.statusError
+                        : context.palette.textSecondary,
+                  ),
                 ),
               ),
             ],

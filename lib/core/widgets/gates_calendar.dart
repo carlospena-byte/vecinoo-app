@@ -208,6 +208,7 @@ class _GatesDatePickerSheetState extends State<_GatesDatePickerSheet> {
                 children: [
                   Text(widget.title, style: GatesTypography.headingMedium),
                   IconButton(
+                    tooltip: 'Cerrar',
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),

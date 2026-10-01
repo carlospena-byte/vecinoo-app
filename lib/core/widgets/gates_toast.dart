@@ -56,6 +56,13 @@ class _GatesToast extends StatelessWidget {
     GatesToastType.error => context.palette.statusErrorBg,
   };
 
+  String get _typeLabel => switch (type) {
+    GatesToastType.success => 'Éxito',
+    GatesToastType.info => 'Información',
+    GatesToastType.warning => 'Advertencia',
+    GatesToastType.error => 'Error',
+  };
+
   String get _glyph => switch (type) {
     GatesToastType.success => '✓',
     GatesToastType.info || GatesToastType.warning => 'i',
@@ -76,7 +83,15 @@ class _GatesToast extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(_glyph, style: GatesTypography.label.copyWith(color: accent)),
+          Semantics(
+            label: _typeLabel,
+            child: ExcludeSemantics(
+              child: Text(
+                _glyph,
+                style: GatesTypography.label.copyWith(color: accent),
+              ),
+            ),
+          ),
           const SizedBox(width: GatesSpacing.space12),
           Expanded(
             child: Column(
@@ -100,16 +115,24 @@ class _GatesToast extends StatelessWidget {
             ),
           ),
           const SizedBox(width: GatesSpacing.space12),
-          GestureDetector(
+          Semantics(
+            button: true,
+            label: 'Cerrar',
+            excludeSemantics: true,
             onTap: onClose,
-            behavior: HitTestBehavior.opaque,
-            child: Semantics(
-              button: true,
-              label: 'Cerrar',
-              child: Text(
-                '×',
-                style: GatesTypography.headingSmall.copyWith(
-                  color: context.palette.textSecondary,
+            child: GestureDetector(
+              onTap: onClose,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: GatesSpacing.space8,
+                  vertical: GatesSpacing.space4,
+                ),
+                child: Text(
+                  '×',
+                  style: GatesTypography.headingSmall.copyWith(
+                    color: context.palette.textSecondary,
+                  ),
                 ),
               ),
             ),

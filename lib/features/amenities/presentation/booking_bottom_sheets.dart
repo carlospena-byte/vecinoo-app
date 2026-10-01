@@ -172,6 +172,7 @@ class _BookingDetailSheetBodyState
                   width: 44,
                   height: 44,
                   child: IconButton(
+                    tooltip: 'Cerrar',
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: _cancelling

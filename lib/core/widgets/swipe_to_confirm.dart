@@ -34,6 +34,7 @@ class _SwipeToConfirmState extends State<SwipeToConfirm> {
   static const _edgePadding = 4.0;
 
   double _dragExtent = 0;
+  double _maxExtent = 0;
   bool _isDragging = false;
   bool _confirmed = false;
 
@@ -75,12 +76,24 @@ class _SwipeToConfirmState extends State<SwipeToConfirm> {
     if (reachedThreshold) widget.onConfirmed();
   }
 
+  /// Screen-reader and switch-control users can't drag, so the semantics
+  /// tree exposes the same confirmation as an explicit double-tap action.
+  void _confirmWithoutDragging() {
+    if (_confirmed || widget.loading) return;
+    setState(() {
+      _dragExtent = _maxExtent;
+      _confirmed = true;
+    });
+    widget.onConfirmed();
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxExtent = (constraints.maxWidth - _thumbSize - _edgePadding * 2)
             .clamp(0.0, double.infinity);
+        _maxExtent = maxExtent;
         final progress = maxExtent == 0
             ? 0.0
             : (_dragExtent / maxExtent).clamp(0.0, 1.0);
@@ -110,70 +123,85 @@ class _SwipeToConfirmState extends State<SwipeToConfirm> {
           progress,
         )!;
 
-        return Container(
-          width: double.infinity,
-          height: _trackHeight,
-          decoration: BoxDecoration(
-            color: trackColor,
-            borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
-            border: Border.all(color: borderColor),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Opacity(
-                opacity: 1 - progress,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: _thumbSize),
-                      child: Text(
-                        widget.label,
-                        style: GatesTypography.label.copyWith(
-                          color: labelColor,
-                          fontWeight: FontWeight.w600,
+        return Semantics(
+          button: true,
+          enabled: !widget.loading,
+          label: widget.label,
+          hint: 'Toca dos veces para confirmar',
+          excludeSemantics: true,
+          onTap: _confirmWithoutDragging,
+          child: Container(
+            width: double.infinity,
+            height: _trackHeight,
+            decoration: BoxDecoration(
+              color: trackColor,
+              borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+              border: Border.all(color: borderColor),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Opacity(
+                  opacity: 1 - progress,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            left: _thumbSize,
+                            right: GatesSpacing.space8,
+                          ),
+                          child: Text(
+                            widget.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GatesTypography.label.copyWith(
+                              color: labelColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              AnimatedPositioned(
-                duration: _isDragging
-                    ? Duration.zero
-                    : const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                left: _edgePadding + _dragExtent,
-                child: GestureDetector(
-                  onHorizontalDragStart: _handleDragStart,
-                  onHorizontalDragUpdate: (details) =>
-                      _handleDragUpdate(details, maxExtent),
-                  onHorizontalDragEnd: (_) => _handleDragEnd(maxExtent),
-                  onHorizontalDragCancel: () => _handleDragEnd(maxExtent),
-                  child: Container(
-                    width: _thumbSize,
-                    height: _thumbSize,
-                    decoration: BoxDecoration(
-                      color: thumbColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: widget.loading
-                        ? Padding(
-                            padding: EdgeInsets.all(14),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: context.palette.textOnBrand,
-                            ),
-                          )
-                        : Icon(
-                            Icons.chevron_right_rounded,
-                            color: context.palette.textOnBrand,
-                          ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                AnimatedPositioned(
+                  duration: _isDragging
+                      ? Duration.zero
+                      : const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  left: _edgePadding + _dragExtent,
+                  child: GestureDetector(
+                    onHorizontalDragStart: _handleDragStart,
+                    onHorizontalDragUpdate: (details) =>
+                        _handleDragUpdate(details, maxExtent),
+                    onHorizontalDragEnd: (_) => _handleDragEnd(maxExtent),
+                    onHorizontalDragCancel: () => _handleDragEnd(maxExtent),
+                    child: Container(
+                      width: _thumbSize,
+                      height: _thumbSize,
+                      decoration: BoxDecoration(
+                        color: thumbColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: widget.loading
+                          ? Padding(
+                              padding: EdgeInsets.all(14),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: context.palette.textOnBrand,
+                              ),
+                            )
+                          : Icon(
+                              Icons.chevron_right_rounded,
+                              color: context.palette.textOnBrand,
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

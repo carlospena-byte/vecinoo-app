@@ -37,6 +37,7 @@ class CreateVisitTypeScreen extends ConsumerWidget {
                     width: 44,
                     height: 44,
                     child: IconButton(
+                      tooltip: 'Volver',
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.arrow_back, size: 24),
                       onPressed: () => Navigator.of(context).pop(),

@@ -68,7 +68,10 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
                       style: GatesTypography.headingMedium,
                     ),
                   ),
-                  GatesAddButton(onTap: () => context.push('/amenities')),
+                  GatesAddButton(
+                    semanticLabel: 'Nueva reserva',
+                    onTap: () => context.push('/amenities'),
+                  ),
                 ],
               ),
             ),

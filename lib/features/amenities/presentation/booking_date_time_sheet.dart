@@ -192,6 +192,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                 children: [
                   Text('Fecha y horario', style: GatesTypography.headingMedium),
                   IconButton(
+                    tooltip: 'Cerrar',
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),

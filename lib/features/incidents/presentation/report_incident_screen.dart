@@ -823,24 +823,35 @@ class _PhotoTile extends StatelessWidget {
                       ? Semantics(
                           button: true,
                           label: 'Eliminar fotografía',
+                          excludeSemantics: true,
+                          onTap: onRemove,
                           child: GestureDetector(
                             onTap: onRemove,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: context.palette.bgSurface,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close,
-                                size: 20,
-                                color: context.palette.textPrimary,
+                            behavior: HitTestBehavior.opaque,
+                            // 44pt touch target around the 28pt chip.
+                            child: SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: Align(
+                                alignment: Alignment.topRight,
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: context.palette.bgSurface,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 20,
+                                    color: context.palette.textPrimary,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         )
-                      : const SizedBox(height: 28),
+                      : const SizedBox(height: 44),
                   if (status == _PhotoStatus.uploading)
                     _StatusPill(
                       label: 'Subiendo…',
@@ -848,12 +859,18 @@ class _PhotoTile extends StatelessWidget {
                       foreground: context.palette.textBrand,
                     ),
                   if (status == _PhotoStatus.error)
-                    GestureDetector(
+                    Semantics(
+                      button: true,
+                      label: 'Reintentar subida de la fotografía',
+                      excludeSemantics: true,
                       onTap: onRetry,
-                      child: _StatusPill(
-                        label: 'Reintentar',
-                        background: context.palette.statusErrorBg,
-                        foreground: context.palette.statusError,
+                      child: GestureDetector(
+                        onTap: onRetry,
+                        child: _StatusPill(
+                          label: 'Reintentar',
+                          background: context.palette.statusErrorBg,
+                          foreground: context.palette.statusError,
+                        ),
                       ),
                     ),
                 ],

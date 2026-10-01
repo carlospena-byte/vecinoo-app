@@ -380,7 +380,7 @@ class _AmenityThumbnail extends ConsumerWidget {
         width: 80,
         height: 80,
         child: url != null
-            ? Image.network(url, fit: BoxFit.cover)
+            ? Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true)
             : Container(
                 color: context.palette.bgSubtle,
                 alignment: Alignment.center,

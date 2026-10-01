@@ -110,9 +110,11 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: context.gatesText.caption.copyWith(color: labelColor),
+        ExcludeSemantics(
+          child: Text(
+            widget.label,
+            style: context.gatesText.caption.copyWith(color: labelColor),
+          ),
         ),
         const SizedBox(height: GatesSpacing.space8),
         SizedBox(
@@ -128,57 +130,68 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
                 children: [
                   // Invisible field underneath: captures the keyboard, paste and
                   // autofill, while the boxes above show the resulting characters.
+                  // Hidden visually and for touch, but it is the one real
+                  // control for screen readers (the boxes are decoration).
                   IgnorePointer(
                     child: Opacity(
                       opacity: 0,
-                      child: TextField(
-                        controller: widget.controller,
-                        focusNode: _focusNode,
-                        keyboardType: widget.alphanumeric
-                            ? TextInputType.visiblePassword
-                            : TextInputType.number,
-                        textCapitalization: widget.alphanumeric
-                            ? TextCapitalization.characters
-                            : TextCapitalization.none,
-                        autofillHints: widget.autofillHints,
-                        inputFormatters: [
-                          widget.alphanumeric
-                              ? FilteringTextInputFormatter.allow(
-                                  RegExp('[A-Za-z0-9]'),
-                                )
-                              : FilteringTextInputFormatter.digitsOnly,
-                          if (widget.alphanumeric) _UpperCaseTextFormatter(),
-                          LengthLimitingTextInputFormatter(widget.length),
-                        ],
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
+                      alwaysIncludeSemantics: true,
+                      child: Semantics(
+                        label: widget.label,
+                        hint: '${widget.length} caracteres',
+                        child: TextField(
+                          controller: widget.controller,
+                          focusNode: _focusNode,
+                          keyboardType: widget.alphanumeric
+                              ? TextInputType.visiblePassword
+                              : TextInputType.number,
+                          textCapitalization: widget.alphanumeric
+                              ? TextCapitalization.characters
+                              : TextCapitalization.none,
+                          autofillHints: widget.autofillHints,
+                          inputFormatters: [
+                            widget.alphanumeric
+                                ? FilteringTextInputFormatter.allow(
+                                    RegExp('[A-Za-z0-9]'),
+                                  )
+                                : FilteringTextInputFormatter.digitsOnly,
+                            if (widget.alphanumeric) _UpperCaseTextFormatter(),
+                            LengthLimitingTextInputFormatter(widget.length),
+                          ],
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
                         ),
                       ),
                     ),
                   ),
                   Positioned.fill(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () => _selectBox(widget.controller.text.length),
+                    child: ExcludeSemantics(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () => _selectBox(widget.controller.text.length),
+                      ),
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      for (var i = 0; i < widget.length; i++)
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => _selectBox(i),
-                          child: _DigitBox(
-                            digit: i < code.length ? code[i] : '',
-                            focused: isFocused && i == activeIndex,
-                            hasError: hasError,
-                            idleBorderColor: widget.accentColor,
-                            width: boxWidth,
+                  ExcludeSemantics(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        for (var i = 0; i < widget.length; i++)
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _selectBox(i),
+                            child: _DigitBox(
+                              digit: i < code.length ? code[i] : '',
+                              focused: isFocused && i == activeIndex,
+                              hasError: hasError,
+                              idleBorderColor: widget.accentColor,
+                              width: boxWidth,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               );
@@ -188,9 +201,12 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
         if ((widget.errorText != null && widget.errorText!.isNotEmpty) ||
             (widget.helper != null && widget.helper!.isNotEmpty)) ...[
           const SizedBox(height: GatesSpacing.space8),
-          Text(
-            hasError ? widget.errorText! : widget.helper!,
-            style: context.gatesText.caption.copyWith(color: labelColor),
+          Semantics(
+            liveRegion: hasError,
+            child: Text(
+              hasError ? widget.errorText! : widget.helper!,
+              style: context.gatesText.caption.copyWith(color: labelColor),
+            ),
           ),
         ],
       ],

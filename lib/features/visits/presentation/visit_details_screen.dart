@@ -81,6 +81,7 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
                 children: [
                   Text('Fecha y horario', style: GatesTypography.headingMedium),
                   IconButton(
+                    tooltip: 'Cerrar',
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -410,6 +411,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                     width: 44,
                     height: 44,
                     child: IconButton(
+                      tooltip: 'Volver',
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.arrow_back, size: 24),
                       onPressed: () => Navigator.of(context).pop(),

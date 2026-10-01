@@ -102,21 +102,30 @@ class GatesPhoneField extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: Row(
                 children: [
-                  InkWell(
+                  Semantics(
+                    button: true,
+                    label: 'Código de país ${country.dialCode}',
+                    excludeSemantics: true,
                     onTap: () => _pickCountry(context),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16, right: 12),
-                      child: Row(
-                        children: [
-                          Text(
-                            country.flag,
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                          const SizedBox(width: GatesSpacing.space8),
-                          Text(country.dialCode, style: GatesTypography.label),
-                          const SizedBox(width: GatesSpacing.space8),
-                          const Icon(Icons.keyboard_arrow_down, size: 16),
-                        ],
+                    child: InkWell(
+                      onTap: () => _pickCountry(context),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 12),
+                        child: Row(
+                          children: [
+                            Text(
+                              country.flag,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                            const SizedBox(width: GatesSpacing.space8),
+                            Text(
+                              country.dialCode,
+                              style: GatesTypography.label,
+                            ),
+                            const SizedBox(width: GatesSpacing.space8),
+                            const Icon(Icons.keyboard_arrow_down, size: 16),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -132,33 +141,39 @@ class GatesPhoneField extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Teléfono',
-                            style: context.gatesText.caption.copyWith(
-                              color: hasError
-                                  ? context.palette.statusError
-                                  : context.palette.textSecondary,
+                          ExcludeSemantics(
+                            child: Text(
+                              'Teléfono',
+                              style: context.gatesText.caption.copyWith(
+                                color: hasError
+                                    ? context.palette.statusError
+                                    : context.palette.textSecondary,
+                              ),
                             ),
                           ),
                           const SizedBox(height: GatesSpacing.space4),
-                          TextField(
-                            controller: controller,
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9 \-]'),
-                              ),
-                            ],
-                            onChanged: (_) => field.didChange(controller.text),
-                            style: GatesTypography.body,
-                            cursorColor: context.palette.borderFocus,
-                            decoration: InputDecoration(
-                              isDense: true,
-                              isCollapsed: true,
-                              border: InputBorder.none,
-                              hintText: hintText,
-                              hintStyle: GatesTypography.body.copyWith(
-                                color: context.palette.textSecondary,
+                          Semantics(
+                            label: 'Teléfono',
+                            child: TextField(
+                              controller: controller,
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9 \-]'),
+                                ),
+                              ],
+                              onChanged: (_) =>
+                                  field.didChange(controller.text),
+                              style: GatesTypography.body,
+                              cursorColor: context.palette.borderFocus,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                isCollapsed: true,
+                                border: InputBorder.none,
+                                hintText: hintText,
+                                hintStyle: GatesTypography.body.copyWith(
+                                  color: context.palette.textSecondary,
+                                ),
                               ),
                             ),
                           ),
@@ -171,10 +186,13 @@ class GatesPhoneField extends StatelessWidget {
             ),
             if (hasError) ...[
               const SizedBox(height: GatesSpacing.space4),
-              Text(
-                field.errorText!,
-                style: context.gatesText.caption.copyWith(
-                  color: context.palette.statusError,
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  field.errorText!,
+                  style: context.gatesText.caption.copyWith(
+                    color: context.palette.statusError,
+                  ),
                 ),
               ),
             ],

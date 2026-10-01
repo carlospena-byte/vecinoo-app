@@ -273,32 +273,37 @@ class _AttachmentThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => showDialog<void>(
-        context: context,
-        builder: (_) => Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.all(GatesSpacing.space16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(GatesRadius.radius16),
-            child: InteractiveViewer(child: Image.network(url)),
+    return Semantics(
+      button: true,
+      label: 'Fotografía adjunta',
+      hint: 'Toca dos veces para ampliar',
+      child: GestureDetector(
+        onTap: () => showDialog<void>(
+          context: context,
+          builder: (_) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(GatesSpacing.space16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(GatesRadius.radius16),
+              child: InteractiveViewer(child: Image.network(url)),
+            ),
           ),
         ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          url,
-          width: 104,
-          height: 100,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Container(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            url,
             width: 104,
             height: 100,
-            color: context.palette.bgSubtle,
-            child: Icon(
-              Icons.broken_image_outlined,
-              color: context.palette.textSecondary,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(
+              width: 104,
+              height: 100,
+              color: context.palette.bgSubtle,
+              child: Icon(
+                Icons.broken_image_outlined,
+                color: context.palette.textSecondary,
+              ),
             ),
           ),
         ),

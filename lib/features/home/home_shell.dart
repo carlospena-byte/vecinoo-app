@@ -139,34 +139,43 @@ class _NavPillItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? context.palette.bgAccent : Colors.transparent,
-      // The selected tab is outlined (invisible in light mode) so it never
-      // relies on its fill alone to stand out.
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: selected ? context.palette.borderSelected : Colors.transparent,
-          width: 1.5,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: selected ? context.palette.bgAccent : Colors.transparent,
+        // The selected tab is outlined (invisible in light mode) so it never
+        // relies on its fill alone to stand out.
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: selected
+                ? context.palette.borderSelected
+                : Colors.transparent,
+            width: 1.5,
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GatesSvgIcon(item.icon, size: 24),
-              const SizedBox(height: 4),
-              Text(
-                item.label,
-                style: context.gatesText.caption.copyWith(
-                  color: context.palette.textPrimary,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GatesSvgIcon(item.icon, size: 24),
+                const SizedBox(height: 4),
+                Text(
+                  item.label,
+                  style: context.gatesText.caption.copyWith(
+                    color: context.palette.textPrimary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

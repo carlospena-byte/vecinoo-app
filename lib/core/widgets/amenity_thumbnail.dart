@@ -12,6 +12,11 @@ class AmenityThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Decorative: the amenity name is always shown next to it.
+    return ExcludeSemantics(child: _buildTile(context));
+  }
+
+  Widget _buildTile(BuildContext context) {
     final radius = BorderRadius.circular(GatesRadius.radius8);
     if (imageUrl == null) {
       return Container(
