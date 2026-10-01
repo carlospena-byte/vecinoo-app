@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 enum GatesToastType { success, info, warning, error }
 
@@ -56,11 +57,11 @@ class _GatesToast extends StatelessWidget {
     GatesToastType.error => context.palette.statusErrorBg,
   };
 
-  String get _typeLabel => switch (type) {
-    GatesToastType.success => 'Éxito',
-    GatesToastType.info => 'Información',
-    GatesToastType.warning => 'Advertencia',
-    GatesToastType.error => 'Error',
+  String _typeLabel(BuildContext context) => switch (type) {
+    GatesToastType.success => context.l10n.commonToastSuccess,
+    GatesToastType.info => context.l10n.commonToastInfo,
+    GatesToastType.warning => context.l10n.commonToastWarning,
+    GatesToastType.error => context.l10n.commonToastError,
   };
 
   String get _glyph => switch (type) {
@@ -84,7 +85,7 @@ class _GatesToast extends StatelessWidget {
       child: Row(
         children: [
           Semantics(
-            label: _typeLabel,
+            label: _typeLabel(context),
             child: ExcludeSemantics(
               child: Text(
                 _glyph,
@@ -117,7 +118,7 @@ class _GatesToast extends StatelessWidget {
           const SizedBox(width: GatesSpacing.space12),
           Semantics(
             button: true,
-            label: 'Cerrar',
+            label: context.l10n.commonClose,
             excludeSemantics: true,
             onTap: onClose,
             child: GestureDetector(

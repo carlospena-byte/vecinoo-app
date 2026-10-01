@@ -3,7 +3,9 @@ import 'package:flutter_html/flutter_html.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_sheet.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/amenity.dart';
+import 'amenity_formatters.dart';
 
 /// "Términos y condiciones" bottom sheet — Figma "A05" / "B13".
 Future<void> showTermsSheet(BuildContext context, String terms) {
@@ -16,7 +18,7 @@ Future<void> showTermsSheet(BuildContext context, String terms) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: 'Términos y condiciones'),
+            GatesSheetHeader(title: context.l10n.amenitiesTerms),
             const SizedBox(height: GatesSpacing.space12),
             Flexible(
               child: SingleChildScrollView(
@@ -43,52 +45,59 @@ Future<void> showTermsSheet(BuildContext context, String terms) {
 /// "Costo de la reserva" detail bottom sheet — Figma "B12 · Detalle del costo".
 Future<void> showCostDetailsSheet(BuildContext context, Amenity amenity) {
   final hasCost = amenity.requiresPayment && amenity.price != null;
-  final currency = amenity.price != null
-      ? '\$${amenity.price!.toStringAsFixed(2)}'
-      : 'Sin costo';
-  return showGatesSheet(
-    context,
-    (context) => SafeArea(
+  return showGatesSheet(context, (context) {
+    final currency = amenity.price != null
+        ? '\$${amenity.price!.toStringAsFixed(2)}'
+        : context.l10n.amenitiesNoCost;
+    return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(GatesSpacing.space24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: 'Costo de la reserva'),
+            GatesSheetHeader(title: context.l10n.amenitiesCostHeading),
             const SizedBox(height: GatesSpacing.space16),
             Text(
-              hasCost ? currency : 'Sin costo',
+              hasCost ? currency : context.l10n.amenitiesNoCost,
               style: GatesTypography.headingMedium,
             ),
             if (hasCost && amenity.bookingDurationMinutes != null) ...[
               const SizedBox(height: GatesSpacing.space8),
               Text(
-                'Por reserva de ${amenity.bookingDurationMinutes! ~/ 60} horas',
+                context.l10n.amenitiesPerBookingOf(
+                  amenityDurationLabel(
+                    context.l10n,
+                    amenity.bookingDurationMinutes!,
+                  ),
+                ),
                 style: context.gatesText.labelSecondary,
               ),
             ],
             if (hasCost && amenity.paymentMethods.isNotEmpty) ...[
               const SizedBox(height: GatesSpacing.space16),
-              Text('Métodos aceptados', style: GatesTypography.label),
+              Text(
+                context.l10n.amenitiesAcceptedMethods,
+                style: GatesTypography.label,
+              ),
               const SizedBox(height: 4),
               Text(
                 amenity.paymentMethods
-                    .map(Amenity.paymentMethodLabel)
+                    .map((m) => amenityPaymentMethodLabel(context.l10n, m))
                     .join(' · '),
                 style: context.gatesText.labelSecondary,
               ),
             ],
             const SizedBox(height: GatesSpacing.space16),
             Text(
-              'El costo y los métodos son informativos; esta app no procesa pagos.',
+              context.l10n.amenitiesCostInfoNote,
               style: context.gatesText.labelSecondary,
             ),
           ],
         ),
       ),
-    ),
-  );
+    );
+  });
 }
 
 /// "Notas (opcional)" edit bottom sheet — Figma "B11 · Editar notas".
@@ -114,13 +123,13 @@ Future<String?> showEditNotesSheet(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const GatesSheetHeader(title: 'Notas (opcional)'),
+              GatesSheetHeader(title: context.l10n.amenitiesNotesOptional),
               const SizedBox(height: GatesSpacing.space16),
               TextField(
                 controller: controller,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Agrega una nota para tu reserva',
+                decoration: InputDecoration(
+                  hintText: context.l10n.amenitiesNotesHint,
                 ),
                 autofocus: true,
               ),
@@ -130,7 +139,7 @@ Future<String?> showEditNotesSheet(
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
+                      child: Text(context.l10n.amenitiesCancel),
                     ),
                   ),
                   const SizedBox(width: GatesSpacing.space12),
@@ -138,7 +147,7 @@ Future<String?> showEditNotesSheet(
                     child: FilledButton(
                       onPressed: () =>
                           Navigator.of(context).pop(controller.text.trim()),
-                      child: const Text('Guardar'),
+                      child: Text(context.l10n.amenitiesSave),
                     ),
                   ),
                 ],

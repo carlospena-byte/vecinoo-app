@@ -5,17 +5,17 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/amenity.dart';
-import '../domain/amenity_blackout.dart';
 import '../domain/amenity_details.dart';
 import '../domain/service.dart';
 import 'amenities_controller.dart';
 import 'amenity_bottom_sheets.dart';
+import 'amenity_formatters.dart';
 import 'booking_date_time_sheet.dart';
 import 'review_booking_screen.dart';
 import 'service_icons.dart';
@@ -24,24 +24,6 @@ final _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: r'$');
 
 TextStyle _bodySecondary(BuildContext context) =>
     GatesTypography.body.copyWith(color: context.palette.textSecondary);
-
-String _durationLabel(int minutes) {
-  if (minutes % 60 == 0) {
-    final hours = minutes ~/ 60;
-    return hours == 1 ? '1 hora' : '$hours horas';
-  }
-  return '$minutes minutos';
-}
-
-String _blackoutLabel(AmenityBlackout blackout) {
-  final formatter = DateFormat('d MMM', 'es');
-  final range = isSameDay(blackout.startDate, blackout.endDate)
-      ? formatter.format(blackout.startDate)
-      : '${formatter.format(blackout.startDate)} – ${formatter.format(blackout.endDate)}';
-  return blackout.reason == null || blackout.reason!.isEmpty
-      ? range
-      : '$range · ${blackout.reason}';
-}
 
 /// The amenity's extended detail screen — gallery, identity, services,
 /// description, schedule, booking rules and cost — with a fixed CTA that
@@ -61,7 +43,7 @@ class AmenityDetailScreen extends ConsumerWidget {
       body: detailsAsync.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(
-          message: 'No se pudo cargar la amenidad.',
+          message: context.l10n.amenitiesDetailLoadError,
           onRetry: () => ref.invalidate(amenityDetailsProvider(amenityId)),
         ),
         data: (details) => _AmenityDetailContent(details: details),
@@ -96,14 +78,17 @@ class _AmenityDetailContent extends ConsumerWidget {
                   width: 44,
                   height: 44,
                   child: IconButton(
-                    tooltip: 'Volver',
+                    tooltip: context.l10n.amenitiesBack,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.arrow_back, size: 20),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
                 const SizedBox(width: GatesSpacing.space8),
-                Text('Amenidad', style: GatesTypography.headingSmall),
+                Text(
+                  context.l10n.amenitiesDetailTitle,
+                  style: GatesTypography.headingSmall,
+                ),
               ],
             ),
           ),
@@ -240,8 +225,11 @@ class _GalleryState extends ConsumerState<_Gallery> {
                 onPageChanged: (page) => setState(() => _page = page),
                 itemBuilder: (context, index) => Semantics(
                   button: true,
-                  label: 'Fotografía ${index + 1} de ${photoUrls.length}',
-                  hint: 'Toca dos veces para ampliar',
+                  label: context.l10n.amenitiesPhotoLabel(
+                    index + 1,
+                    photoUrls.length,
+                  ),
+                  hint: context.l10n.amenitiesPhotoHint,
                   excludeSemantics: true,
                   onTap: () => _openViewer(context, photoUrls, index),
                   child: GestureDetector(
@@ -340,7 +328,10 @@ class _PhotoViewer extends StatelessWidget {
             child: Image.network(
               photoUrls[index],
               fit: BoxFit.contain,
-              semanticLabel: 'Fotografía ${index + 1} de ${photoUrls.length}',
+              semanticLabel: context.l10n.amenitiesPhotoLabel(
+                index + 1,
+                photoUrls.length,
+              ),
             ),
           ),
         ),
@@ -357,8 +348,11 @@ class _Identity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metaParts = [
-      if (amenity.capacity != null) '${amenity.capacity} personas',
-      amenity.requiresBooking ? 'Reservación necesaria' : 'Acceso libre',
+      if (amenity.capacity != null)
+        context.l10n.amenitiesCapacity(amenity.capacity!),
+      amenity.requiresBooking
+          ? context.l10n.amenitiesBookingRequired
+          : context.l10n.amenitiesFreeAccess,
     ].join(' · ');
 
     return Column(
@@ -389,7 +383,7 @@ class _FeaturedServices extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeading('Lo que ofrece este espacio'),
+        _SectionHeading(context.l10n.amenitiesOffersHeading),
         for (final entry in visible)
           Padding(
             padding: const EdgeInsets.only(bottom: GatesSpacing.space16),
@@ -411,7 +405,7 @@ class _FeaturedServices extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: GatesButton(
-              label: 'Ver todos los servicios',
+              label: context.l10n.amenitiesViewAllServices,
               style: GatesButtonStyle.secondary,
               onPressed: () => _showAllServicesSheet(context, services),
             ),
@@ -455,11 +449,11 @@ class _AllServicesSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Todos los servicios',
+                  context.l10n.amenitiesAllServices,
                   style: GatesTypography.headingSmall,
                 ),
                 IconButton(
-                  tooltip: 'Cerrar',
+                  tooltip: context.l10n.amenitiesClose,
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -500,7 +494,7 @@ class _Description extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeading('Un espacio para compartir'),
+        _SectionHeading(context.l10n.amenitiesAboutHeading),
         Html(
           data: html,
           style: {
@@ -529,11 +523,14 @@ class _Schedule extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeading('Horarios de uso'),
+        _SectionHeading(context.l10n.amenitiesScheduleHeading),
         for (final block in amenity.effectiveSchedule)
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
-            child: Text(block.label, style: GatesTypography.body),
+            child: Text(
+              amenityScheduleBlockLabel(context.l10n, block),
+              style: GatesTypography.body,
+            ),
           ),
       ],
     );
@@ -551,21 +548,30 @@ class _BookingRules extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeading('Antes de reservar'),
+        _SectionHeading(context.l10n.amenitiesBeforeBookingHeading),
         if (amenity.bookingDurationMinutes != null) ...[
-          Text('Duración por reserva', style: GatesTypography.label),
+          Text(
+            context.l10n.amenitiesDurationPerBooking,
+            style: GatesTypography.label,
+          ),
           const SizedBox(height: 4),
           Text(
-            _durationLabel(amenity.bookingDurationMinutes!),
+            amenityDurationLabel(context.l10n, amenity.bookingDurationMinutes!),
             style: _bodySecondary(context),
           ),
           const SizedBox(height: GatesSpacing.space16),
         ],
         if (details.bookingLimits.isNotEmpty) ...[
-          Text('Límite por residente', style: GatesTypography.label),
+          Text(
+            context.l10n.amenitiesLimitPerResident,
+            style: GatesTypography.label,
+          ),
           const SizedBox(height: 4),
           for (final limit in details.bookingLimits)
-            Text(limit.label, style: _bodySecondary(context)),
+            Text(
+              amenityBookingLimitLabel(context.l10n, limit),
+              style: _bodySecondary(context),
+            ),
           const SizedBox(height: GatesSpacing.space16),
         ],
         if (details.blackouts.isNotEmpty)
@@ -580,7 +586,7 @@ class _BookingRules extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Fechas cerradas',
+                  context.l10n.amenitiesClosedDates,
                   style: GatesTypography.label.copyWith(
                     color: context.palette.statusWarning,
                   ),
@@ -588,7 +594,7 @@ class _BookingRules extends StatelessWidget {
                 const SizedBox(height: GatesSpacing.space8),
                 for (final blackout in details.blackouts)
                   Text(
-                    _blackoutLabel(blackout),
+                    amenityBlackoutLabel(context.l10n, blackout),
                     style: context.gatesText.labelSecondary.copyWith(
                       color: context.palette.statusWarning,
                     ),
@@ -612,24 +618,36 @@ class _Cost extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeading('Costo de la reserva'),
+        _SectionHeading(context.l10n.amenitiesCostHeading),
         Text(
-          hasCost ? _currencyFormat.format(amenity.price) : 'Sin costo',
+          hasCost
+              ? _currencyFormat.format(amenity.price)
+              : context.l10n.amenitiesNoCost,
           style: GatesTypography.headingMedium,
         ),
         if (hasCost && amenity.bookingDurationMinutes != null) ...[
           const SizedBox(height: GatesSpacing.space8),
           Text(
-            'Por reserva de ${_durationLabel(amenity.bookingDurationMinutes!)}',
+            context.l10n.amenitiesPerBookingOf(
+              amenityDurationLabel(
+                context.l10n,
+                amenity.bookingDurationMinutes!,
+              ),
+            ),
             style: context.gatesText.labelSecondary,
           ),
         ],
         if (hasCost && amenity.paymentMethods.isNotEmpty) ...[
           const SizedBox(height: GatesSpacing.space16),
-          Text('Métodos aceptados', style: GatesTypography.label),
+          Text(
+            context.l10n.amenitiesAcceptedMethods,
+            style: GatesTypography.label,
+          ),
           const SizedBox(height: 4),
           Text(
-            amenity.paymentMethods.map(Amenity.paymentMethodLabel).join(' · '),
+            amenity.paymentMethods
+                .map((m) => amenityPaymentMethodLabel(context.l10n, m))
+                .join(' · '),
             style: context.gatesText.labelSecondary,
           ),
         ],
@@ -648,7 +666,7 @@ class _TermsButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: GatesButton(
-        label: 'Términos y condiciones',
+        label: context.l10n.amenitiesTerms,
         style: GatesButtonStyle.secondary,
         onPressed: () => showTermsSheet(context, terms),
       ),
@@ -680,10 +698,12 @@ class _FixedActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final priceLabel = amenity.requiresPayment && amenity.price != null
         ? _currencyFormat.format(amenity.price)
-        : 'Sin costo';
+        : context.l10n.amenitiesNoCost;
     final durationLabel = amenity.bookingDurationMinutes != null
-        ? 'por reserva · ${_durationLabel(amenity.bookingDurationMinutes!)}'
-        : 'por reserva';
+        ? context.l10n.amenitiesPerBookingDuration(
+            amenityDurationLabel(context.l10n, amenity.bookingDurationMinutes!),
+          )
+        : context.l10n.amenitiesPerBooking;
 
     // The design's own 24px bottom padding already reads as "clear of the
     // home indicator" on non-notched devices; on devices with a real inset
@@ -719,7 +739,7 @@ class _FixedActionBar extends StatelessWidget {
           SizedBox(
             width: 176,
             child: GatesButton(
-              label: 'Elegir fecha',
+              label: context.l10n.amenitiesPickDate,
               onPressed: () => _pickDateTime(context),
             ),
           ),

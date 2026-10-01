@@ -9,6 +9,7 @@ import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import 'providers_catalog_controller.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../session/presentation/session_controller.dart';
@@ -30,14 +31,14 @@ class VisitDetailsArgs {
   final ProviderCatalogItem? provider;
 }
 
-String _dateLabel(DateTime date) {
+String _dateLabel(AppLocalizations l10n, DateTime date) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final tomorrow = today.add(const Duration(days: 1));
   final day = DateTime(date.year, date.month, date.day);
   final formatted = DateFormat('d MMM y', 'es').format(date);
-  if (day == today) return 'Hoy, $formatted';
-  if (day == tomorrow) return 'Mañana, $formatted';
+  if (day == today) return l10n.visitsDateToday(formatted);
+  if (day == tomorrow) return l10n.visitsDateTomorrow(formatted);
   return formatted;
 }
 
@@ -79,9 +80,12 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Fecha y horario', style: GatesTypography.headingMedium),
+                  Text(
+                    context.l10n.visitsDetailsDateAndTime,
+                    style: GatesTypography.headingMedium,
+                  ),
                   IconButton(
-                    tooltip: 'Cerrar',
+                    tooltip: context.l10n.visitsClose,
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -114,7 +118,9 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
                     DateTime.now().subtract(const Duration(days: 1)),
                   ),
                   calendarFormat: CalendarFormat.month,
-                  availableCalendarFormats: const {CalendarFormat.month: 'Mes'},
+                  availableCalendarFormats: {
+                    CalendarFormat.month: context.l10n.visitsCalendarMonth,
+                  },
                   headerStyle: HeaderStyle(
                     titleCentered: true,
                     formatButtonVisible: false,
@@ -138,7 +144,16 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
                   ),
                   calendarBuilders: CalendarBuilders(
                     dowBuilder: (context, day) {
-                      const labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+                      final l10n = context.l10n;
+                      final labels = [
+                        l10n.visitsCalendarDowMon,
+                        l10n.visitsCalendarDowTue,
+                        l10n.visitsCalendarDowWed,
+                        l10n.visitsCalendarDowThu,
+                        l10n.visitsCalendarDowFri,
+                        l10n.visitsCalendarDowSat,
+                        l10n.visitsCalendarDowSun,
+                      ];
                       return Center(
                         child: Text(
                           labels[day.weekday - 1],
@@ -181,7 +196,7 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
               SizedBox(
                 width: double.infinity,
                 child: GatesButton(
-                  label: 'Continuar',
+                  label: context.l10n.visitsContinue,
                   onPressed: () => Navigator.of(context).pop(selectedDay),
                 ),
               ),
@@ -218,11 +233,11 @@ Future<TimeOfDay?> _showArrivalTimeSheet(
             children: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancelar'),
+                child: Text(context.l10n.visitsCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(selected),
-                child: const Text('Listo'),
+                child: Text(context.l10n.visitsDone),
               ),
             ],
           ),
@@ -371,15 +386,15 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
       showGatesToast(
         context,
         type: GatesToastType.success,
-        title: 'Visita autorizada',
+        title: context.l10n.visitsDetailsAuthorizedToast,
       );
     } catch (_) {
       if (mounted) {
         showGatesToast(
           context,
           type: GatesToastType.error,
-          title: 'No pudimos autorizar la visita',
-          message: 'Intenta de nuevo.',
+          title: context.l10n.visitsDetailsAuthorizeError,
+          message: context.l10n.visitsTryAgain,
         );
       }
     } finally {
@@ -411,7 +426,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                     width: 44,
                     height: 44,
                     child: IconButton(
-                      tooltip: 'Volver',
+                      tooltip: context.l10n.visitsBack,
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.arrow_back, size: 24),
                       onPressed: () => Navigator.of(context).pop(),
@@ -419,7 +434,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                   ),
                   const SizedBox(width: GatesSpacing.space12),
                   Text(
-                    'Detalles de la visita',
+                    context.l10n.visitsDetailsTitle,
                     style: GatesTypography.headingMedium,
                   ),
                 ],
@@ -439,29 +454,29 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                   children: [
                     _SelectedCatalogField(
                       label: _kind == ProviderKind.proveedor
-                          ? 'Servicio'
-                          : '¿Quién viene?',
+                          ? context.l10n.visitsDetailsService
+                          : context.l10n.visitsNewTypeTitle,
                       value:
                           provider?.name ??
                           (_nameController.text.trim().isEmpty
-                              ? 'Otro'
+                              ? context.l10n.visitsCatalogOther
                               : _nameController.text.trim()),
                       onTap: _changeProvider,
                     ),
                     const SizedBox(height: GatesSpacing.space16),
                     _PickerField(
-                      label: 'Fecha de visita',
-                      value: _dateLabel(_visitDate),
+                      label: context.l10n.visitsFastlaneVisitDate,
+                      value: _dateLabel(context.l10n, _visitDate),
                       icon: Icons.calendar_today_outlined,
-                      helper: 'Acceso válido durante el día seleccionado.',
+                      helper: context.l10n.visitsDetailsDateHelper,
                       onTap: _pickDate,
                     ),
                     if (_needsTime) ...[
                       const SizedBox(height: GatesSpacing.space16),
                       _PickerField(
-                        label: 'Horario',
+                        label: context.l10n.visitsFrequentScheduleLabel,
                         value: _arrivalTime == null
-                            ? 'Elige una hora'
+                            ? context.l10n.visitsDetailsPickTime
                             : _timeLabel(_arrivalTime!),
                         icon: Icons.access_time,
                         onTap: _pickArrivalTime,
@@ -488,7 +503,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: GatesButton(
-                  label: 'Autorizar visita',
+                  label: context.l10n.visitsDetailsAuthorize,
                   loading: _isSubmitting,
                   onPressed: _isSubmitting ? null : _submit,
                 ),
@@ -661,7 +676,7 @@ class _NotesFieldState extends State<_NotesField> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Notas para portería (opcional)',
+                context.l10n.visitsDetailsNotesLabel,
                 style: context.gatesText.caption,
               ),
               const SizedBox(height: GatesSpacing.space8),
@@ -675,11 +690,11 @@ class _NotesFieldState extends State<_NotesField> {
                   required isFocused,
                   maxLength,
                 }) => null,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   isDense: true,
                   isCollapsed: true,
                   border: InputBorder.none,
-                  hintText: 'Agrega una indicación',
+                  hintText: context.l10n.visitsDetailsNotesHint,
                   hintStyle: GatesTypography.body,
                 ),
                 style: GatesTypography.body,
@@ -727,10 +742,13 @@ class _NotifySwitch extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Avisarme al llegar', style: GatesTypography.label),
+                  Text(
+                    context.l10n.visitsFrequentNotifyLabel,
+                    style: GatesTypography.label,
+                  ),
                   const SizedBox(height: GatesSpacing.space4),
                   Text(
-                    'Notificaciones de mis visitas',
+                    context.l10n.visitsFrequentNotifyHint,
                     style: context.gatesText.caption,
                   ),
                 ],
@@ -822,14 +840,14 @@ class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const GatesSheetHeader(title: 'Cambiar visita'),
+              GatesSheetHeader(title: context.l10n.visitsDetailsChange),
               const SizedBox(height: GatesSpacing.space8),
               GatesSegmentedTabs<ProviderKind>(
                 options: [
                   for (final kind in ProviderKind.values)
                     GatesSegmentedTabOption(
                       value: kind,
-                      label: providerKindLabel(kind),
+                      label: providerKindLabel(context.l10n, kind),
                     ),
                 ],
                 selected: _kind,
@@ -840,7 +858,7 @@ class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
                 child: catalogAsync.when(
                   loading: () => const LoadingView(),
                   error: (e, _) => ErrorView(
-                    message: 'No pudimos cargar el catálogo.',
+                    message: context.l10n.visitsCatalogLoadError,
                     onRetry: () => ref.invalidate(
                       providersCatalogProvider((
                         residentialId: widget.residentialId,
@@ -886,7 +904,10 @@ class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
                           height: 40,
                           child: Icon(Icons.edit_outlined),
                         ),
-                        title: Text('Otro', style: GatesTypography.body),
+                        title: Text(
+                          context.l10n.visitsCatalogOther,
+                          style: GatesTypography.body,
+                        ),
                         trailing: Icon(
                           _otherOpen ? Icons.expand_less : Icons.expand_more,
                           color: context.palette.textSecondary,
@@ -895,8 +916,8 @@ class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
                       ),
                       if (_otherOpen) ...[
                         GatesTextField(
-                          label: 'Nombre de la visita *',
-                          hintText: 'Escribe el nombre',
+                          label: context.l10n.visitsFrequentNameLabel,
+                          hintText: context.l10n.visitsDetailsNameHint,
                           autofocus: true,
                           controller: _nameController,
                           textCapitalization: TextCapitalization.words,
@@ -905,7 +926,7 @@ class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
                         ),
                         const SizedBox(height: GatesSpacing.space16),
                         GatesButton(
-                          label: 'Usar este nombre',
+                          label: context.l10n.visitsDetailsUseName,
                           onPressed: _nameController.text.trim().isEmpty
                               ? null
                               : _confirmOther,

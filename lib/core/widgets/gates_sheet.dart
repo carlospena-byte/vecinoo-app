@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 /// The rounded, safe-area-aware modal bottom sheet shell shared by every
 /// Gates bottom sheet — see amenity_bottom_sheets.dart for why `useSafeArea`
@@ -34,7 +35,7 @@ class GatesSheetHeader extends StatelessWidget {
       children: [
         Text(title, style: GatesTypography.headingSmall),
         IconButton(
-          tooltip: 'Cerrar',
+          tooltip: context.l10n.commonClose,
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),

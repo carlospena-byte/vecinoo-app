@@ -7,14 +7,17 @@ import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/provider_catalog_item.dart';
 import '../domain/visit.dart';
 import 'providers_catalog_controller.dart';
 import 'visit_details_screen.dart';
 
-String _catalogTitle(ProviderKind kind) =>
-    kind == ProviderKind.proveedor ? 'Elige un servicio' : 'Elige una empresa';
+String _catalogTitle(AppLocalizations l10n, ProviderKind kind) =>
+    kind == ProviderKind.proveedor
+    ? l10n.visitsCatalogTitleService
+    : l10n.visitsCatalogTitleCompany;
 
 /// "07 · Visitas / Catálogos globales" — Figma nodes C01/C02/C03 (`118:712`,
 /// `118:771`, `118:824`) unified into one screen: the kind tabs switch which
@@ -79,7 +82,7 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                     width: 44,
                     height: 44,
                     child: IconButton(
-                      tooltip: 'Volver',
+                      tooltip: context.l10n.visitsBack,
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.arrow_back, size: 24),
                       onPressed: () => Navigator.of(context).pop(),
@@ -88,7 +91,7 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                   const SizedBox(width: GatesSpacing.space12),
                   Expanded(
                     child: Text(
-                      _catalogTitle(_kind),
+                      _catalogTitle(context.l10n, _kind),
                       style: GatesTypography.headingMedium,
                     ),
                   ),
@@ -96,8 +99,8 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
               ),
               const SizedBox(height: 20),
               GatesTextField(
-                label: 'Buscar',
-                hintText: 'Servicio o proveedor',
+                label: context.l10n.visitsCatalogSearchLabel,
+                hintText: context.l10n.visitsCatalogSearchHint,
                 controller: _searchController,
                 onChanged: (v) =>
                     setState(() => _query = v.trim().toLowerCase()),
@@ -108,7 +111,7 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                   for (final kind in ProviderKind.values)
                     GatesSegmentedTabOption(
                       value: kind,
-                      label: providerKindLabel(kind),
+                      label: providerKindLabel(context.l10n, kind),
                     ),
                 ],
                 selected: _kind,
@@ -119,7 +122,7 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                 width: double.infinity,
                 child: GatesButton(
                   style: GatesButtonStyle.secondary,
-                  label: 'Otro',
+                  label: context.l10n.visitsCatalogOther,
                   onPressed: () => _openDetails(context),
                 ),
               ),
@@ -128,7 +131,7 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                 child: catalogAsync.when(
                   loading: () => const LoadingView(),
                   error: (e, _) => ErrorView(
-                    message: 'No pudimos cargar el catálogo.',
+                    message: context.l10n.visitsCatalogLoadError,
                     onRetry: () => ref.invalidate(
                       providersCatalogProvider((
                         residentialId: membership.residentialId,
@@ -152,17 +155,17 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                         children: [
                           const SizedBox(height: GatesSpacing.space16),
                           Text(
-                            'No encontramos resultados',
+                            context.l10n.visitsCatalogNoResultsTitle,
                             style: GatesTypography.headingSmall,
                           ),
                           const SizedBox(height: GatesSpacing.space8),
                           Text(
-                            'Puedes registrar la visita con un nombre personalizado.',
+                            context.l10n.visitsCatalogNoResultsBody,
                             style: context.gatesText.labelSecondary,
                           ),
                           const SizedBox(height: GatesSpacing.space16),
                           GatesButton(
-                            label: 'Registrar con nombre personalizado',
+                            label: context.l10n.visitsCatalogRegisterCustom,
                             onPressed: () => _openDetails(context),
                           ),
                         ],
@@ -245,7 +248,7 @@ class _CatalogOptionTile extends StatelessWidget {
                   ),
                   const SizedBox(height: GatesSpacing.space4),
                   Text(
-                    providerKindLabel(item.kind),
+                    providerKindLabel(context.l10n, item.kind),
                     style: context.gatesText.caption,
                   ),
                 ],

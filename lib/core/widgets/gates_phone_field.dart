@@ -3,13 +3,32 @@ import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
 import 'gates_sheet.dart';
+import '../../l10n/l10n.dart';
 
 class GatesCountryCode {
   const GatesCountryCode(this.flag, this.name, this.dialCode);
 
+  /// [name] is the Spanish source name; UI should show [localizedName].
   final String flag;
   final String name;
   final String dialCode;
+
+  /// Country name in the current locale (resolved at build time, since this
+  /// list is const data with no [BuildContext]).
+  String localizedName(BuildContext context) {
+    final l10n = context.l10n;
+    return switch (dialCode) {
+      '+504' => l10n.commonCountryHonduras,
+      '+502' => l10n.commonCountryGuatemala,
+      '+503' => l10n.commonCountryElSalvador,
+      '+505' => l10n.commonCountryNicaragua,
+      '+506' => l10n.commonCountryCostaRica,
+      '+507' => l10n.commonCountryPanama,
+      '+52' => l10n.commonCountryMexico,
+      '+1' => l10n.commonCountryUnitedStates,
+      _ => name,
+    };
+  }
 }
 
 const gatesCountryCodes = [
@@ -52,7 +71,7 @@ class GatesPhoneField extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: 'País'),
+            GatesSheetHeader(title: sheetContext.l10n.commonCountry),
             Flexible(
               child: ListView(
                 shrinkWrap: true,
@@ -64,7 +83,10 @@ class GatesPhoneField extends StatelessWidget {
                         c.flag,
                         style: const TextStyle(fontSize: 20),
                       ),
-                      title: Text(c.name, style: GatesTypography.body),
+                      title: Text(
+                        c.localizedName(context),
+                        style: GatesTypography.body,
+                      ),
                       trailing: Text(c.dialCode, style: GatesTypography.label),
                       selected: c.dialCode == country.dialCode,
                       onTap: () => Navigator.of(sheetContext).pop(c),
@@ -104,7 +126,7 @@ class GatesPhoneField extends StatelessWidget {
                 children: [
                   Semantics(
                     button: true,
-                    label: 'Código de país ${country.dialCode}',
+                    label: context.l10n.commonCountryCode(country.dialCode),
                     excludeSemantics: true,
                     onTap: () => _pickCountry(context),
                     child: InkWell(
@@ -143,7 +165,7 @@ class GatesPhoneField extends StatelessWidget {
                         children: [
                           ExcludeSemantics(
                             child: Text(
-                              'Teléfono',
+                              context.l10n.commonPhone,
                               style: context.gatesText.caption.copyWith(
                                 color: hasError
                                     ? context.palette.statusError
@@ -153,7 +175,7 @@ class GatesPhoneField extends StatelessWidget {
                           ),
                           const SizedBox(height: GatesSpacing.space4),
                           Semantics(
-                            label: 'Teléfono',
+                            label: context.l10n.commonPhone,
                             child: TextField(
                               controller: controller,
                               keyboardType: TextInputType.phone,

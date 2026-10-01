@@ -7,6 +7,7 @@ import 'package:gates_app/core/theme/app_theme.dart';
 import 'package:gates_app/features/visits/domain/visit.dart';
 import 'package:gates_app/features/visits/presentation/create_frequent_visit_screen.dart';
 import 'package:gates_app/features/visits/presentation/frequent_visit_formatters.dart';
+import 'package:gates_app/l10n/app_localizations_es.dart';
 
 void main() {
   setUpAll(() => initializeDateFormatting('es'));
@@ -109,7 +110,10 @@ void main() {
       validUntil: DateTime(2099),
       createdAt: DateTime(2026),
     );
-    expect(frequentScheduleSummary(base), 'Lunes a viernes · Todo el día');
+    expect(
+      frequentScheduleSummary(AppLocalizationsEs(), base),
+      'Lunes a viernes · Todo el día',
+    );
 
     final custom = Visit(
       id: '2',
@@ -129,6 +133,9 @@ void main() {
       validUntil: DateTime(2099),
       createdAt: DateTime(2026),
     );
-    expect(frequentScheduleSummary(custom), contains('Lun, Mié · '));
+    expect(
+      frequentScheduleSummary(AppLocalizationsEs(), custom),
+      contains('Lun, Mié · '),
+    );
   });
 }

@@ -11,6 +11,7 @@ import '../../session/data/session_repository.dart';
 import '../../session/presentation/session_controller.dart';
 import 'auth_controller.dart';
 import 'otp_verify_screen.dart';
+import '../../../l10n/l10n.dart';
 
 /// "01 · Acceso administrado" screen from Figma (file
 /// `Bla1GPfXA7JkuZcYpVi2DS`, node `13:2`): passwordless email sign-in —
@@ -51,11 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // a unit yet — sending a sign-in code here would just create a
         // disconnected account instead of the "Valida tu código" flow that
         // actually activates it.
-        setState(
-          () => _errorText =
-              'Ya tienes una invitación pendiente. Usa tu '
-              'código de invitación para activar tu cuenta.',
-        );
+        setState(() => _errorText = context.l10n.authInvitationPending);
         return;
       }
       if (status == EmailLoginStatus.unknown) {
@@ -63,11 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // admin has invited it yet — sending an OTP here would silently
         // create a disconnected account instead of surfacing the real
         // problem.
-        setState(
-          () => _errorText =
-              'No reconocemos ese correo. Por favor comunícate con el '
-              'administrador de tu residencial.',
-        );
+        setState(() => _errorText = context.l10n.authEmailUnknown);
         return;
       }
       await ref.read(authRepositoryProvider).sendEmailOtp(email);
@@ -81,9 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // emulator can't reach the configured SUPABASE_URL) rather than a bad
       // identifier — keep the real exception in the console.
       debugPrint('Send OTP failed: $e');
-      setState(
-        () => _errorText = 'No se pudo enviar el código. Intenta de nuevo.',
-      );
+      setState(() => _errorText = context.l10n.authSendCodeFailed);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -102,12 +93,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const VecinooWordmark(),
                 const VecinooMark(),
                 Text(
-                  'Tu hogar,\nen un solo lugar.',
+                  context.l10n.authLoginTitle,
                   style: GatesTypography.headingLarge,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Pagos, avisos y visitas.\nTodo cerca, todo en vecinoo.',
+                  context.l10n.authLoginSubtitle,
                   style: GatesTypography.body.copyWith(
                     color: context.palette.textPrimary,
                   ),
@@ -119,14 +110,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       GatesTextField(
-                        label: 'Correo electrónico',
-                        hintText: 'nombre@correo.com',
+                        label: context.l10n.authEmailLabel,
+                        hintText: context.l10n.authEmailHint,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.done,
                         autofillHints: const [AutofillHints.email],
                         validator: (v) => (v == null || !v.contains('@'))
-                            ? 'Correo inválido'
+                            ? context.l10n.authEmailInvalid
                             : null,
                       ),
                       if (_errorText != null) ...[
@@ -140,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                       const SizedBox(height: 24),
                       GatesButton(
-                        label: 'Continuar',
+                        label: context.l10n.commonContinue,
                         onPressed: _isSubmitting ? null : _submitEmail,
                         loading: _isSubmitting,
                       ),
@@ -153,7 +144,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? null
                         : () => context.push('/register'),
                     child: Text(
-                      '¿Tienes un código de invitación? Ingrésalo aquí.',
+                      context.l10n.authHaveInvitationCode,
                       style: GatesTypography.label.copyWith(
                         color: context.palette.textBrand,
                       ),

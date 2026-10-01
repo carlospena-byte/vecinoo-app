@@ -1,0 +1,868 @@
+{
+  "@@locale": "es",
+  "amenitiesBack": "Volver",
+  "amenitiesClose": "Cerrar",
+  "amenitiesCancel": "Cancelar",
+  "amenitiesSave": "Guardar",
+  "amenitiesContinue": "Continuar",
+  "amenitiesChange": "Cambiar",
+  "amenitiesEdit": "Editar",
+  "amenitiesTryAgain": "Intenta de nuevo.",
+  "amenitiesDayMon": "Lun",
+  "amenitiesDayTue": "Mar",
+  "amenitiesDayWed": "Mié",
+  "amenitiesDayThu": "Jue",
+  "amenitiesDayFri": "Vie",
+  "amenitiesDaySat": "Sáb",
+  "amenitiesDaySun": "Dom",
+  "amenitiesPaymentCash": "Efectivo",
+  "amenitiesPaymentCard": "Tarjeta",
+  "amenitiesPaymentTransfer": "Transferencia",
+  "amenitiesPeriodDay": "día",
+  "amenitiesPeriodWeek": "semana",
+  "amenitiesPeriodMonth": "mes",
+  "amenitiesBookingLimit": "{count, plural, =1{Máximo 1 reserva por {period}} other{Máximo {count} reservas por {period}}}",
+  "@amenitiesBookingLimit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesDurationHours": "{count, plural, =1{1 hora} other{{count} horas}}",
+  "@amenitiesDurationHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "amenitiesDurationMinutes": "{count} minutos",
+  "@amenitiesDurationMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "amenitiesBlackoutWithReason": "{range} · {reason}",
+  "@amenitiesBlackoutWithReason": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesBlackoutClosed": "Cerrado {range}",
+  "@amenitiesBlackoutClosed": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesBlackoutClosedWithReason": "Cerrado {range}: {reason}",
+  "@amenitiesBlackoutClosedWithReason": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesBlackoutRangeWithReason": "{range}: {reason}",
+  "@amenitiesBlackoutRangeWithReason": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesNewBooking": "Nueva reserva",
+  "amenitiesListLoadError": "No se pudieron cargar las amenidades.",
+  "amenitiesListEmpty": "Tu residencial aún no tiene amenidades configuradas.",
+  "amenitiesListHeading": "Amenidades",
+  "amenitiesCapacity": "{count, plural, =1{1 persona} other{{count} personas}}",
+  "@amenitiesCapacity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "amenitiesBookingRequiredBadge": "Reserva obligatoria",
+  "amenitiesNoBookingBadge": "Sin reserva",
+  "amenitiesDetailTitle": "Amenidad",
+  "amenitiesDetailLoadError": "No se pudo cargar la amenidad.",
+  "amenitiesPhotoLabel": "Fotografía {index} de {total}",
+  "@amenitiesPhotoLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "amenitiesPhotoHint": "Toca dos veces para ampliar",
+  "amenitiesBookingRequired": "Reservación necesaria",
+  "amenitiesFreeAccess": "Acceso libre",
+  "amenitiesOffersHeading": "Lo que ofrece este espacio",
+  "amenitiesViewAllServices": "Ver todos los servicios",
+  "amenitiesAllServices": "Todos los servicios",
+  "amenitiesAboutHeading": "Un espacio para compartir",
+  "amenitiesScheduleHeading": "Horarios de uso",
+  "amenitiesBeforeBookingHeading": "Antes de reservar",
+  "amenitiesDurationPerBooking": "Duración por reserva",
+  "amenitiesLimitPerResident": "Límite por residente",
+  "amenitiesClosedDates": "Fechas cerradas",
+  "amenitiesCostHeading": "Costo de la reserva",
+  "amenitiesNoCost": "Sin costo",
+  "amenitiesPerBookingOf": "Por reserva de {duration}",
+  "@amenitiesPerBookingOf": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesAcceptedMethods": "Métodos aceptados",
+  "amenitiesTerms": "Términos y condiciones",
+  "amenitiesPerBooking": "por reserva",
+  "amenitiesPerBookingDuration": "por reserva · {duration}",
+  "@amenitiesPerBookingDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesPickDate": "Elegir fecha",
+  "amenitiesCostInfoNote": "El costo y los métodos son informativos; esta app no procesa pagos.",
+  "amenitiesNotesOptional": "Notas (opcional)",
+  "amenitiesNotesHint": "Agrega una nota para tu reserva",
+  "amenitiesDateTimeTitle": "Fecha y horario",
+  "amenitiesEndAfterStartError": "La hora de fin debe ser después de la hora de inicio.",
+  "amenitiesStart": "Inicio",
+  "amenitiesEnd": "Fin",
+  "amenitiesEndsAt": "Termina a las",
+  "amenitiesEachBookingLasts": "Cada reserva dura {duration}.",
+  "@amenitiesEachBookingLasts": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesReviewTitle": "Revisar reserva",
+  "amenitiesErrorPastDateTitle": "Fecha en el pasado",
+  "amenitiesErrorPastDateMessage": "La fecha seleccionada ya pasó. Elige una fecha actual o futura.",
+  "amenitiesErrorScheduleTitle": "Error de horario",
+  "amenitiesErrorConflictTitle": "Horario no disponible",
+  "amenitiesErrorConflictMessage": "Otra reserva ocupa este horario. Tus notas se conservaron.",
+  "amenitiesErrorBlackoutTitle": "Fecha cerrada",
+  "amenitiesErrorBlackoutMessage": "La amenidad estará cerrada el día elegido. Selecciona otra fecha.",
+  "amenitiesErrorSubmitTitle": "No se pudo enviar la reserva",
+  "amenitiesErrorSubmitMessage": "Intenta de nuevo en unos segundos.",
+  "amenitiesDate": "Fecha",
+  "amenitiesSchedule": "Horario",
+  "amenitiesNoNotes": "Sin notas",
+  "amenitiesCancelFutureHint": "Puedes cancelar una reserva futura desde Mis reservas.",
+  "amenitiesConfirmBooking": "Confirmar reserva",
+  "amenitiesResultConfirmedHeading": "Todo listo para tu reserva",
+  "amenitiesPendingConfirmation": "Pendiente de confirmación",
+  "amenitiesResultConfirmedSubtext": "Consulta los datos y el estado desde Mis reservas.",
+  "amenitiesResultPendingSubtext": "Tu solicitud fue enviada. Aún no está confirmada; consulta su estado en Mis reservas.",
+  "amenitiesResultConfirmedTitle": "Reserva confirmada",
+  "amenitiesResultPendingTitle": "Solicitud enviada",
+  "amenitiesNotesValue": "Notas: {notes}",
+  "@amenitiesNotesValue": {
+    "placeholders": {
+      "notes": {
+        "type": "String"
+      }
+    }
+  },
+  "amenitiesViewMyBookings": "Ver mis reservas",
+  "amenitiesStatusConfirmed": "Confirmada",
+  "amenitiesStatusPending": "Pendiente",
+  "amenitiesStatusCancelled": "Cancelada",
+  "amenitiesStatusExpired": "Expirada",
+  "amenitiesBannerConfirmedMessage": "La reserva se registró correctamente.",
+  "amenitiesBannerPendingMessage": "La solicitud espera confirmación.",
+  "amenitiesBookingsTitle": "Reservas",
+  "amenitiesTabPending": "Pendientes",
+  "amenitiesTabConfirmed": "Confirmadas",
+  "amenitiesTabHistory": "Historial",
+  "amenitiesBookingsLoadError": "No se pudieron cargar tus reservas.",
+  "amenitiesEmptyPending": "No tienes reservas pendientes.",
+  "amenitiesEmptyConfirmed": "No tienes reservas confirmadas.",
+  "amenitiesEmptyHistory": "Aún no tienes historial de reservas.",
+  "amenitiesPillConfirmed": "Reserva confirmada",
+  "amenitiesPillPast": "Reserva pasada",
+  "amenitiesPillCancelled": "Reserva cancelada",
+  "amenitiesPillExpired": "Reserva expirada",
+  "amenitiesBookingDetailTitle": "Detalle de reserva",
+  "amenitiesSpace": "Espacio",
+  "amenitiesReason": "Motivo",
+  "amenitiesReasonOptional": "Motivo (opcional)",
+  "amenitiesReasonHint": "Cuéntanos por qué cancelas, si quieres",
+  "amenitiesSwipeToCancel": "Desliza para cancelar",
+  "amenitiesCancelFailedTitle": "No pudimos cancelar la reserva",
+  "commonBack": "Volver",
+  "commonClose": "Cerrar",
+  "commonRetry": "Reintentar",
+  "commonCancel": "Cancelar",
+  "commonDone": "Listo",
+  "commonContinue": "Continuar",
+  "commonProfile": "Perfil",
+  "commonLogout": "Cerrar sesión",
+  "commonForResidents": "PARA RESIDENTES",
+  "commonToastSuccess": "Éxito",
+  "commonToastInfo": "Información",
+  "commonToastWarning": "Advertencia",
+  "commonToastError": "Error",
+  "commonMonth": "Mes",
+  "commonDate": "Fecha",
+  "commonCountry": "País",
+  "commonPhone": "Teléfono",
+  "commonCountryCode": "Código de país {dialCode}",
+  "@commonCountryCode": {
+    "placeholders": {
+      "dialCode": {
+        "type": "String"
+      }
+    }
+  },
+  "commonCharactersCount": "{length} caracteres",
+  "@commonCharactersCount": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "commonTapTwiceToConfirm": "Toca dos veces para confirmar",
+  "commonDoormanNotesLabel": "Notas para portería (opcional)",
+  "commonDoormanNotesHint": "Agrega una indicación",
+  "commonUploadFormats": "JPG o PNG · hasta 10 MB",
+  "commonUploadReady": "Foto lista",
+  "commonUploadUploading": "Subiendo foto…",
+  "commonUploadPreparing": "Preparando…",
+  "commonUploadErrorDefault": "Revisa tu conexión e inténtalo de nuevo.",
+  "commonUploadDocument": "Subir documento",
+  "commonRemove": "Quitar",
+  "commonChooseFile": "Elegir archivo",
+  "commonCountryHonduras": "Honduras",
+  "commonCountryGuatemala": "Guatemala",
+  "commonCountryElSalvador": "El Salvador",
+  "commonCountryNicaragua": "Nicaragua",
+  "commonCountryCostaRica": "Costa Rica",
+  "commonCountryPanama": "Panamá",
+  "commonCountryMexico": "México",
+  "commonCountryUnitedStates": "Estados Unidos",
+  "authBiometricTitle": "Entra más rápido",
+  "authBiometricBody": "Usa tu rostro o huella para entrar.\nPuedes configurarlo más adelante.",
+  "authBiometricSetup": "Configurar biometría",
+  "authBiometricSkip": "Omitir por ahora",
+  "authInvitationPending": "Ya tienes una invitación pendiente. Usa tu código de invitación para activar tu cuenta.",
+  "authEmailUnknown": "No reconocemos ese correo. Por favor comunícate con el administrador de tu residencial.",
+  "authSendCodeFailed": "No se pudo enviar el código. Intenta de nuevo.",
+  "authLoginTitle": "Tu hogar,\nen un solo lugar.",
+  "authLoginSubtitle": "Pagos, avisos y visitas.\nTodo cerca, todo en vecinoo.",
+  "authEmailLabel": "Correo electrónico",
+  "authEmailHint": "nombre@correo.com",
+  "authEmailInvalid": "Correo inválido",
+  "authHaveInvitationCode": "¿Tienes un código de invitación? Ingrésalo aquí.",
+  "authOtpIntroEmail": "Para iniciar sesión, ingresa el nuevo código de 6 dígitos que enviamos a",
+  "authOtpIntroSms": "Para iniciar sesión, ingresa el nuevo código de 6 dígitos que enviamos por SMS a",
+  "authEnterDigits": "Ingresa los {length} dígitos",
+  "@authEnterDigits": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "authOtpWrongOrExpired": "Código incorrecto o expirado.",
+  "authOtpResentTitle": "Código reenviado",
+  "authOtpResentMessage": "Puedes pedir otro en 60 segundos.",
+  "authOtpResendFailedTitle": "No pudimos reenviar el código",
+  "authOtpResendFailedMessage": "Intenta de nuevo en un minuto.",
+  "authInvitationValidated": "Invitación validada",
+  "authCheckEmail": "Revisa tu correo",
+  "authCheckPhone": "Revisa tu teléfono",
+  "authVerificationCode": "Código de verificación",
+  "authVerifyAndSignIn": "Verificar e iniciar sesión",
+  "authSending": "Enviando...",
+  "authResendIn": "Reenviar código en {seconds}s",
+  "@authResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "authResend": "Reenviar código",
+  "authCommunityAccess": "Tu acceso a la comunidad",
+  "authResidentName": "{name} · Residente",
+  "@authResidentName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "authInvitationInvalid": "Código inválido, ya usado o expirado.",
+  "authSupportTitle": "Contacta a soporte",
+  "authSupportMessage": "Escríbenos a soporte@vecinoo.app",
+  "authValidateCodeTitle": "Valida tu código",
+  "authValidateCodeBody": "Ingresa el código de {length} dígitos que recibiste en tu invitación.",
+  "@authValidateCodeBody": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "authInvitationCode": "Código de invitación",
+  "authInvitationHelper": "Revisa tu tarjeta o correo de bienvenida.",
+  "authAcceptInvitation": "Aceptar invitación",
+  "authNoInvitationContactSupport": "¿No recibiste tu invitación? Contactar soporte",
+  "sessionPendingTitle": "Cuenta pendiente",
+  "sessionPendingBody": "Todavía no tienes una unidad vinculada. Pide al administrador que te vincule o ingresa un código de invitación.",
+  "sessionCodeDigitsHelper": "6 dígitos.",
+  "sessionUseCode": "Usar código",
+  "sessionAlreadyLinkedRetry": "Ya me vincularon, reintentar",
+  "sessionSelectUnitTitle": "Selecciona tu unidad",
+  "sessionSelectUnitBody": "Elige la unidad que quieres consultar.",
+  "profileLoadFailed": "No se pudo cargar tu perfil.",
+  "profileChangeUnit": "Cambiar unidad",
+  "profileAppearance": "Apariencia",
+  "profileThemeLight": "Claro",
+  "profileThemeDark": "Oscuro",
+  "profileThemeSystem": "Sistema",
+  "homeNavHome": "Inicio",
+  "homeIncidents": "Incidencias",
+  "homeReservations": "Reservas",
+  "homeVisits": "Visitas",
+  "homeComingSoon": "Próximamente",
+  "homeGreeting": "Hola",
+  "homeGreetingNamed": "Hola, {name}",
+  "@homeGreetingNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTagline": "Tu comunidad, más cerca.",
+  "homeNotifications": "Notificaciones",
+  "homeToday": "Hoy",
+  "homeTomorrow": "Mañana",
+  "homePm": "p. m.",
+  "homeAm": "a. m.",
+  "homeBookingsLoadFailed": "No se pudieron cargar tus reservas.",
+  "homeNoBookingsTitle": "Un espacio para disfrutar",
+  "homeNoBookingsDetail": "Aún no tienes reservas próximas.",
+  "homeExploreAmenities": "Explorar amenidades",
+  "homeVisitsSummary": "{count, plural, =0{Sin visitas\nprevistas} =1{1 visita\npara hoy} other{{count} visitas\npara hoy}}",
+  "@homeVisitsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeIncidentsSummary": "{count, plural, =0{Sin incidencias\nreportadas} =1{1 reporte\nen seguimiento} other{{count} reportes\nen seguimiento}}",
+  "@homeIncidentsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeInvite": "Invitar",
+  "homeViewVisits": "Ver visitas",
+  "homeReport": "Reportar",
+  "homeViewReport": "Ver reporte",
+  "incidentsStatusNew": "Nueva",
+  "incidentsStatusInProgress": "En progreso",
+  "incidentsStatusResolved": "Resuelta",
+  "incidentsStatusClosed": "Cerrada",
+  "incidentsStatusCancelled": "Cancelada",
+  "incidentsPriorityLow": "Baja",
+  "incidentsPriorityMedium": "Media",
+  "incidentsPriorityHigh": "Alta",
+  "incidentsPriorityUrgent": "Urgente",
+  "incidentsEditorDescriptionLabel": "Descripción (opcional)",
+  "incidentsEditorBold": "Negrita",
+  "incidentsEditorItalic": "Cursiva",
+  "incidentsEditorList": "Lista",
+  "incidentsEditorLink": "Enlace",
+  "incidentsEditorDescriptionHint": "Describe qué ocurrió y dónde…",
+  "incidentsEditorLinkInvalid": "Escribe un enlace válido.",
+  "incidentsEditorAddLink": "Agregar enlace",
+  "incidentsEditorLinkNoSelection": "Sin texto seleccionado, se insertará el enlace tal cual.",
+  "incidentsEditorLinkHint": "https://…",
+  "incidentsListEmptyPending": "No tienes incidencias pendientes.",
+  "incidentsListEmptyInProgress": "No tienes incidencias en curso.",
+  "incidentsListEmptyHistory": "Aún no tienes historial de incidencias.",
+  "incidentsListTitle": "Incidencias",
+  "incidentsTabPending": "Pendientes",
+  "incidentsTabInProgress": "En curso",
+  "incidentsTabHistory": "Historial",
+  "incidentsListLoadError": "No se pudieron cargar las incidencias.",
+  "incidentsDetailLoadError": "No se pudo cargar la incidencia.",
+  "incidentsEditAction": "Editar incidencia",
+  "incidentsCancelAction": "Cancelar incidencia",
+  "incidentsCancelSheetBody": "Ya no se le dará seguimiento. La incidencia seguirá en tu historial como cancelada.",
+  "incidentsCancelConfirm": "Sí, cancelar incidencia",
+  "incidentsCancelledToast": "Incidencia cancelada",
+  "incidentsCancelFailedTitle": "No pudimos cancelar la incidencia",
+  "incidentsTryAgain": "Intenta de nuevo.",
+  "incidentsDetailTitle": "Incidencia",
+  "incidentsDetailReportedOn": "Reportada el {date}",
+  "@incidentsDetailReportedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "incidentsDetailDescription": "Descripción",
+  "incidentsDetailPhotos": "Fotografías",
+  "incidentsAttachedPhoto": "Fotografía adjunta",
+  "incidentsAttachedPhotoHint": "Toca dos veces para ampliar",
+  "incidentsReportMaxPhotos": "Máximo {count} fotografías",
+  "@incidentsReportMaxPhotos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incidentsReportAddedFirst": "Agregamos las primeras {count}.",
+  "@incidentsReportAddedFirst": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incidentsReportPhotosOpenFailed": "No pudimos abrir las fotografías",
+  "incidentsReportPhotosPermissions": "Revisa los permisos e intenta de nuevo.",
+  "incidentsReportSaveFailed": "No pudimos guardar los cambios",
+  "incidentsReportSaveFailedBody": "Tus cambios se conservaron. Intenta de nuevo.",
+  "incidentsReportSendFailed": "No pudimos enviar el reporte",
+  "incidentsReportSendFailedBody": "Tus datos se conservaron. Intenta de nuevo.",
+  "incidentsReportChangesSaved": "Cambios guardados",
+  "incidentsReportDiscardTitle": "¿Descartar cambios?",
+  "incidentsReportDiscardBody": "Si sales ahora, los cambios que hiciste no se guardarán.",
+  "incidentsReportDiscardAction": "Descartar cambios",
+  "incidentsReportKeepEditing": "Seguir editando",
+  "incidentsReportEditTitle": "Editar incidencia",
+  "incidentsReportIntro": "Cuéntanos qué ocurrió. Un administrador dará seguimiento.",
+  "incidentsReportCategoryLabel": "Categoría (opcional)",
+  "incidentsReportCategoryPlaceholder": "Seleccionar categoría",
+  "incidentsReportTitleLabel": "Título *",
+  "incidentsReportTitleHint": "¿Qué problema quieres reportar?",
+  "incidentsReportSaveChanges": "Guardar cambios",
+  "incidentsReportSavingChanges": "Estamos guardando tus cambios",
+  "incidentsReportSending": "Estamos enviando tu reporte",
+  "incidentsReportWaitMessage": "Espera un momento mientras guardamos los datos y las fotografías.",
+  "incidentsReportSendingButton": "Enviando…",
+  "incidentsReportPhotoErrorTitle": "Una foto no se pudo subir",
+  "incidentsReportPhotoErrorBody": "Reintenta la carga o elimina esa foto para continuar.",
+  "incidentsReportRetryPhoto": "Reintentar fotografía",
+  "incidentsReportDone": "Listo",
+  "incidentsReportSentTitle": "Incidencia enviada",
+  "incidentsReportSentHeadline": "Tu reporte fue enviado",
+  "incidentsReportSentBody": "Un administrador dará seguimiento a la incidencia.",
+  "incidentsReportReceived": "Reporte recibido",
+  "incidentsReportBackHome": "Volver al inicio",
+  "incidentsReportPhotosOptional": "Fotografías (opcional)",
+  "incidentsReportAddPhotos": "Agregar fotografías",
+  "incidentsReportAddMorePhotos": "Agregar más fotos",
+  "incidentsReportUpToPhotos": "Hasta {count} fotografías",
+  "@incidentsReportUpToPhotos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incidentsReportRemovePhoto": "Eliminar fotografía",
+  "incidentsReportUploading": "Subiendo…",
+  "incidentsReportRetryUploadPhoto": "Reintentar subida de la fotografía",
+  "incidentsReportRetry": "Reintentar",
+  "incidentsReportPhotoSourceBody": "Elige cómo quieres agregar tus fotos.",
+  "incidentsReportTakePhoto": "Tomar foto",
+  "incidentsReportChooseGallery": "Elegir de la galería",
+  "incidentsReportCancel": "Cancelar",
+  "incidentsReportAction": "Reportar incidencia",
+  "visitsStatusPendingRegistration": "Pendiente de registro",
+  "visitsStatusScheduled": "Programada",
+  "visitsStatusActive": "Activa",
+  "visitsStatusInside": "Dentro",
+  "visitsStatusCompleted": "Completada",
+  "visitsStatusCancelled": "Cancelada",
+  "visitsStatusRejected": "Rechazada",
+  "visitsStatusExpired": "Expirada",
+  "visitsTypeFrequent": "Frecuente",
+  "visitsTypeDelivery": "Delivery/Proveedor",
+  "visitsTypeFastlane": "FastLane",
+  "visitsRoleFamiliar": "Familiar",
+  "visitsRoleEntrenador": "Entrenador",
+  "visitsRoleEmpleado": "Empleado",
+  "visitsRoleProveedor": "Proveedor",
+  "visitsRoleVisitante": "Visitante",
+  "visitsRoleInvitado": "Invitado",
+  "visitsProviderKindProveedor": "Proveedor",
+  "visitsProviderKindDelivery": "Delivery",
+  "visitsProviderKindPaqueteria": "Paquetería",
+  "visitsRecurrenceMonFri": "Lunes a viernes",
+  "visitsRecurrenceMonSat": "Lunes a sábado",
+  "visitsRecurrenceDaily": "Todos los días",
+  "visitsRecurrenceCustom": "Personalizado",
+  "visitsWeekdayMon": "Lun",
+  "visitsWeekdayTue": "Mar",
+  "visitsWeekdayWed": "Mié",
+  "visitsWeekdayThu": "Jue",
+  "visitsWeekdayFri": "Vie",
+  "visitsWeekdaySat": "Sáb",
+  "visitsWeekdaySun": "Dom",
+  "visitsFrequentAccess": "Acceso frecuente",
+  "visitsAllDay": "Todo el día",
+  "visitsMovementDayToday": "hoy",
+  "visitsMovementDayYesterday": "ayer",
+  "visitsMovementDayDate": "el {date}",
+  "@visitsMovementDayDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsLastEntry": "Ingreso {day}, {time}",
+  "@visitsLastEntry": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsLastExit": "Salida {day}, {time}",
+  "@visitsLastExit": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsToday": "Hoy",
+  "visitsTomorrow": "Mañana",
+  "visitsPendingInvitationName": "Invitación por completar",
+  "visitsListEmptyPending": "No tienes visitas pendientes.",
+  "visitsListEmptyOngoing": "No tienes visitas en curso.",
+  "visitsListEmptyHistory": "Aún no tienes historial de visitas.",
+  "visitsListGroupToday": "Accesos para hoy · {dayMonth}",
+  "@visitsListGroupToday": {
+    "placeholders": {
+      "dayMonth": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsListGroupTomorrow": "Mañana · {dayMonth}",
+  "@visitsListGroupTomorrow": {
+    "placeholders": {
+      "dayMonth": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsListFastlaneSchedule": "{day} · Llegada prevista {time}",
+  "@visitsListFastlaneSchedule": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsDeliveryOrProvider": "Delivery o proveedor",
+  "visitsListSubtitleDeliveryKind": "Delivery o proveedor · {kind}",
+  "@visitsListSubtitleDeliveryKind": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsListSubtitleFastlane": "Invitado · FastLane",
+  "visitsListTitle": "Visitas",
+  "visitsListNewVisit": "Nueva visita",
+  "visitsTabPending": "Pendientes",
+  "visitsTabOngoing": "En curso",
+  "visitsTabHistory": "Historial",
+  "visitsListShowFrequent": "Mostrar visitas frecuentes",
+  "visitsListLoadError": "No se pudieron cargar tus visitas.",
+  "visitsListHiddenFrequent": "Tienes {count, plural, =1{1 acceso frecuente oculto} other{{count} accesos frecuentes ocultos}}.",
+  "@visitsListHiddenFrequent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visitsListFrequentHeading": "Accesos frecuentes",
+  "visitsListDailyVisit": "Visita del día",
+  "visitsBack": "Volver",
+  "visitsCatalogTitleService": "Elige un servicio",
+  "visitsCatalogTitleCompany": "Elige una empresa",
+  "visitsCatalogSearchLabel": "Buscar",
+  "visitsCatalogSearchHint": "Servicio o proveedor",
+  "visitsCatalogOther": "Otro",
+  "visitsCatalogLoadError": "No pudimos cargar el catálogo.",
+  "visitsCatalogNoResultsTitle": "No encontramos resultados",
+  "visitsCatalogNoResultsBody": "Puedes registrar la visita con un nombre personalizado.",
+  "visitsCatalogRegisterCustom": "Registrar con nombre personalizado",
+  "visitsTryAgain": "Intenta de nuevo.",
+  "visitsUnit": "Unidad",
+  "visitsPlate": "Placa",
+  "visitsGateNotes": "Notas para portería",
+  "visitsCancelVisit": "Cancelar visita",
+  "visitsCancelAccess": "Cancelar acceso",
+  "visitsDetailTitle": "Detalle de visita",
+  "visitsDetailCancelledToast": "Visita cancelada",
+  "visitsDetailCancelError": "No pudimos cancelar la visita",
+  "visitsDetailValidity": "Vigencia",
+  "visitsDetailValiditySameDay": "{day}, {from} a {until}",
+  "@visitsDetailValiditySameDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsDetailValidityRange": "{from} a {until}",
+  "@visitsDetailValidityRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsFrequentDefaultName": "Tu visita",
+  "visitsFrequentCancelBody": "{name} ya no podrá ingresar con este acceso frecuente.",
+  "@visitsFrequentCancelBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsFrequentCancelConfirm": "Sí, cancelar acceso",
+  "visitsFrequentCancelledToast": "Acceso cancelado",
+  "visitsFrequentCancelError": "No pudimos cancelar el acceso",
+  "visitsFrequentLoadError": "No se pudo cargar el acceso.",
+  "visitsFrequentActiveIntro": "Tu visita puede ingresar en los días y horarios que definiste.",
+  "visitsFrequentInactiveIntro": "Este acceso ya no está disponible.",
+  "visitsFrequentEditAccess": "Editar acceso",
+  "visitsFrequentVisitCaption": "Visita",
+  "visitsFrequentVisitCaptionRole": "Visita · {role}",
+  "@visitsFrequentVisitCaptionRole": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsFrequentNoName": "Sin nombre",
+  "visitsFrequentActiveStatus": "Acceso activo",
+  "visitsFrequentValidUntilCancelled": "Vigente hasta que lo canceles.",
+  "visitsFrequentDaysAndHours": "Días y horario",
+  "visitsFrequentVehicle": "Vehículo",
+  "visitsFrequentLastMovement": "Último movimiento",
+  "visitsArrivalToday": "Hoy, {rest}",
+  "@visitsArrivalToday": {
+    "placeholders": {
+      "rest": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsArrivalTomorrow": "Mañana, {rest}",
+  "@visitsArrivalTomorrow": {
+    "placeholders": {
+      "rest": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsDateToday": "Hoy, {date}",
+  "@visitsDateToday": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsPendingLinkCopied": "Enlace copiado",
+  "visitsPendingShareTitle": "Invitación FastLane",
+  "visitsPendingShareTitleResidential": "Invitación a {residential}",
+  "@visitsPendingShareTitleResidential": {
+    "placeholders": {
+      "residential": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsPendingCancel": "Cancelar invitación",
+  "visitsPendingCancelBody": "El enlace dejará de funcionar y tu visita ya no podrá registrarse con él.",
+  "visitsPendingCancelConfirm": "Sí, cancelar invitación",
+  "visitsPendingCancelledToast": "Invitación cancelada",
+  "visitsPendingCancelError": "No pudimos cancelar la invitación",
+  "visitsPendingTitle": "Invitación creada",
+  "visitsPendingIntro": "Comparte el enlace para que tu visitante complete sus datos.",
+  "visitsPendingShare": "Compartir invitación",
+  "visitsPendingCopyLink": "Copiar enlace",
+  "visitsPendingEdit": "Editar invitación",
+  "visitsPendingGoToVisits": "Ir a mis visitas",
+  "visitsPendingExpectedArrival": "Llegada prevista",
+  "visitsPendingDataStatus": "Pendiente de datos",
+  "visitsPendingVisitorWillComplete": "Tu visitante completará sus datos al abrir el enlace.",
+  "visitsPendingLinkLabel": "Enlace de invitación",
+  "visitsFastlaneVisitDate": "Fecha de visita",
+  "visitsFastlaneUpdatedToast": "Invitación actualizada",
+  "visitsSaveError": "No pudimos guardar los cambios",
+  "visitsFastlaneCreateError": "No pudimos crear la invitación",
+  "visitsFastlaneTitle": "Invitar con FastLane",
+  "visitsUnitUpper": "UNIDAD",
+  "visitsFastlaneNameLabel": "Nombre de referencia *",
+  "visitsFastlaneNameHint": "Visita de...",
+  "visitsFastlaneNameRequired": "Escribe un nombre para identificar la visita.",
+  "visitsFastlaneDateHelper": "Fecha prevista para la visita.",
+  "visitsFastlaneArrivalLabel": "Hora de llegada prevista *",
+  "visitsSaveChanges": "Guardar cambios",
+  "visitsFastlaneCreate": "Crear invitación",
+  "visitsNewTypeTitle": "¿Quién viene?",
+  "visitsNewTypeAccessFor": "Acceso para",
+  "visitsNewTypeGuest": "Invitado",
+  "visitsNewTypeGuestSubtitle": "Crea una invitación con registro del visitante",
+  "visitsNewTypeDeliverySubtitle": "Autoriza una entrega o servicio",
+  "visitsNewTypeFrequentSubtitle": "Para personas que vienen regularmente",
+  "visitsWeekdayInitialMon": "L",
+  "visitsWeekdayInitialTue": "M",
+  "visitsWeekdayInitialWed": "M",
+  "visitsWeekdayInitialThu": "J",
+  "visitsWeekdayInitialFri": "V",
+  "visitsWeekdayInitialSat": "S",
+  "visitsWeekdayInitialSun": "D",
+  "visitsScheduleBlockTitle": "Bloque de horario {number}",
+  "@visitsScheduleBlockTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "visitsScheduleBlockRemove": "Eliminar bloque",
+  "visitsScheduleFrom": "Desde",
+  "visitsScheduleTo": "Hasta",
+  "visitsFrequentCurrentDocument": "Documento actual",
+  "visitsFrequentIdDocument": "Documento de identidad",
+  "visitsFrequentTakePhoto": "Tomar foto",
+  "visitsFrequentPickGallery": "Elegir de la galería",
+  "visitsFrequentPhotoTooBig": "La foto supera los 10 MB. Elige una más ligera.",
+  "visitsFrequentMissingData": "Falta un dato",
+  "visitsFrequentSelectDayEachBlock": "Selecciona al menos un día en cada bloque de horario.",
+  "visitsFrequentStartBeforeEnd": "La hora de inicio debe ser anterior a la hora final.",
+  "visitsFrequentUpdatedToast": "Acceso actualizado",
+  "visitsFrequentAuthorizedToast": "Acceso frecuente autorizado",
+  "visitsFrequentAuthorizeError": "No pudimos autorizar el acceso",
+  "visitsFrequentStep1": "1 de 2 · Datos de la visita",
+  "visitsFrequentStep2": "2 de 2 · Permisos de acceso",
+  "visitsContinue": "Continuar",
+  "visitsFrequentAuthorize": "Autorizar acceso",
+  "visitsFrequentNameLabel": "Nombre de la visita *",
+  "visitsFrequentNameRequired": "Escribe el nombre de la visita.",
+  "visitsFrequentTypeLabel": "Tipo",
+  "visitsFrequentPhoneInvalid": "Escribe un teléfono válido.",
+  "visitsFrequentIdDocumentRequired": "Documento de identidad *",
+  "visitsFrequentIdDocumentHint": "Adjunta una foto legible del documento.",
+  "visitsFrequentIdDocumentMissing": "Adjunta una foto del documento para continuar.",
+  "visitsFrequentHasVehicle": "Ingresará en vehículo",
+  "visitsFrequentHasVehicleHint": "Activa para ingresar la placa",
+  "visitsFrequentPlateLabel": "Placa del vehículo",
+  "visitsFrequentPlateHint": "Ingresa la placa",
+  "visitsFrequentPlateRequired": "Escribe la placa del vehículo.",
+  "visitsFrequentFrequencyLabel": "Frecuencia",
+  "visitsFrequentGroupDaysHint": "Agrupa los días que comparten el mismo horario.",
+  "visitsFrequentScheduleLabel": "Horario",
+  "visitsFrequentNotifyLabel": "Avisarme al llegar",
+  "visitsFrequentNotifyHint": "Notificaciones de mis visitas",
+  "visitsFrequentAddBlock": "+ Agregar bloque",
+  "visitsDateTomorrow": "Mañana, {date}",
+  "@visitsDateTomorrow": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "visitsClose": "Cerrar",
+  "visitsCancel": "Cancelar",
+  "visitsDone": "Listo",
+  "visitsDetailsDateAndTime": "Fecha y horario",
+  "visitsCalendarMonth": "Mes",
+  "visitsCalendarDowMon": "L",
+  "visitsCalendarDowTue": "M",
+  "visitsCalendarDowWed": "X",
+  "visitsCalendarDowThu": "J",
+  "visitsCalendarDowFri": "V",
+  "visitsCalendarDowSat": "S",
+  "visitsCalendarDowSun": "D",
+  "visitsDetailsAuthorizedToast": "Visita autorizada",
+  "visitsDetailsAuthorizeError": "No pudimos autorizar la visita",
+  "visitsDetailsTitle": "Detalles de la visita",
+  "visitsDetailsService": "Servicio",
+  "visitsDetailsDateHelper": "Acceso válido durante el día seleccionado.",
+  "visitsDetailsPickTime": "Elige una hora",
+  "visitsDetailsAuthorize": "Autorizar visita",
+  "visitsDetailsNotesLabel": "Notas para portería (opcional)",
+  "visitsDetailsNotesHint": "Agrega una indicación",
+  "visitsDetailsChange": "Cambiar visita",
+  "visitsDetailsNameHint": "Escribe el nombre",
+  "visitsDetailsUseName": "Usar este nombre"
+}

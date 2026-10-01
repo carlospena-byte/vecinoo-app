@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 /// Figma "OTP / IFTA": a segmented code field rendered as independent boxes
 /// (to avoid clipping and keep every character legible), backed by a single
@@ -138,7 +139,7 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
                       alwaysIncludeSemantics: true,
                       child: Semantics(
                         label: widget.label,
-                        hint: '${widget.length} caracteres',
+                        hint: context.l10n.commonCharactersCount(widget.length),
                         child: TextField(
                           controller: widget.controller,
                           focusNode: _focusNode,

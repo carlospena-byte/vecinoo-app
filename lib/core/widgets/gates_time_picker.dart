@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 /// A scrolling-wheel time picker (like an alarm-clock spinner) instead of
 /// Material's analog clock dial, which residents found hard to use. Always
@@ -32,11 +33,11 @@ Future<TimeOfDay?> showGatesTimePicker(
             children: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancelar'),
+                child: Text(context.l10n.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(selected),
-                child: const Text('Listo'),
+                child: Text(context.l10n.commonDone),
               ),
             ],
           ),

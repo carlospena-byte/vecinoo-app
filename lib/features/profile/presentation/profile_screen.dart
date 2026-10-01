@@ -8,6 +8,7 @@ import '../../../core/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../session/presentation/session_controller.dart';
 import 'profile_controller.dart';
+import '../../../l10n/l10n.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -19,11 +20,11 @@ class ProfileScreen extends ConsumerWidget {
     final memberships = ref.watch(myMembershipsProvider).value ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
+      appBar: AppBar(title: Text(context.l10n.commonProfile)),
       body: profileAsync.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(
-          message: 'No se pudo cargar tu perfil.',
+          message: context.l10n.profileLoadFailed,
           onRetry: () => ref.invalidate(myProfileProvider),
         ),
         data: (profile) {
@@ -77,25 +78,28 @@ class ProfileScreen extends ConsumerWidget {
                   onPressed: () =>
                       ref.read(selectedMembershipProvider.notifier).clear(),
                   icon: const Icon(Icons.swap_horiz),
-                  label: const Text('Cambiar unidad'),
+                  label: Text(context.l10n.profileChangeUnit),
                 ),
               ],
               const SizedBox(height: 24),
-              Text('Apariencia', style: context.gatesText.labelSecondary),
+              Text(
+                context.l10n.profileAppearance,
+                style: context.gatesText.labelSecondary,
+              ),
               const SizedBox(height: 8),
               GatesSegmentedTabs<ThemeMode>(
-                options: const [
+                options: [
                   GatesSegmentedTabOption(
                     value: ThemeMode.light,
-                    label: 'Claro',
+                    label: context.l10n.profileThemeLight,
                   ),
                   GatesSegmentedTabOption(
                     value: ThemeMode.dark,
-                    label: 'Oscuro',
+                    label: context.l10n.profileThemeDark,
                   ),
                   GatesSegmentedTabOption(
                     value: ThemeMode.system,
-                    label: 'Sistema',
+                    label: context.l10n.profileThemeSystem,
                   ),
                 ],
                 selected: ref.watch(themeModeProvider),
@@ -106,7 +110,7 @@ class ProfileScreen extends ConsumerWidget {
               FilledButton.tonalIcon(
                 onPressed: () => ref.read(authRepositoryProvider).signOut(),
                 icon: const Icon(Icons.logout),
-                label: const Text('Cerrar sesión'),
+                label: Text(context.l10n.commonLogout),
               ),
             ],
           );

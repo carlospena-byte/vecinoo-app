@@ -8,6 +8,7 @@ import '../amenities/presentation/bookings_list_screen.dart';
 import '../incidents/presentation/incidents_list_screen.dart';
 import '../visits/presentation/visits_list_screen.dart';
 import 'presentation/home_screen.dart';
+import '../../l10n/l10n.dart';
 
 /// Asks the [HomeShell] to select a tab, e.g. `context.go('/', extra:
 /// HomeTabRequest(HomeShell.bookingsTab))`. Compared by identity, so
@@ -52,15 +53,24 @@ class _HomeShellState extends State<HomeShell> {
     const VisitsListScreen(),
   ];
 
-  static const _destinations = [
-    _NavItem(icon: 'assets/icons/home/nav_home.svg', label: 'Inicio'),
-    _NavItem(icon: 'assets/icons/home/nav_incidents.svg', label: 'Incidencias'),
-    _NavItem(icon: 'assets/icons/home/nav_reservations.svg', label: 'Reservas'),
-    _NavItem(icon: 'assets/icons/home/nav_visits.svg', label: 'Visitas'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final destinations = [
+      _NavItem(icon: 'assets/icons/home/nav_home.svg', label: l10n.homeNavHome),
+      _NavItem(
+        icon: 'assets/icons/home/nav_incidents.svg',
+        label: l10n.homeIncidents,
+      ),
+      _NavItem(
+        icon: 'assets/icons/home/nav_reservations.svg',
+        label: l10n.homeReservations,
+      ),
+      _NavItem(
+        icon: 'assets/icons/home/nav_visits.svg',
+        label: l10n.homeVisits,
+      ),
+    ];
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _index, children: _screens),
@@ -99,10 +109,10 @@ class _HomeShellState extends State<HomeShell> {
                   ),
                   child: Row(
                     children: [
-                      for (var i = 0; i < _destinations.length; i++)
+                      for (var i = 0; i < destinations.length; i++)
                         Expanded(
                           child: _NavPillItem(
-                            item: _destinations[i],
+                            item: destinations[i],
                             selected: i == _index,
                             onTap: () => _goToTab(i),
                           ),

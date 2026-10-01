@@ -9,6 +9,7 @@ import '../../../core/widgets/gates_calendar.dart';
 import '../../../core/widgets/gates_text_area.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../../core/widgets/gates_time_picker.dart';
+import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/visit.dart';
 import 'visits_controller.dart';
@@ -17,12 +18,12 @@ import '../../../core/widgets/gates_toast.dart';
 const _notesMaxLength = 120;
 
 /// Shared with [VisitPendingDetailScreen] so both show identical date text.
-String formatVisitDate(DateTime date) {
+String formatVisitDate(AppLocalizations l10n, DateTime date) {
   final now = DateTime.now();
   final isToday =
       date.year == now.year && date.month == now.month && date.day == now.day;
   final formatted = DateFormat('d MMM y', 'es').format(date);
-  return isToday ? 'Hoy, $formatted' : formatted;
+  return isToday ? l10n.visitsDateToday(formatted) : formatted;
 }
 
 String formatArrivalTime(TimeOfDay time) {
@@ -90,7 +91,7 @@ class _CreateFastlaneVisitScreenState
       initialDate: _visitDate,
       firstDate: today,
       lastDate: today.add(const Duration(days: 365)),
-      title: 'Fecha de visita',
+      title: context.l10n.visitsFastlaneVisitDate,
     );
     if (picked != null) setState(() => _visitDate = picked);
   }
@@ -128,15 +129,15 @@ class _CreateFastlaneVisitScreenState
         showGatesToast(
           context,
           type: GatesToastType.success,
-          title: 'Invitación actualizada',
+          title: context.l10n.visitsFastlaneUpdatedToast,
         );
       } catch (_) {
         if (mounted) {
           showGatesToast(
             context,
             type: GatesToastType.error,
-            title: 'No pudimos guardar los cambios',
-            message: 'Intenta de nuevo.',
+            title: context.l10n.visitsSaveError,
+            message: context.l10n.visitsTryAgain,
           );
           setState(() => _isSubmitting = false);
         }
@@ -167,8 +168,8 @@ class _CreateFastlaneVisitScreenState
         showGatesToast(
           context,
           type: GatesToastType.error,
-          title: 'No pudimos crear la invitación',
-          message: 'Intenta de nuevo.',
+          title: context.l10n.visitsFastlaneCreateError,
+          message: context.l10n.visitsTryAgain,
         );
       }
     } finally {
@@ -188,7 +189,11 @@ class _CreateFastlaneVisitScreenState
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(_isEditing ? 'Editar invitación' : 'Invitar con FastLane'),
+        title: Text(
+          _isEditing
+              ? context.l10n.visitsPendingEdit
+              : context.l10n.visitsFastlaneTitle,
+        ),
       ),
       body: SafeArea(
         top: false,
@@ -201,7 +206,10 @@ class _CreateFastlaneVisitScreenState
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('UNIDAD', style: context.gatesText.caption),
+                    Text(
+                      context.l10n.visitsUnitUpper,
+                      style: context.gatesText.caption,
+                    ),
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
                       membership.label,
@@ -215,24 +223,24 @@ class _CreateFastlaneVisitScreenState
               ],
               GatesTextField(
                 controller: _nameController,
-                label: 'Nombre de referencia *',
-                hintText: 'Visita de...',
+                label: context.l10n.visitsFastlaneNameLabel,
+                hintText: context.l10n.visitsFastlaneNameHint,
                 textCapitalization: TextCapitalization.words,
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Escribe un nombre para identificar la visita.'
+                    ? context.l10n.visitsFastlaneNameRequired
                     : null,
               ),
               const SizedBox(height: GatesSpacing.space16),
               _TapField(
-                label: 'Fecha de visita',
-                value: formatVisitDate(_visitDate),
-                helper: 'Fecha prevista para la visita.',
+                label: context.l10n.visitsFastlaneVisitDate,
+                value: formatVisitDate(context.l10n, _visitDate),
+                helper: context.l10n.visitsFastlaneDateHelper,
                 icon: Icons.calendar_month_outlined,
                 onTap: _pickVisitDate,
               ),
               const SizedBox(height: GatesSpacing.space16),
               _TapField(
-                label: 'Hora de llegada prevista *',
+                label: context.l10n.visitsFastlaneArrivalLabel,
                 value: formatArrivalTime(_arrivalTime),
                 onTap: _pickArrivalTime,
               ),
@@ -249,7 +257,9 @@ class _CreateFastlaneVisitScreenState
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.all(GatesSpacing.space24),
         child: GatesButton(
-          label: _isEditing ? 'Guardar cambios' : 'Crear invitación',
+          label: _isEditing
+              ? context.l10n.visitsSaveChanges
+              : context.l10n.visitsFastlaneCreate,
           loading: _isSubmitting,
           onPressed: _isSubmitting ? null : _submit,
         ),

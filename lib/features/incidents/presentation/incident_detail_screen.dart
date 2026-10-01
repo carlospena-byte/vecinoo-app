@@ -14,6 +14,7 @@ import '../../../core/widgets/gates_toast.dart';
 import '../../session/presentation/session_controller.dart';
 import '../../../core/widgets/state_views.dart';
 import '../domain/incident.dart';
+import '../../../l10n/l10n.dart';
 import 'incident_edit_args.dart';
 import 'incidents_controller.dart';
 import 'incidents_list_screen.dart' show IncidentStatusBadge;
@@ -35,16 +36,18 @@ class IncidentDetailScreen extends ConsumerWidget {
     final userId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
 
     return incidentAsync.when(
-      loading: () => _shell(const LoadingView()),
+      loading: () => _shell(context, const LoadingView()),
       error: (e, _) => _shell(
+        context,
         ErrorView(
-          message: 'No se pudo cargar la incidencia.',
+          message: context.l10n.incidentsDetailLoadError,
           onRetry: () => ref.invalidate(incidentDetailProvider(incidentId)),
         ),
       ),
       data: (incident) {
         final canManage = incident.isEditable && incident.reportedBy == userId;
         return _shell(
+          context,
           SafeArea(
             top: false,
             child: ListView(
@@ -65,7 +68,7 @@ class IncidentDetailScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       GatesTextAction(
-                        label: 'Editar incidencia',
+                        label: context.l10n.incidentsEditAction,
                         filled: true,
                         onPressed: () async {
                           final photos = await ref.read(
@@ -87,7 +90,7 @@ class IncidentDetailScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 20),
                       GatesTextAction(
-                        label: 'Cancelar incidencia',
+                        label: context.l10n.incidentsCancelAction,
                         color: context.palette.statusError,
                         onPressed: () => _confirmCancel(context, ref),
                       ),
@@ -113,18 +116,17 @@ class IncidentDetailScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: 'Cancelar incidencia'),
+            GatesSheetHeader(title: context.l10n.incidentsCancelAction),
             const SizedBox(height: GatesSpacing.space8),
             Text(
-              'Ya no se le dará seguimiento. La incidencia seguirá en tu '
-              'historial como cancelada.',
+              context.l10n.incidentsCancelSheetBody,
               style: GatesTypography.body,
             ),
             const SizedBox(height: GatesSpacing.space24),
             SizedBox(
               width: double.infinity,
               child: GatesButton(
-                label: 'Sí, cancelar incidencia',
+                label: context.l10n.incidentsCancelConfirm,
                 style: GatesButtonStyle.destructive,
                 onPressed: () => Navigator.of(sheetContext).pop(true),
               ),
@@ -147,28 +149,29 @@ class IncidentDetailScreen extends ConsumerWidget {
       showGatesToast(
         context,
         type: GatesToastType.success,
-        title: 'Incidencia cancelada',
+        title: context.l10n.incidentsCancelledToast,
       );
     } catch (_) {
       if (!context.mounted) return;
       showGatesToast(
         context,
         type: GatesToastType.error,
-        title: 'No pudimos cancelar la incidencia',
-        message: 'Intenta de nuevo.',
+        title: context.l10n.incidentsCancelFailedTitle,
+        message: context.l10n.incidentsTryAgain,
       );
     }
   }
 
-  Widget _shell(Widget body, {Widget? bottom}) => Scaffold(
-    backgroundColor: Colors.transparent,
-    appBar: AppBar(
-      backgroundColor: Colors.transparent,
-      title: const Text('Incidencia'),
-    ),
-    body: body,
-    bottomNavigationBar: bottom,
-  );
+  Widget _shell(BuildContext context, Widget body, {Widget? bottom}) =>
+      Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(context.l10n.incidentsDetailTitle),
+        ),
+        body: body,
+        bottomNavigationBar: bottom,
+      );
 }
 
 /// Same card shape as the invitation's "Resumen y estado" (Figma 402:1939).
@@ -193,7 +196,9 @@ class _SummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Reportada el ${_dateFormat.format(incident.createdAt)}',
+            context.l10n.incidentsDetailReportedOn(
+              _dateFormat.format(incident.createdAt),
+            ),
             style: context.gatesText.caption.copyWith(fontSize: 13),
           ),
           const SizedBox(height: GatesSpacing.space4),
@@ -221,7 +226,10 @@ class _SummaryCard extends StatelessWidget {
           ),
           if (description != null && description.trim().isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text('Descripción', style: context.gatesText.caption),
+            Text(
+              context.l10n.incidentsDetailDescription,
+              style: context.gatesText.caption,
+            ),
             const SizedBox(height: GatesSpacing.space4),
             Html(
               data: description,
@@ -252,7 +260,10 @@ class _SummaryCard extends StatelessWidget {
           ],
           if (photos.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text('Fotografías', style: context.gatesText.caption),
+            Text(
+              context.l10n.incidentsDetailPhotos,
+              style: context.gatesText.caption,
+            ),
             const SizedBox(height: GatesSpacing.space8),
             Wrap(
               spacing: GatesSpacing.space12,
@@ -275,8 +286,8 @@ class _AttachmentThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Fotografía adjunta',
-      hint: 'Toca dos veces para ampliar',
+      label: context.l10n.incidentsAttachedPhoto,
+      hint: context.l10n.incidentsAttachedPhotoHint,
       child: GestureDetector(
         onTap: () => showDialog<void>(
           context: context,

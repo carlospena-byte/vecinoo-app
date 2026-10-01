@@ -12,6 +12,7 @@ import '../../session/presentation/session_controller.dart';
 import 'auth_controller.dart';
 import 'otp_verify_screen.dart';
 import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
 
 /// SharedPreferences key for an already-validated invitation code, saved
 /// right before we navigate to the OTP screen (there's no active session
@@ -48,7 +49,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _acceptInvitation() async {
     if (_codeController.text.length != _invitationCodeLength) {
-      setState(() => _errorText = 'Ingresa los $_invitationCodeLength dígitos');
+      setState(
+        () => _errorText = context.l10n.authEnterDigits(_invitationCodeLength),
+      );
       return;
     }
     setState(() {
@@ -86,7 +89,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       // bugs — like an unreachable Supabase URL — from looking identical
       // to a bad invitation code in the debug console.
       debugPrint('Accept invitation failed: $e');
-      setState(() => _errorText = 'Código inválido, ya usado o expirado.');
+      setState(() => _errorText = context.l10n.authInvitationInvalid);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -96,8 +99,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     showGatesToast(
       context,
       type: GatesToastType.info,
-      title: 'Contacta a soporte',
-      message: 'Escríbenos a soporte@vecinoo.app',
+      title: context.l10n.authSupportTitle,
+      message: context.l10n.authSupportMessage,
     );
   }
 
@@ -114,25 +117,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const VecinooWordmark(),
                 const VecinooMark(),
                 const Expanded(child: SizedBox()),
-                Text('Valida tu código', style: GatesTypography.headingLarge),
+                Text(
+                  context.l10n.authValidateCodeTitle,
+                  style: GatesTypography.headingLarge,
+                ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ingresa el código de $_invitationCodeLength dígitos que recibiste en tu invitación.',
+                  context.l10n.authValidateCodeBody(_invitationCodeLength),
                   style: context.gatesText.labelSecondary,
                 ),
                 const SizedBox(height: 16),
                 OtpCodeField(
                   controller: _codeController,
-                  label: 'Código de invitación',
+                  label: context.l10n.authInvitationCode,
                   length: _invitationCodeLength,
                   accentColor: context.palette.accentCoral,
-                  helper: 'Revisa tu tarjeta o correo de bienvenida.',
+                  helper: context.l10n.authInvitationHelper,
                   errorText: _errorText,
                   onCompleted: (_) => _acceptInvitation(),
                 ),
                 const SizedBox(height: 16),
                 GatesButton(
-                  label: 'Aceptar invitación',
+                  label: context.l10n.authAcceptInvitation,
                   onPressed:
                       (_isSubmitting ||
                           _codeController.text.length != _invitationCodeLength)
@@ -144,7 +150,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: TextButton(
                     onPressed: _contactSupport,
                     child: Text(
-                      '¿No recibiste tu invitación? Contactar soporte',
+                      context.l10n.authNoInvitationContactSupport,
                       style: GatesTypography.label.copyWith(
                         color: context.palette.textBrand,
                       ),
@@ -189,6 +195,7 @@ class _BackButton extends StatelessWidget {
           height: 40,
           child: Icon(
             Icons.arrow_back,
+            semanticLabel: context.l10n.commonBack,
             size: 20,
             color: context.palette.textPrimary,
           ),

@@ -13,6 +13,7 @@ import '../../../core/widgets/vecinoo_brand.dart';
 import '../../session/presentation/session_controller.dart';
 import 'auth_controller.dart';
 import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
 
 enum OtpChannel { email, phone }
 
@@ -80,9 +81,8 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
   bool get _isEmail => widget.args.channel == OtpChannel.email;
 
-  String get _introText => _isEmail
-      ? 'Para iniciar sesión, ingresa el nuevo código de 6 dígitos que enviamos a'
-      : 'Para iniciar sesión, ingresa el nuevo código de 6 dígitos que enviamos por SMS a';
+  String _introText(BuildContext context) =>
+      _isEmail ? context.l10n.authOtpIntroEmail : context.l10n.authOtpIntroSms;
 
   @override
   void initState() {
@@ -109,7 +109,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
   Future<void> _verify() async {
     if (_codeController.text.length != 6) {
-      setState(() => _errorText = 'Ingresa los 6 dígitos');
+      setState(() => _errorText = context.l10n.authEnterDigits(6));
       return;
     }
     setState(() {
@@ -135,7 +135,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       // Otherwise, GoRouter's auth redirect takes over once the session is set.
     } catch (e) {
       debugPrint('OTP verify failed: $e');
-      setState(() => _errorText = 'Código incorrecto o expirado.');
+      setState(() => _errorText = context.l10n.authOtpWrongOrExpired);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -173,8 +173,8 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
         showGatesToast(
           context,
           type: GatesToastType.success,
-          title: 'Código reenviado',
-          message: 'Puedes pedir otro en 60 segundos.',
+          title: context.l10n.authOtpResentTitle,
+          message: context.l10n.authOtpResentMessage,
         );
       }
     } catch (e) {
@@ -185,8 +185,8 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
         showGatesToast(
           context,
           type: GatesToastType.error,
-          title: 'No pudimos reenviar el código',
-          message: 'Intenta de nuevo en un minuto.',
+          title: context.l10n.authOtpResendFailedTitle,
+          message: context.l10n.authOtpResendFailedMessage,
         );
       }
     } finally {
@@ -208,7 +208,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 const VecinooMark(),
                 if (widget.args.registration != null) ...[
                   Text(
-                    'Invitación validada',
+                    context.l10n.authInvitationValidated,
                     style: context.gatesText.caption.copyWith(
                       color: context.palette.textBrand,
                       fontWeight: FontWeight.w600,
@@ -217,12 +217,14 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                   const SizedBox(height: 8),
                 ],
                 Text(
-                  _isEmail ? 'Revisa tu correo' : 'Revisa tu teléfono',
+                  _isEmail
+                      ? context.l10n.authCheckEmail
+                      : context.l10n.authCheckPhone,
                   style: GatesTypography.headingLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _introText,
+                  _introText(context),
                   style: GatesTypography.body.copyWith(
                     color: context.palette.textPrimary,
                   ),
@@ -239,14 +241,14 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 const SizedBox(height: 24),
                 OtpCodeField(
                   controller: _codeController,
-                  label: 'Código de verificación',
+                  label: context.l10n.authVerificationCode,
                   errorText: _errorText,
                   autofillHints: const [AutofillHints.oneTimeCode],
                   onCompleted: (_) => _verify(),
                 ),
                 const SizedBox(height: 16),
                 GatesButton(
-                  label: 'Verificar e iniciar sesión',
+                  label: context.l10n.authVerifyAndSignIn,
                   onPressed: _isSubmitting ? null : _verify,
                   loading: _isSubmitting,
                 ),
@@ -257,10 +259,10 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                         : _resend,
                     child: Text(
                       _isResending
-                          ? 'Enviando...'
+                          ? context.l10n.authSending
                           : _cooldownRemaining > 0
-                          ? 'Reenviar código en ${_cooldownRemaining}s'
-                          : 'Reenviar código',
+                          ? context.l10n.authResendIn(_cooldownRemaining)
+                          : context.l10n.authResend,
                       style: GatesTypography.label.copyWith(
                         color: _cooldownRemaining > 0
                             ? context.palette.textSecondary
@@ -308,7 +310,10 @@ class _CommunityContext extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tu acceso a la comunidad', style: context.gatesText.caption),
+        Text(
+          context.l10n.authCommunityAccess,
+          style: context.gatesText.caption,
+        ),
         const SizedBox(height: 4),
         Text(
           '${registration.unitName} · ${registration.residentialName}',
@@ -319,7 +324,10 @@ class _CommunityContext extends StatelessWidget {
         ),
         if (name != null) ...[
           const SizedBox(height: 4),
-          Text('$name · Residente', style: context.gatesText.caption),
+          Text(
+            context.l10n.authResidentName(name),
+            style: context.gatesText.caption,
+          ),
         ],
       ],
     );
@@ -346,6 +354,7 @@ class _BackButton extends StatelessWidget {
           height: 40,
           child: Icon(
             Icons.arrow_back,
+            semanticLabel: context.l10n.commonBack,
             size: 20,
             color: context.palette.textPrimary,
           ),

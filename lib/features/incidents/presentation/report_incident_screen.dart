@@ -13,6 +13,7 @@ import '../../../core/widgets/gates_toast.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/incident.dart';
 import 'incident_edit_args.dart';
+import '../../../l10n/l10n.dart';
 import 'incident_rich_editor.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import 'incidents_controller.dart';
@@ -143,8 +144,8 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         showGatesToast(
           context,
           type: GatesToastType.info,
-          title: 'Máximo $_maxPhotos fotografías',
-          message: 'Agregamos las primeras $remaining.',
+          title: context.l10n.incidentsReportMaxPhotos(_maxPhotos),
+          message: context.l10n.incidentsReportAddedFirst(remaining),
         );
         picked = picked.take(remaining).toList();
       }
@@ -156,8 +157,8 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       showGatesToast(
         context,
         type: GatesToastType.error,
-        title: 'No pudimos abrir las fotografías',
-        message: 'Revisa los permisos e intenta de nuevo.',
+        title: context.l10n.incidentsReportPhotosOpenFailed,
+        message: context.l10n.incidentsReportPhotosPermissions,
       );
     }
   }
@@ -212,8 +213,8 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         showGatesToast(
           context,
           type: GatesToastType.error,
-          title: 'No pudimos guardar los cambios',
-          message: 'Tus cambios se conservaron. Intenta de nuevo.',
+          title: context.l10n.incidentsReportSaveFailed,
+          message: context.l10n.incidentsReportSaveFailedBody,
         );
         return;
       }
@@ -237,8 +238,8 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       showGatesToast(
         context,
         type: GatesToastType.error,
-        title: 'No pudimos enviar el reporte',
-        message: 'Tus datos se conservaron. Intenta de nuevo.',
+        title: context.l10n.incidentsReportSendFailed,
+        message: context.l10n.incidentsReportSendFailedBody,
       );
       return;
     }
@@ -289,7 +290,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       showGatesToast(
         context,
         type: GatesToastType.success,
-        title: 'Cambios guardados',
+        title: context.l10n.incidentsReportChangesSaved,
       );
     } else {
       setState(() => _phase = _Phase.sent);
@@ -314,21 +315,21 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: '¿Descartar cambios?'),
+            GatesSheetHeader(title: context.l10n.incidentsReportDiscardTitle),
             const SizedBox(height: GatesSpacing.space8),
             Text(
-              'Si sales ahora, los cambios que hiciste no se guardarán.',
+              context.l10n.incidentsReportDiscardBody,
               style: GatesTypography.body,
             ),
             const SizedBox(height: GatesSpacing.space24),
             GatesButton(
-              label: 'Descartar cambios',
+              label: context.l10n.incidentsReportDiscardAction,
               style: GatesButtonStyle.destructive,
               onPressed: () => Navigator.of(sheetContext).pop(true),
             ),
             const SizedBox(height: GatesSpacing.space8),
             GatesButton(
-              label: 'Seguir editando',
+              label: context.l10n.incidentsReportKeepEditing,
               style: GatesButtonStyle.secondary,
               onPressed: () => Navigator.of(sheetContext).pop(false),
             ),
@@ -371,7 +372,9 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
-          _isEditing ? 'Editar incidencia' : 'Reportar incidencia',
+          _isEditing
+              ? context.l10n.incidentsReportEditTitle
+              : context.l10n.incidentsReportAction,
           style: _appBarTitle,
         ),
       ),
@@ -387,13 +390,13 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           ),
           children: [
             Text(
-              'Cuéntanos qué ocurrió. Un administrador dará seguimiento.',
+              context.l10n.incidentsReportIntro,
               style: context.gatesText.labelSecondary,
             ),
             const SizedBox(height: GatesSpacing.space16),
             GatesSelectField<String>(
-              label: 'Categoría (opcional)',
-              placeholder: 'Seleccionar categoría',
+              label: context.l10n.incidentsReportCategoryLabel,
+              placeholder: context.l10n.incidentsReportCategoryPlaceholder,
               value: _incidentTypeId ?? '',
               options: {for (final t in types) t.id: t.name},
               onChanged: (id) => setState(() => _incidentTypeId = id),
@@ -401,8 +404,8 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             const SizedBox(height: GatesSpacing.space16),
             GatesTextField(
               controller: _titleController,
-              label: 'Título *',
-              hintText: '¿Qué problema quieres reportar?',
+              label: context.l10n.incidentsReportTitleLabel,
+              hintText: context.l10n.incidentsReportTitleHint,
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.next,
             ),
@@ -421,7 +424,9 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         child: ListenableBuilder(
           listenable: _titleController,
           builder: (context, _) => GatesButton(
-            label: _isEditing ? 'Guardar cambios' : 'Reportar incidencia',
+            label: _isEditing
+                ? context.l10n.incidentsReportSaveChanges
+                : context.l10n.incidentsReportAction,
             onPressed: _titleController.text.trim().isEmpty ? null : _submit,
           ),
         ),
@@ -437,28 +442,31 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
-        title: Text('Reportar incidencia', style: _appBarTitle),
+        title: Text(context.l10n.incidentsReportAction, style: _appBarTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
         children: [
           Text(
             _isEditing
-                ? 'Estamos guardando tus cambios'
-                : 'Estamos enviando tu reporte',
+                ? context.l10n.incidentsReportSavingChanges
+                : context.l10n.incidentsReportSending,
             style: GatesTypography.headingMedium,
           ),
           const SizedBox(height: GatesSpacing.space16),
           Text(
-            'Espera un momento mientras guardamos los datos y las fotografías.',
+            context.l10n.incidentsReportWaitMessage,
             style: context.gatesText.labelSecondary,
           ),
           const SizedBox(height: GatesSpacing.space16),
           _PhotosSection(photos: _photos, showAdd: false),
         ],
       ),
-      bottomNavigationBar: const _FixedAction(
-        child: GatesButton(label: 'Enviando…', onPressed: null),
+      bottomNavigationBar: _FixedAction(
+        child: GatesButton(
+          label: context.l10n.incidentsReportSendingButton,
+          onPressed: null,
+        ),
       ),
     );
   }
@@ -471,7 +479,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
-        title: Text('Fotografías', style: _appBarTitle),
+        title: Text(context.l10n.incidentsDetailPhotos, style: _appBarTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
@@ -488,14 +496,14 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Una foto no se pudo subir',
+                    context.l10n.incidentsReportPhotoErrorTitle,
                     style: GatesTypography.label.copyWith(
                       color: context.palette.statusError,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space8),
                   Text(
-                    'Reintenta la carga o elimina esa foto para continuar.',
+                    context.l10n.incidentsReportPhotoErrorBody,
                     style: context.gatesText.labelSecondary.copyWith(
                       color: context.palette.textPrimary,
                     ),
@@ -515,7 +523,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           if (_hasErrors) ...[
             const SizedBox(height: GatesSpacing.space16),
             GatesButton(
-              label: 'Reintentar fotografía',
+              label: context.l10n.incidentsReportRetryPhoto,
               style: GatesButtonStyle.secondary,
               onPressed: _uploadPending,
             ),
@@ -524,7 +532,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       ),
       bottomNavigationBar: _FixedAction(
         child: GatesButton(
-          label: 'Listo',
+          label: context.l10n.incidentsReportDone,
           onPressed: _hasErrors ? null : _finish,
         ),
       ),
@@ -544,7 +552,10 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           leading: BackButton(onPressed: _goHome),
-          title: Text('Incidencia enviada', style: _appBarTitle),
+          title: Text(
+            context.l10n.incidentsReportSentTitle,
+            style: _appBarTitle,
+          ),
         ),
         body: ListView(
           padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
@@ -567,7 +578,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                 const SizedBox(width: GatesSpacing.space16),
                 Expanded(
                   child: Text(
-                    'Tu reporte fue enviado',
+                    context.l10n.incidentsReportSentHeadline,
                     style: GatesTypography.headingMedium,
                   ),
                 ),
@@ -575,7 +586,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             ),
             const SizedBox(height: GatesSpacing.space16),
             Text(
-              'Un administrador dará seguimiento a la incidencia.',
+              context.l10n.incidentsReportSentBody,
               style: GatesTypography.body.copyWith(
                 color: context.palette.textSecondary,
               ),
@@ -601,7 +612,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                   ],
                   const SizedBox(height: GatesSpacing.space12),
                   Text(
-                    'Reporte recibido',
+                    context.l10n.incidentsReportReceived,
                     style: GatesTypography.label.copyWith(
                       color: context.palette.statusSuccess,
                     ),
@@ -610,7 +621,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                   Row(
                     children: [
                       Text(
-                        'Fotografías',
+                        context.l10n.incidentsDetailPhotos,
                         style: context.gatesText.labelSecondary,
                       ),
                       const SizedBox(width: GatesSpacing.space12),
@@ -626,7 +637,10 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           ],
         ),
         bottomNavigationBar: _FixedAction(
-          child: GatesButton(label: 'Volver al inicio', onPressed: _goHome),
+          child: GatesButton(
+            label: context.l10n.incidentsReportBackHome,
+            onPressed: _goHome,
+          ),
         ),
       ),
     );
@@ -693,7 +707,10 @@ class _PhotosSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Fotografías (opcional)', style: GatesTypography.label),
+            Text(
+              context.l10n.incidentsReportPhotosOptional,
+              style: GatesTypography.label,
+            ),
             Text(
               '${photos.length} / $_maxPhotos',
               style: context.gatesText.caption.copyWith(height: 16 / 12),
@@ -720,7 +737,9 @@ class _PhotosSection extends StatelessWidget {
         if (showAdd && photos.length < _maxPhotos) ...[
           if (photos.isNotEmpty) const SizedBox(height: GatesSpacing.space12),
           _AddPhotosCard(
-            title: photos.isEmpty ? 'Agregar fotografías' : 'Agregar más fotos',
+            title: photos.isEmpty
+                ? context.l10n.incidentsReportAddPhotos
+                : context.l10n.incidentsReportAddMorePhotos,
             onTap: onAdd,
           ),
         ],
@@ -768,7 +787,7 @@ class _AddPhotosCard extends StatelessWidget {
                     ),
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
-                      'Hasta $_maxPhotos fotografías',
+                      context.l10n.incidentsReportUpToPhotos(_maxPhotos),
                       style: context.gatesText.caption.copyWith(
                         height: 16 / 12,
                       ),
@@ -822,7 +841,7 @@ class _PhotoTile extends StatelessWidget {
                   canRemove && status != _PhotoStatus.uploading
                       ? Semantics(
                           button: true,
-                          label: 'Eliminar fotografía',
+                          label: context.l10n.incidentsReportRemovePhoto,
                           excludeSemantics: true,
                           onTap: onRemove,
                           child: GestureDetector(
@@ -854,20 +873,20 @@ class _PhotoTile extends StatelessWidget {
                       : const SizedBox(height: 44),
                   if (status == _PhotoStatus.uploading)
                     _StatusPill(
-                      label: 'Subiendo…',
+                      label: context.l10n.incidentsReportUploading,
                       background: context.palette.bgSurface,
                       foreground: context.palette.textBrand,
                     ),
                   if (status == _PhotoStatus.error)
                     Semantics(
                       button: true,
-                      label: 'Reintentar subida de la fotografía',
+                      label: context.l10n.incidentsReportRetryUploadPhoto,
                       excludeSemantics: true,
                       onTap: onRetry,
                       child: GestureDetector(
                         onTap: onRetry,
                         child: _StatusPill(
-                          label: 'Reintentar',
+                          label: context.l10n.incidentsReportRetry,
                           background: context.palette.statusErrorBg,
                           foreground: context.palette.statusError,
                         ),
@@ -946,7 +965,7 @@ class _PhotoSourceSheet extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Agregar fotografías',
+                          context.l10n.incidentsReportAddPhotos,
                           style: GatesTypography.headingSmall,
                         ),
                       ),
@@ -962,19 +981,19 @@ class _PhotoSourceSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: GatesSpacing.space16),
                   Text(
-                    'Elige cómo quieres agregar tus fotos.',
+                    context.l10n.incidentsReportPhotoSourceBody,
                     style: GatesTypography.body.copyWith(
                       color: context.palette.textSecondary,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space16),
                   _SheetAction(
-                    label: 'Tomar foto',
+                    label: context.l10n.incidentsReportTakePhoto,
                     onTap: () => onPick(ImageSource.camera),
                   ),
                   const SizedBox(height: GatesSpacing.space8),
                   _SheetAction(
-                    label: 'Elegir de la galería',
+                    label: context.l10n.incidentsReportChooseGallery,
                     onTap: () => onPick(ImageSource.gallery),
                   ),
                 ],
@@ -982,7 +1001,7 @@ class _PhotoSourceSheet extends StatelessWidget {
             ),
             const SizedBox(height: GatesSpacing.space12),
             _SheetAction(
-              label: 'Cancelar',
+              label: context.l10n.incidentsReportCancel,
               onTap: onCancel,
               background: context.palette.bgSurface,
               height: 52,

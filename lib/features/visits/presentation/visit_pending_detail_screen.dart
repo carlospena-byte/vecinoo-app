@@ -11,6 +11,7 @@ import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_text_action.dart';
 import '../../../core/widgets/gates_toast.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../../home/home_shell.dart';
 import '../../session/presentation/session_controller.dart';
 import '../data/visits_repository.dart';
@@ -19,20 +20,20 @@ import 'visits_controller.dart';
 
 /// "Hoy, 29 sept. · 2:00 p. m." — matches the Figma F02 summary card. The
 /// year is only added when the visit isn't in the current year.
-String _arrivalLabel(DateTime date) {
+String _arrivalLabel(AppLocalizations l10n, DateTime date) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(date.year, date.month, date.day);
-  final prefix = day == today
-      ? 'Hoy, '
-      : day == today.add(const Duration(days: 1))
-      ? 'Mañana, '
-      : '';
   final dayMonth =
       '${DateFormat('d MMM', 'es').format(date).replaceAll('.', '')}.';
   final year = date.year == now.year ? '' : ' ${date.year}';
   final time = DateFormat('h:mm a', 'es').format(date);
-  return '$prefix$dayMonth$year · $time';
+  final rest = '$dayMonth$year · $time';
+  if (day == today) return l10n.visitsArrivalToday(rest);
+  if (day == today.add(const Duration(days: 1))) {
+    return l10n.visitsArrivalTomorrow(rest);
+  }
+  return rest;
 }
 
 /// FastLane invitation that is still waiting for the visitor's data — Figma
@@ -74,7 +75,7 @@ class _VisitPendingDetailScreenState
     showGatesToast(
       context,
       type: GatesToastType.success,
-      title: 'Enlace copiado',
+      title: context.l10n.visitsPendingLinkCopied,
     );
   }
 
@@ -83,10 +84,11 @@ class _VisitPendingDetailScreenState
         .read(selectedMembershipProvider)
         .value
         ?.residentialName;
+    final l10n = context.l10n;
     final title = residentialName == null
-        ? 'Invitación FastLane'
-        : 'Invitación a $residentialName';
-    final detail = _arrivalLabel(visit.validFrom);
+        ? l10n.visitsPendingShareTitle
+        : l10n.visitsPendingShareTitleResidential(residentialName);
+    final detail = _arrivalLabel(l10n, visit.validFrom);
     // The OS share sheet (iOS/Android). iPads need an anchor rect for the
     // popover, so use this screen's bounds.
     final box = context.findRenderObject() as RenderBox?;
@@ -111,17 +113,17 @@ class _VisitPendingDetailScreenState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: 'Cancelar invitación'),
+            GatesSheetHeader(title: context.l10n.visitsPendingCancel),
             const SizedBox(height: GatesSpacing.space8),
             Text(
-              'El enlace dejará de funcionar y tu visita ya no podrá registrarse con él.',
+              context.l10n.visitsPendingCancelBody,
               style: GatesTypography.body,
             ),
             const SizedBox(height: GatesSpacing.space24),
             SizedBox(
               width: double.infinity,
               child: GatesButton(
-                label: 'Sí, cancelar invitación',
+                label: context.l10n.visitsPendingCancelConfirm,
                 style: GatesButtonStyle.destructive,
                 onPressed: () => Navigator.of(sheetContext).pop(true),
               ),
@@ -140,7 +142,7 @@ class _VisitPendingDetailScreenState
       showGatesToast(
         context,
         type: GatesToastType.success,
-        title: 'Invitación cancelada',
+        title: context.l10n.visitsPendingCancelledToast,
       );
     } catch (_) {
       if (!mounted) return;
@@ -148,8 +150,8 @@ class _VisitPendingDetailScreenState
       showGatesToast(
         context,
         type: GatesToastType.error,
-        title: 'No pudimos cancelar la invitación',
-        message: 'Intenta de nuevo.',
+        title: context.l10n.visitsPendingCancelError,
+        message: context.l10n.visitsTryAgain,
       );
     }
   }
@@ -183,7 +185,7 @@ class _VisitPendingDetailScreenState
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Invitación creada'),
+        title: Text(context.l10n.visitsPendingTitle),
       ),
       body: SafeArea(
         top: false,
@@ -191,22 +193,25 @@ class _VisitPendingDetailScreenState
           padding: const EdgeInsets.all(GatesSpacing.space24),
           children: [
             Text(
-              'Comparte el enlace para que tu visitante complete sus datos.',
+              context.l10n.visitsPendingIntro,
               style: GatesTypography.body.copyWith(
                 color: context.palette.textSecondary,
               ),
             ),
             const SizedBox(height: GatesSpacing.space24),
-            _SummaryCard(arrival: _arrivalLabel(visit.validFrom), link: link),
+            _SummaryCard(
+              arrival: _arrivalLabel(context.l10n, visit.validFrom),
+              link: link,
+            ),
             if (link != null) ...[
               const SizedBox(height: GatesSpacing.space24),
               GatesButton(
-                label: 'Compartir invitación',
+                label: context.l10n.visitsPendingShare,
                 onPressed: () => _share(visit, link),
               ),
               const SizedBox(height: GatesSpacing.space8),
               GatesTextAction(
-                label: 'Copiar enlace',
+                label: context.l10n.visitsPendingCopyLink,
                 onPressed: () => _copyLink(link),
               ),
             ],
@@ -219,7 +224,7 @@ class _VisitPendingDetailScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             GatesTextAction(
-              label: 'Editar invitación',
+              label: context.l10n.visitsPendingEdit,
               filled: true,
               onPressed: () =>
                   context.push('/visits/${visit.id}/edit', extra: visit),
@@ -227,7 +232,7 @@ class _VisitPendingDetailScreenState
             const SizedBox(height: 20),
             if (widget.justCreated)
               GatesTextAction(
-                label: 'Ir a mis visitas',
+                label: context.l10n.visitsPendingGoToVisits,
                 onPressed: () => context.go(
                   '/',
                   extra: const HomeTabRequest(HomeShell.visitsTab),
@@ -235,7 +240,7 @@ class _VisitPendingDetailScreenState
               )
             else
               GatesTextAction(
-                label: 'Cancelar invitación',
+                label: context.l10n.visitsPendingCancel,
                 color: context.palette.statusError,
                 onPressed: _isCancelling ? null : () => _cancel(visit),
               ),
@@ -267,7 +272,7 @@ class _SummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Llegada prevista',
+            context.l10n.visitsPendingExpectedArrival,
             style: context.gatesText.caption.copyWith(fontSize: 13),
           ),
           const SizedBox(height: GatesSpacing.space4),
@@ -287,7 +292,7 @@ class _SummaryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
             ),
             child: Text(
-              'Pendiente de datos',
+              context.l10n.visitsPendingDataStatus,
               style: context.gatesText.caption.copyWith(
                 color: context.palette.textBrand,
                 fontWeight: FontWeight.w600,
@@ -296,7 +301,7 @@ class _SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Tu visitante completará sus datos al abrir el enlace.',
+            context.l10n.visitsPendingVisitorWillComplete,
             style: GatesTypography.body.copyWith(
               fontSize: 14,
               color: context.palette.textSecondary,
@@ -305,7 +310,10 @@ class _SummaryCard extends StatelessWidget {
           ),
           if (link != null) ...[
             const SizedBox(height: 20),
-            Text('Enlace de invitación', style: context.gatesText.caption),
+            Text(
+              context.l10n.visitsPendingLinkLabel,
+              style: context.gatesText.caption,
+            ),
             const SizedBox(height: GatesSpacing.space4),
             Text(
               link!,

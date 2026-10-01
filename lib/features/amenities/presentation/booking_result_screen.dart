@@ -7,10 +7,12 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
+import '../../../l10n/l10n.dart';
 import '../../home/home_shell.dart';
 import '../domain/amenity.dart';
 import '../domain/amenity_booking.dart';
 import 'amenities_controller.dart';
+import 'amenity_formatters.dart';
 
 /// Arguments for `/amenities/:id/result`.
 class BookingResultArgs {
@@ -50,14 +52,14 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
     final booking = widget.args.booking;
 
     final heading = _isConfirmed
-        ? 'Todo listo para tu reserva'
-        : 'Pendiente de confirmación';
+        ? context.l10n.amenitiesResultConfirmedHeading
+        : context.l10n.amenitiesPendingConfirmation;
     final subtext = _isConfirmed
-        ? 'Consulta los datos y el estado desde Mis reservas.'
-        : 'Tu solicitud fue enviada. Aún no está confirmada; consulta su estado en Mis reservas.';
+        ? context.l10n.amenitiesResultConfirmedSubtext
+        : context.l10n.amenitiesResultPendingSubtext;
     final appBarTitle = _isConfirmed
-        ? 'Reserva confirmada'
-        : 'Solicitud enviada';
+        ? context.l10n.amenitiesResultConfirmedTitle
+        : context.l10n.amenitiesResultPendingTitle;
 
     final urlsAsync = ref.watch(amenityImageUrlsProvider(amenity.id));
     final thumbnailUrl = urlsAsync.value?.values.firstOrNull;
@@ -149,13 +151,13 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                   ),
                   Text(
                     '${_timeFormat.format(booking.startTime)}–${_timeFormat.format(booking.endTime)} · '
-                    '${_durationLabel(booking.endTime.difference(booking.startTime).inMinutes)}',
+                    '${amenityDurationLabel(context.l10n, booking.endTime.difference(booking.startTime).inMinutes)}',
                     style: GatesTypography.body,
                   ),
                   if (booking.notes != null && booking.notes!.isNotEmpty) ...[
                     const SizedBox(height: GatesSpacing.space16),
                     Text(
-                      'Notas: ${booking.notes}',
+                      context.l10n.amenitiesNotesValue(booking.notes!),
                       style: context.gatesText.caption,
                     ),
                   ],
@@ -182,7 +184,7 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
             child: SizedBox(
               width: double.infinity,
               child: GatesButton(
-                label: 'Ver mis reservas',
+                label: context.l10n.amenitiesViewMyBookings,
                 onPressed: () => context.go(
                   '/',
                   extra: const HomeTabRequest(HomeShell.bookingsTab),
@@ -197,14 +199,6 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
 
   String _capitalize(String value) =>
       value.isEmpty ? value : value[0].toUpperCase() + value.substring(1);
-
-  String _durationLabel(int minutes) {
-    if (minutes % 60 == 0) {
-      final hours = minutes ~/ 60;
-      return hours == 1 ? '1 hora' : '$hours horas';
-    }
-    return '$minutes minutos';
-  }
 }
 
 class _StatusBanner extends StatelessWidget {
@@ -238,13 +232,15 @@ class _StatusBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  confirmed ? 'Confirmada' : 'Pendiente',
+                  confirmed
+                      ? context.l10n.amenitiesStatusConfirmed
+                      : context.l10n.amenitiesStatusPending,
                   style: GatesTypography.label,
                 ),
                 Text(
                   confirmed
-                      ? 'La reserva se registró correctamente.'
-                      : 'La solicitud espera confirmación.',
+                      ? context.l10n.amenitiesBannerConfirmedMessage
+                      : context.l10n.amenitiesBannerPendingMessage,
                   style: context.gatesText.caption,
                 ),
               ],

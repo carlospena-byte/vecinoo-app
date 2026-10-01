@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart' show TimeOfDay;
 
+import '../../../l10n/l10n.dart';
+
 enum VisitType { frequent, delivery, fastlane }
 
 enum VisitStatus {
@@ -58,76 +60,76 @@ VisitStatus visitStatusFromString(String value) {
   }
 }
 
-String visitStatusLabel(VisitStatus status) {
+String visitStatusLabel(AppLocalizations l10n, VisitStatus status) {
   switch (status) {
     case VisitStatus.pendingRegistration:
-      return 'Pendiente de registro';
+      return l10n.visitsStatusPendingRegistration;
     case VisitStatus.scheduled:
-      return 'Programada';
+      return l10n.visitsStatusScheduled;
     case VisitStatus.active:
-      return 'Activa';
+      return l10n.visitsStatusActive;
     case VisitStatus.inside:
-      return 'Dentro';
+      return l10n.visitsStatusInside;
     case VisitStatus.completed:
-      return 'Completada';
+      return l10n.visitsStatusCompleted;
     case VisitStatus.cancelled:
-      return 'Cancelada';
+      return l10n.visitsStatusCancelled;
     case VisitStatus.rejected:
-      return 'Rechazada';
+      return l10n.visitsStatusRejected;
     case VisitStatus.expired:
-      return 'Expirada';
+      return l10n.visitsStatusExpired;
   }
 }
 
-String visitTypeLabel(VisitType type) {
+String visitTypeLabel(AppLocalizations l10n, VisitType type) {
   switch (type) {
     case VisitType.frequent:
-      return 'Frecuente';
+      return l10n.visitsTypeFrequent;
     case VisitType.delivery:
-      return 'Delivery/Proveedor';
+      return l10n.visitsTypeDelivery;
     case VisitType.fastlane:
-      return 'FastLane';
+      return l10n.visitsTypeFastlane;
   }
 }
 
-String visitorRoleLabel(VisitorRole role) {
+String visitorRoleLabel(AppLocalizations l10n, VisitorRole role) {
   switch (role) {
     case VisitorRole.familiar:
-      return 'Familiar';
+      return l10n.visitsRoleFamiliar;
     case VisitorRole.entrenador:
-      return 'Entrenador';
+      return l10n.visitsRoleEntrenador;
     case VisitorRole.empleado:
-      return 'Empleado';
+      return l10n.visitsRoleEmpleado;
     case VisitorRole.proveedor:
-      return 'Proveedor';
+      return l10n.visitsRoleProveedor;
     case VisitorRole.visitante:
-      return 'Visitante';
+      return l10n.visitsRoleVisitante;
     case VisitorRole.invitado:
-      return 'Invitado';
+      return l10n.visitsRoleInvitado;
   }
 }
 
-String providerKindLabel(ProviderKind kind) {
+String providerKindLabel(AppLocalizations l10n, ProviderKind kind) {
   switch (kind) {
     case ProviderKind.proveedor:
-      return 'Proveedor';
+      return l10n.visitsProviderKindProveedor;
     case ProviderKind.delivery:
-      return 'Delivery';
+      return l10n.visitsProviderKindDelivery;
     case ProviderKind.paqueteria:
-      return 'Paquetería';
+      return l10n.visitsProviderKindPaqueteria;
   }
 }
 
-String recurrenceLabel(Recurrence recurrence) {
+String recurrenceLabel(AppLocalizations l10n, Recurrence recurrence) {
   switch (recurrence) {
     case Recurrence.monFri:
-      return 'Lunes a viernes';
+      return l10n.visitsRecurrenceMonFri;
     case Recurrence.monSat:
-      return 'Lunes a sábado';
+      return l10n.visitsRecurrenceMonSat;
     case Recurrence.daily:
-      return 'Todos los días';
+      return l10n.visitsRecurrenceDaily;
     case Recurrence.custom:
-      return 'Personalizado';
+      return l10n.visitsRecurrenceCustom;
   }
 }
 
@@ -155,14 +157,14 @@ Recurrence recurrenceFromString(String value) {
 /// Day keys as stored in `recurrence_days` / `schedule_blocks`, Monday first.
 const weekdayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
-const weekdayShortLabels = {
-  'mon': 'Lun',
-  'tue': 'Mar',
-  'wed': 'Mié',
-  'thu': 'Jue',
-  'fri': 'Vie',
-  'sat': 'Sáb',
-  'sun': 'Dom',
+String weekdayShortLabel(AppLocalizations l10n, String day) => switch (day) {
+  'mon' => l10n.visitsWeekdayMon,
+  'tue' => l10n.visitsWeekdayTue,
+  'wed' => l10n.visitsWeekdayWed,
+  'thu' => l10n.visitsWeekdayThu,
+  'fri' => l10n.visitsWeekdayFri,
+  'sat' => l10n.visitsWeekdaySat,
+  _ => l10n.visitsWeekdaySun,
 };
 
 /// One "Bloque de horario": a group of weekdays sharing the same access window.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key});
@@ -40,7 +41,7 @@ class ErrorView extends StatelessWidget {
               const SizedBox(height: 16),
               OutlinedButton(
                 onPressed: onRetry,
-                child: const Text('Reintentar'),
+                child: Text(context.l10n.commonRetry),
               ),
             ],
           ],

@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/keyboard_safe_column.dart';
 import '../../../core/widgets/vecinoo_brand.dart';
+import '../../../l10n/l10n.dart';
 
 /// "02b / Configura biometría" screen from Figma (file
 /// `Bla1GPfXA7JkuZcYpVi2DS`, node `46:82`): offered once, right after a
@@ -27,24 +28,27 @@ class BiometricSetupScreen extends StatelessWidget {
               children: [
                 const VecinooWordmark(),
                 const VecinooMark(),
-                Text('Entra más rápido', style: GatesTypography.headingLarge),
+                Text(
+                  context.l10n.authBiometricTitle,
+                  style: GatesTypography.headingLarge,
+                ),
                 const SizedBox(height: 12),
                 Text(
-                  'Usa tu rostro o huella para entrar.\nPuedes configurarlo más adelante.',
+                  context.l10n.authBiometricBody,
                   style: GatesTypography.body.copyWith(
                     color: context.palette.textPrimary,
                   ),
                 ),
                 const Expanded(child: SizedBox()),
                 GatesButton(
-                  label: 'Configurar biometría',
+                  label: context.l10n.authBiometricSetup,
                   onPressed: () => context.go('/'),
                 ),
                 Center(
                   child: TextButton(
                     onPressed: () => context.go('/'),
                     child: Text(
-                      'Omitir por ahora',
+                      context.l10n.authBiometricSkip,
                       style: GatesTypography.label.copyWith(
                         color: context.palette.textBrand,
                       ),

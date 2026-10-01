@@ -4,6 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../theme/app_theme.dart';
 import 'gates_button.dart';
+import '../../l10n/l10n.dart';
 
 /// "Octubre 2026" — capitalized month name plus year, no "de" in between
 /// (unlike `DateFormat.yMMMM('es')`, which reads "octubre de 2026").
@@ -65,7 +66,9 @@ class GatesCalendar extends StatelessWidget {
               return !day.isBefore(DateTime.utc(now.year, now.month, now.day));
             },
         calendarFormat: CalendarFormat.month,
-        availableCalendarFormats: const {CalendarFormat.month: 'Mes'},
+        availableCalendarFormats: {
+          CalendarFormat.month: context.l10n.commonMonth,
+        },
         headerStyle: HeaderStyle(
           titleCentered: true,
           formatButtonVisible: false,
@@ -140,8 +143,8 @@ Future<DateTime?> showGatesDatePicker(
   required DateTime initialDate,
   required DateTime firstDate,
   required DateTime lastDate,
-  String title = 'Fecha',
-  String primaryLabel = 'Continuar',
+  String? title,
+  String? primaryLabel,
 }) {
   return showModalBottomSheet<DateTime>(
     context: context,
@@ -155,8 +158,8 @@ Future<DateTime?> showGatesDatePicker(
       initialDate: initialDate,
       firstDate: firstDate,
       lastDate: lastDate,
-      title: title,
-      primaryLabel: primaryLabel,
+      title: title ?? context.l10n.commonDate,
+      primaryLabel: primaryLabel ?? context.l10n.commonContinue,
     ),
   );
 }
@@ -208,7 +211,7 @@ class _GatesDatePickerSheetState extends State<_GatesDatePickerSheet> {
                 children: [
                   Text(widget.title, style: GatesTypography.headingMedium),
                   IconButton(
-                    tooltip: 'Cerrar',
+                    tooltip: context.l10n.commonClose,
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),

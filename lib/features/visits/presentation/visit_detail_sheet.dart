@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/visit.dart';
 import 'visits_controller.dart';
 
@@ -23,12 +24,12 @@ Future<void> showVisitDetailSheet(
   );
 }
 
-String _dayLabel(DateTime date) {
+String _dayLabel(AppLocalizations l10n, DateTime date) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(date.year, date.month, date.day);
-  if (day == today) return 'Hoy';
-  if (day == today.add(const Duration(days: 1))) return 'Mañana';
+  if (day == today) return l10n.visitsToday;
+  if (day == today.add(const Duration(days: 1))) return l10n.visitsTomorrow;
   return _shortDate(date);
 }
 
@@ -44,16 +45,17 @@ String _fullDate(DateTime date) =>
 
 String _time(DateTime date) => DateFormat('HH:mm', 'es').format(date);
 
-String _kindLabel(Visit v) => switch (v.visitType) {
+String _kindLabel(AppLocalizations l10n, Visit v) => switch (v.visitType) {
   VisitType.delivery => providerKindLabel(
+    l10n,
     v.providerKind ?? ProviderKind.delivery,
   ),
-  VisitType.fastlane => 'Invitado · FastLane',
-  VisitType.frequent => 'Frecuente',
+  VisitType.fastlane => l10n.visitsListSubtitleFastlane,
+  VisitType.frequent => l10n.visitsTypeFrequent,
 }.toUpperCase();
 
 /// "Hoy, 00:00 a 23:59" for a same-day window, otherwise both ends spelled out.
-String _validity(Visit v) {
+String _validity(AppLocalizations l10n, Visit v) {
   final from = v.validFrom;
   final until = v.validUntil;
   final sameDay =
@@ -61,8 +63,15 @@ String _validity(Visit v) {
       from.month == until.month &&
       from.day == until.day;
   return sameDay
-      ? '${_dayLabel(from)}, ${_time(from)} a ${_time(until)}'
-      : '${_shortDate(from)} ${_time(from)} a ${_shortDate(until)} ${_time(until)}';
+      ? l10n.visitsDetailValiditySameDay(
+          _dayLabel(l10n, from),
+          _time(from),
+          _time(until),
+        )
+      : l10n.visitsDetailValidityRange(
+          '${_shortDate(from)} ${_time(from)}',
+          '${_shortDate(until)} ${_time(until)}',
+        );
 }
 
 bool _canCancel(Visit v) =>
@@ -92,7 +101,7 @@ class _VisitDetailSheetState extends ConsumerState<_VisitDetailSheet> {
       showGatesToast(
         context,
         type: GatesToastType.success,
-        title: 'Visita cancelada',
+        title: context.l10n.visitsDetailCancelledToast,
       );
     } catch (_) {
       if (!mounted) return;
@@ -100,8 +109,8 @@ class _VisitDetailSheetState extends ConsumerState<_VisitDetailSheet> {
       showGatesToast(
         context,
         type: GatesToastType.error,
-        title: 'No pudimos cancelar la visita',
-        message: 'Intenta de nuevo.',
+        title: context.l10n.visitsDetailCancelError,
+        message: context.l10n.visitsTryAgain,
       );
     }
   }
@@ -120,30 +129,33 @@ class _VisitDetailSheetState extends ConsumerState<_VisitDetailSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GatesSheetHeader(title: 'Detalle de visita'),
+          GatesSheetHeader(title: context.l10n.visitsDetailTitle),
           const SizedBox(height: GatesSpacing.space12),
           _StatusBanner(
             status: visit.status,
             detail:
-                '${_dayLabel(visit.validFrom)} · ${_fullDate(visit.validFrom)}',
+                '${_dayLabel(context.l10n, visit.validFrom)} · ${_fullDate(visit.validFrom)}',
           ),
           const SizedBox(height: GatesSpacing.space12),
           _Field(
-            label: _kindLabel(visit),
-            value: visit.name ?? 'Invitación por completar',
+            label: _kindLabel(context.l10n, visit),
+            value: visit.name ?? context.l10n.visitsPendingInvitationName,
           ),
-          _Field(label: 'Unidad', value: widget.unitName),
-          _Field(label: 'Vigencia', value: _validity(visit)),
+          _Field(label: context.l10n.visitsUnit, value: widget.unitName),
+          _Field(
+            label: context.l10n.visitsDetailValidity,
+            value: _validity(context.l10n, visit),
+          ),
           if (visit.plate != null && visit.plate!.isNotEmpty)
-            _Field(label: 'Placa', value: visit.plate!),
+            _Field(label: context.l10n.visitsPlate, value: visit.plate!),
           if (notes.isNotEmpty)
-            _Field(label: 'Notas para portería', value: notes),
+            _Field(label: context.l10n.visitsGateNotes, value: notes),
           if (_canCancel(visit)) ...[
             const SizedBox(height: GatesSpacing.space4),
             SizedBox(
               width: double.infinity,
               child: GatesButton(
-                label: 'Cancelar visita',
+                label: context.l10n.visitsCancelVisit,
                 style: GatesButtonStyle.destructive,
                 loading: _isCancelling,
                 onPressed: _isCancelling ? null : _cancel,
@@ -192,7 +204,7 @@ class _StatusBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            visitStatusLabel(status),
+            visitStatusLabel(context.l10n, status),
             style: GatesTypography.label.copyWith(
               fontWeight: FontWeight.w600,
               color: foreground,

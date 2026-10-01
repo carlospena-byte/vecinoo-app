@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_text_field.dart';
+import '../../../l10n/l10n.dart';
 
 const _bold = 1;
 const _italic = 2;
@@ -360,7 +361,7 @@ class IncidentRichEditor extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Descripción (opcional)',
+              context.l10n.incidentsEditorDescriptionLabel,
               style: GatesTypography.label.copyWith(
                 color: context.palette.textSecondary,
               ),
@@ -371,7 +372,7 @@ class IncidentRichEditor extends StatelessWidget {
                 _ToolButton(
                   active: controller.isBold,
                   onTap: controller.toggleBold,
-                  semanticLabel: 'Negrita',
+                  semanticLabel: context.l10n.incidentsEditorBold,
                   child: Text(
                     'B',
                     style: GatesTypography.body.copyWith(
@@ -384,7 +385,7 @@ class IncidentRichEditor extends StatelessWidget {
                 _ToolButton(
                   active: controller.isItalic,
                   onTap: controller.toggleItalic,
-                  semanticLabel: 'Cursiva',
+                  semanticLabel: context.l10n.incidentsEditorItalic,
                   child: Text(
                     'I',
                     style: GatesTypography.body.copyWith(
@@ -396,7 +397,7 @@ class IncidentRichEditor extends StatelessWidget {
                 _ToolButton(
                   active: controller.isBullet,
                   onTap: controller.toggleBullet,
-                  semanticLabel: 'Lista',
+                  semanticLabel: context.l10n.incidentsEditorList,
                   child: Icon(
                     Icons.format_list_bulleted,
                     size: 20,
@@ -407,7 +408,7 @@ class IncidentRichEditor extends StatelessWidget {
                 _ToolButton(
                   active: false,
                   onTap: () => _addLink(context),
-                  semanticLabel: 'Enlace',
+                  semanticLabel: context.l10n.incidentsEditorLink,
                   child: Icon(
                     Icons.link,
                     size: 20,
@@ -431,7 +432,7 @@ class IncidentRichEditor extends StatelessWidget {
                 isDense: true,
                 isCollapsed: true,
                 border: InputBorder.none,
-                hintText: 'Describe qué ocurrió y dónde…',
+                hintText: context.l10n.incidentsEditorDescriptionHint,
                 hintStyle: context.gatesText.labelSecondary.copyWith(
                   color: context.palette.textSecondary,
                 ),
@@ -509,7 +510,7 @@ class _LinkSheetState extends State<_LinkSheet> {
             uri.scheme == 'mailto') &&
         (uri.scheme == 'mailto' || uri.host.contains('.'));
     if (!ok) {
-      setState(() => _error = 'Escribe un enlace válido.');
+      setState(() => _error = context.l10n.incidentsEditorLinkInvalid);
       return;
     }
     Navigator.of(context).pop(raw);
@@ -528,11 +529,11 @@ class _LinkSheetState extends State<_LinkSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GatesSheetHeader(title: 'Agregar enlace'),
+          GatesSheetHeader(title: context.l10n.incidentsEditorAddLink),
           if (!widget.hasSelection) ...[
             const SizedBox(height: GatesSpacing.space4),
             Text(
-              'Sin texto seleccionado, se insertará el enlace tal cual.',
+              context.l10n.incidentsEditorLinkNoSelection,
               style: context.gatesText.labelSecondary.copyWith(
                 color: context.palette.textSecondary,
               ),
@@ -541,8 +542,8 @@ class _LinkSheetState extends State<_LinkSheet> {
           const SizedBox(height: GatesSpacing.space16),
           GatesTextField(
             controller: _controller,
-            label: 'Enlace',
-            hintText: 'https://…',
+            label: context.l10n.incidentsEditorLink,
+            hintText: context.l10n.incidentsEditorLinkHint,
             errorText: _error,
             autofocus: true,
             keyboardType: TextInputType.url,
@@ -552,7 +553,10 @@ class _LinkSheetState extends State<_LinkSheet> {
             },
           ),
           const SizedBox(height: GatesSpacing.space16),
-          GatesButton(label: 'Agregar enlace', onPressed: _submit),
+          GatesButton(
+            label: context.l10n.incidentsEditorAddLink,
+            onPressed: _submit,
+          ),
         ],
       ),
     );

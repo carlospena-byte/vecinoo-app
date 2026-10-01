@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 /// Figma "Textarea / IFTA": label + multiline field in one bordered box, with
 /// a `n/max` counter underneath. Rebuilds itself as [controller] changes.
@@ -9,17 +10,23 @@ class GatesTextArea extends StatelessWidget {
     super.key,
     required this.controller,
     required this.maxLength,
-    this.label = 'Notas para portería (opcional)',
-    this.hintText = 'Agrega una indicación',
+    this.label,
+    this.hintText,
   });
 
   final TextEditingController controller;
   final int maxLength;
-  final String label;
-  final String hintText;
+
+  /// Defaults to the localized "notes for the front desk (optional)".
+  final String? label;
+
+  /// Defaults to the localized "add an instruction".
+  final String? hintText;
 
   @override
   Widget build(BuildContext context) {
+    final label = this.label ?? context.l10n.commonDoormanNotesLabel;
+    final hintText = this.hintText ?? context.l10n.commonDoormanNotesHint;
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) => Column(

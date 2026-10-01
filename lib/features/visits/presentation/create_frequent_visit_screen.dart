@@ -16,6 +16,7 @@ import '../../../core/widgets/gates_text_field.dart';
 import '../../../core/widgets/gates_time_picker.dart';
 import '../../../core/widgets/gates_toast.dart';
 import '../../../core/widgets/gates_upload_card.dart';
+import '../../../l10n/l10n.dart';
 import '../../home/home_shell.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/visit.dart';
@@ -139,7 +140,11 @@ class _CreateFrequentVisitScreenState
 
   String? _documentLabel() {
     final file = _document;
-    if (file == null) return _keepsExistingDocument ? 'Documento actual' : null;
+    if (file == null) {
+      return _keepsExistingDocument
+          ? context.l10n.visitsFrequentCurrentDocument
+          : null;
+    }
     final name = file.path.split('/').last;
     final mb = file.lengthSync() / (1024 * 1024);
     return '$name · ${mb.toStringAsFixed(1)} MB';
@@ -155,17 +160,23 @@ class _CreateFrequentVisitScreenState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: 'Documento de identidad'),
+            GatesSheetHeader(title: context.l10n.visitsFrequentIdDocument),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.photo_camera_outlined),
-              title: Text('Tomar foto', style: GatesTypography.body),
+              title: Text(
+                context.l10n.visitsFrequentTakePhoto,
+                style: GatesTypography.body,
+              ),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.photo_library_outlined),
-              title: Text('Elegir de la galería', style: GatesTypography.body),
+              title: Text(
+                context.l10n.visitsFrequentPickGallery,
+                style: GatesTypography.body,
+              ),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
             ),
           ],
@@ -182,7 +193,7 @@ class _CreateFrequentVisitScreenState
     setState(() {
       if (file.lengthSync() > _maxDocumentBytes) {
         _document = null;
-        _documentError = 'La foto supera los 10 MB. Elige una más ligera.';
+        _documentError = context.l10n.visitsFrequentPhotoTooBig;
       } else {
         _document = file;
         _keepsExistingDocument = false;
@@ -232,7 +243,7 @@ class _CreateFrequentVisitScreenState
   void _warn(String message) => showGatesToast(
     context,
     type: GatesToastType.warning,
-    title: 'Falta un dato',
+    title: context.l10n.visitsFrequentMissingData,
     message: message,
   );
 
@@ -252,17 +263,17 @@ class _CreateFrequentVisitScreenState
     if (_recurrence == Recurrence.custom) {
       for (final block in _blocks) {
         if (block.days.isEmpty) {
-          _warn('Selecciona al menos un día en cada bloque de horario.');
+          _warn(context.l10n.visitsFrequentSelectDayEachBlock);
           return;
         }
         if (!_isBefore(block.start, block.end)) {
-          _warn('La hora de inicio debe ser anterior a la hora final.');
+          _warn(context.l10n.visitsFrequentStartBeforeEnd);
           return;
         }
       }
     } else if (_scheduleType == ScheduleType.custom &&
         !_isBefore(_scheduleStart, _scheduleEnd)) {
-      _warn('La hora de inicio debe ser anterior a la hora final.');
+      _warn(context.l10n.visitsFrequentStartBeforeEnd);
       return;
     }
     final membership = ref.read(selectedMembershipProvider).value;
@@ -312,7 +323,7 @@ class _CreateFrequentVisitScreenState
         showGatesToast(
           context,
           type: GatesToastType.success,
-          title: 'Acceso actualizado',
+          title: context.l10n.visitsFrequentUpdatedToast,
         );
         context.pop();
         return;
@@ -338,7 +349,7 @@ class _CreateFrequentVisitScreenState
       showGatesToast(
         context,
         type: GatesToastType.success,
-        title: 'Acceso frecuente autorizado',
+        title: context.l10n.visitsFrequentAuthorizedToast,
       );
       context.go('/', extra: const HomeTabRequest(HomeShell.visitsTab));
     } catch (_) {
@@ -347,9 +358,9 @@ class _CreateFrequentVisitScreenState
           context,
           type: GatesToastType.error,
           title: _isEditing
-              ? 'No pudimos guardar los cambios'
-              : 'No pudimos autorizar el acceso',
-          message: 'Intenta de nuevo.',
+              ? context.l10n.visitsSaveError
+              : context.l10n.visitsFrequentAuthorizeError,
+          message: context.l10n.visitsTryAgain,
         );
         setState(() => _isSubmitting = false);
       }
@@ -368,7 +379,11 @@ class _CreateFrequentVisitScreenState
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          title: Text(isFirstStep ? 'Acceso frecuente' : 'Días y horario'),
+          title: Text(
+            isFirstStep
+                ? context.l10n.visitsFrequentAccess
+                : context.l10n.visitsFrequentDaysAndHours,
+          ),
         ),
         body: SafeArea(
           top: false,
@@ -384,8 +399,8 @@ class _CreateFrequentVisitScreenState
               children: [
                 Text(
                   isFirstStep
-                      ? '1 de 2 · Datos de la visita'
-                      : '2 de 2 · Permisos de acceso',
+                      ? context.l10n.visitsFrequentStep1
+                      : context.l10n.visitsFrequentStep2,
                   style: context.gatesText.caption,
                 ),
                 const SizedBox(height: GatesSpacing.space16),
@@ -398,8 +413,10 @@ class _CreateFrequentVisitScreenState
           minimum: const EdgeInsets.all(GatesSpacing.space24),
           child: GatesButton(
             label: isFirstStep
-                ? 'Continuar'
-                : (_isEditing ? 'Guardar cambios' : 'Autorizar acceso'),
+                ? context.l10n.visitsContinue
+                : (_isEditing
+                      ? context.l10n.visitsSaveChanges
+                      : context.l10n.visitsFrequentAuthorize),
             loading: _isSubmitting,
             onPressed: _isSubmitting
                 ? null
@@ -421,18 +438,21 @@ class _CreateFrequentVisitScreenState
     return [
       GatesTextField(
         controller: _nameController,
-        label: 'Nombre de la visita *',
+        label: context.l10n.visitsFrequentNameLabel,
         textCapitalization: TextCapitalization.words,
         textInputAction: TextInputAction.next,
         validator: (v) => (v == null || v.trim().isEmpty)
-            ? 'Escribe el nombre de la visita.'
+            ? context.l10n.visitsFrequentNameRequired
             : null,
       ),
       const SizedBox(height: GatesSpacing.space16),
       GatesSelectField<VisitorRole>(
-        label: 'Tipo',
+        label: context.l10n.visitsFrequentTypeLabel,
         value: _role,
-        options: {for (final r in VisitorRole.values) r: visitorRoleLabel(r)},
+        options: {
+          for (final r in VisitorRole.values)
+            r: visitorRoleLabel(context.l10n, r),
+        },
         onChanged: (r) => setState(() => _role = r),
       ),
       const SizedBox(height: GatesSpacing.space16),
@@ -444,37 +464,37 @@ class _CreateFrequentVisitScreenState
           final digits = (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
           if (digits.isEmpty) return null;
           return digits.length < 7 || digits.length > 12
-              ? 'Escribe un teléfono válido.'
+              ? context.l10n.visitsFrequentPhoneInvalid
               : null;
         },
       ),
       const SizedBox(height: GatesSpacing.space16),
       GatesUploadCard(
-        title: 'Documento de identidad *',
-        emptyDescription: 'Adjunta una foto legible del documento.',
+        title: context.l10n.visitsFrequentIdDocumentRequired,
+        emptyDescription: context.l10n.visitsFrequentIdDocumentHint,
         state: uploadState,
         fileLabel: _documentLabel(),
         errorDescription:
-            _documentError ?? 'Adjunta una foto del documento para continuar.',
+            _documentError ?? context.l10n.visitsFrequentIdDocumentMissing,
         onPick: _pickDocument,
         onRemove: _removeDocument,
       ),
       const SizedBox(height: GatesSpacing.space16),
       GatesSwitchRow(
-        label: 'Ingresará en vehículo',
-        description: 'Activa para ingresar la placa',
+        label: context.l10n.visitsFrequentHasVehicle,
+        description: context.l10n.visitsFrequentHasVehicleHint,
         value: _hasVehicle,
         onChanged: (v) => setState(() => _hasVehicle = v),
       ),
       const SizedBox(height: GatesSpacing.space16),
       GatesTextField(
         controller: _plateController,
-        label: 'Placa del vehículo',
-        hintText: 'Ingresa la placa',
+        label: context.l10n.visitsFrequentPlateLabel,
+        hintText: context.l10n.visitsFrequentPlateHint,
         enabled: _hasVehicle,
         textCapitalization: TextCapitalization.characters,
         validator: (v) => _hasVehicle && (v == null || v.trim().isEmpty)
-            ? 'Escribe la placa del vehículo.'
+            ? context.l10n.visitsFrequentPlateRequired
             : null,
       ),
     ];
@@ -484,15 +504,18 @@ class _CreateFrequentVisitScreenState
     final isCustom = _recurrence == Recurrence.custom;
     return [
       GatesSelectField<Recurrence>(
-        label: 'Frecuencia',
+        label: context.l10n.visitsFrequentFrequencyLabel,
         value: _recurrence,
-        options: {for (final r in Recurrence.values) r: recurrenceLabel(r)},
+        options: {
+          for (final r in Recurrence.values)
+            r: recurrenceLabel(context.l10n, r),
+        },
         onChanged: _onFrequencyChanged,
       ),
       const SizedBox(height: GatesSpacing.space12),
       if (isCustom) ...[
         Text(
-          'Agrupa los días que comparten el mismo horario.',
+          context.l10n.visitsFrequentGroupDaysHint,
           style: context.gatesText.caption.copyWith(
             fontWeight: FontWeight.w400,
           ),
@@ -519,11 +542,11 @@ class _CreateFrequentVisitScreenState
         ),
       ] else ...[
         GatesSelectField<ScheduleType>(
-          label: 'Horario',
+          label: context.l10n.visitsFrequentScheduleLabel,
           value: _scheduleType,
-          options: const {
-            ScheduleType.allDay: 'Todo el día',
-            ScheduleType.custom: 'Personalizado',
+          options: {
+            ScheduleType.allDay: context.l10n.visitsAllDay,
+            ScheduleType.custom: context.l10n.visitsRecurrenceCustom,
           },
           onChanged: (t) => setState(() => _scheduleType = t),
         ),
@@ -533,7 +556,7 @@ class _CreateFrequentVisitScreenState
             children: [
               Expanded(
                 child: GatesTimeField(
-                  label: 'Desde',
+                  label: context.l10n.visitsScheduleFrom,
                   value: formatClockField(_scheduleStart),
                   onTap: () => _pickScheduleTime(isStart: true),
                 ),
@@ -541,7 +564,7 @@ class _CreateFrequentVisitScreenState
               const SizedBox(width: GatesSpacing.space8),
               Expanded(
                 child: GatesTimeField(
-                  label: 'Hasta',
+                  label: context.l10n.visitsScheduleTo,
                   value: formatClockField(_scheduleEnd),
                   onTap: () => _pickScheduleTime(isStart: false),
                 ),
@@ -554,8 +577,8 @@ class _CreateFrequentVisitScreenState
       GatesTextArea(controller: _notesController, maxLength: _notesMaxLength),
       const SizedBox(height: GatesSpacing.space16),
       GatesSwitchRow(
-        label: 'Avisarme al llegar',
-        description: 'Notificaciones de mis visitas',
+        label: context.l10n.visitsFrequentNotifyLabel,
+        description: context.l10n.visitsFrequentNotifyHint,
         value: _notifyOnArrival,
         onChanged: (v) => setState(() => _notifyOnArrival = v),
       ),
@@ -583,7 +606,7 @@ class _AddBlockButton extends StatelessWidget {
           shape: const StadiumBorder(),
           textStyle: GatesTypography.label,
         ),
-        child: const Text('+ Agregar bloque'),
+        child: Text(context.l10n.visitsFrequentAddBlock),
       ),
     );
   }

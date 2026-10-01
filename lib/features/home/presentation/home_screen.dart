@@ -15,6 +15,7 @@ import '../../session/presentation/session_controller.dart';
 import '../../visits/domain/visit.dart';
 import '../../visits/presentation/visits_controller.dart';
 import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
 
 /// "05 / Home" screen from Figma (file `Bla1GPfXA7JkuZcYpVi2DS`, node `13:14`),
 /// wired to the app's real providers.
@@ -30,7 +31,11 @@ class HomeScreen extends ConsumerWidget {
   static final _dayFormat = DateFormat('d MMM', 'es');
 
   void _showComingSoon(BuildContext context) {
-    showGatesToast(context, type: GatesToastType.info, title: 'Próximamente');
+    showGatesToast(
+      context,
+      type: GatesToastType.info,
+      title: context.l10n.homeComingSoon,
+    );
   }
 
   @override
@@ -47,7 +52,7 @@ class HomeScreen extends ConsumerWidget {
         child: profileAsync.when(
           loading: () => const LoadingView(),
           error: (e, _) => ErrorView(
-            message: 'No se pudo cargar tu perfil.',
+            message: context.l10n.profileLoadFailed,
             onRetry: () => ref.invalidate(myProfileProvider),
           ),
           data: (profile) => RefreshIndicator(
@@ -69,7 +74,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  _greeting(profile.firstName),
+                  _greeting(context, profile.firstName),
                   style: GatesTypography.headingLarge.copyWith(
                     fontSize: 28,
                     height: 36 / 28,
@@ -78,7 +83,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Tu comunidad, más cerca.',
+                  context.l10n.homeTagline,
                   style: context.gatesText.labelSecondary,
                 ),
                 const SizedBox(height: 16),
@@ -113,10 +118,10 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  static String _greeting(String? firstName) {
+  static String _greeting(BuildContext context, String? firstName) {
     final name = firstName?.trim().split(' ').first;
-    if (name == null || name.isEmpty) return 'Hola';
-    return 'Hola, $name';
+    if (name == null || name.isEmpty) return context.l10n.homeGreeting;
+    return context.l10n.homeGreetingNamed(name);
   }
 }
 
@@ -154,14 +159,14 @@ class _HeaderRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         _CircleIconButton(
-          semanticLabel: 'Notificaciones',
+          semanticLabel: context.l10n.homeNotifications,
           onTap: onBellTap,
           backgroundColor: context.palette.bgSurface,
           child: const GatesSvgIcon('assets/icons/home/bell.svg', size: 20),
         ),
         const SizedBox(width: 12),
         _CircleIconButton(
-          semanticLabel: 'Perfil',
+          semanticLabel: context.l10n.commonProfile,
           onTap: onAvatarTap,
           backgroundColor: context.palette.bgAccent,
           child: Text(
@@ -214,13 +219,13 @@ class _ReservationCard extends ConsumerWidget {
 
   final VoidCallback onBookAmenity;
 
-  String _dayLabel(DateTime start) {
+  String _dayLabel(BuildContext context, DateTime start) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
     final day = DateTime(start.year, start.month, start.day);
-    if (day == today) return 'Hoy';
-    if (day == tomorrow) return 'Mañana';
+    if (day == today) return context.l10n.homeToday;
+    if (day == tomorrow) return context.l10n.homeTomorrow;
     return HomeScreen._dayFormat.format(start);
   }
 
@@ -231,8 +236,8 @@ class _ReservationCard extends ConsumerWidget {
   }
 
   /// "6:00–10:00 p. m." as in Figma.
-  static String _range(DateTime start, DateTime end) {
-    final meridiem = end.hour >= 12 ? 'p. m.' : 'a. m.';
+  static String _range(BuildContext context, DateTime start, DateTime end) {
+    final meridiem = end.hour >= 12 ? context.l10n.homePm : context.l10n.homeAm;
     return '${_clock(start)}–${_clock(end)} $meridiem';
   }
 
@@ -258,9 +263,9 @@ class _ReservationCard extends ConsumerWidget {
         ),
         error: (e, _) => _content(
           context,
-          title: 'No se pudieron cargar tus reservas.',
+          title: context.l10n.homeBookingsLoadFailed,
           detail: null,
-          actionLabel: 'Reintentar',
+          actionLabel: context.l10n.commonRetry,
           onAction: () => ref.invalidate(myBookingsProvider),
         ),
         data: (bookings) {
@@ -270,9 +275,9 @@ class _ReservationCard extends ConsumerWidget {
           if (upcoming.isEmpty) {
             return _content(
               context,
-              title: 'Un espacio para disfrutar',
-              detail: 'Aún no tienes reservas próximas.',
-              actionLabel: 'Explorar amenidades',
+              title: context.l10n.homeNoBookingsTitle,
+              detail: context.l10n.homeNoBookingsDetail,
+              actionLabel: context.l10n.homeExploreAmenities,
               onAction: onBookAmenity,
             );
           }
@@ -280,9 +285,10 @@ class _ReservationCard extends ConsumerWidget {
           final next = upcoming.first;
           return _content(
             context,
-            title: '${next.amenityName} · ${_dayLabel(next.startTime)}',
-            detail: _range(next.startTime, next.endTime),
-            actionLabel: 'Explorar amenidades',
+            title:
+                '${next.amenityName} · ${_dayLabel(context, next.startTime)}',
+            detail: _range(context, next.startTime, next.endTime),
+            actionLabel: context.l10n.homeExploreAmenities,
             onAction: onBookAmenity,
           );
         },
@@ -308,7 +314,7 @@ class _ReservationCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Reservas',
+                    context.l10n.homeReservations,
                     style: context.gatesText.caption.copyWith(
                       color: context.palette.textOnBrand,
                       height: 16 / 12,
@@ -509,13 +515,11 @@ class _VisitsSummaryCard extends ConsumerWidget {
         0;
 
     return _GraphicCard(
-      label: 'Visitas',
-      title: count == 0
-          ? 'Sin visitas\nprevistas'
-          : count == 1
-          ? '1 visita\npara hoy'
-          : '$count visitas\npara hoy',
-      action: count == 0 ? 'Invitar' : 'Ver visitas',
+      label: context.l10n.homeVisits,
+      title: context.l10n.homeVisitsSummary(count),
+      action: count == 0
+          ? context.l10n.homeInvite
+          : context.l10n.homeViewVisits,
       iconAsset: 'assets/icons/home/emblem_visits.svg',
       backgroundColor: context.palette.bgSurface,
       emblemColor: context.palette.bgAccent,
@@ -549,13 +553,11 @@ class _IncidentsSummaryCard extends ConsumerWidget {
         0;
 
     return _GraphicCard(
-      label: 'Incidencias',
-      title: count == 0
-          ? 'Sin incidencias\nreportadas'
-          : count == 1
-          ? '1 reporte\nen seguimiento'
-          : '$count reportes\nen seguimiento',
-      action: count == 0 ? 'Reportar' : 'Ver reporte',
+      label: context.l10n.homeIncidents,
+      title: context.l10n.homeIncidentsSummary(count),
+      action: count == 0
+          ? context.l10n.homeReport
+          : context.l10n.homeViewReport,
       iconAsset: 'assets/icons/home/emblem_incidents.svg',
       backgroundColor: context.palette.bgAccent,
       emblemColor: context.palette.bgSurface,

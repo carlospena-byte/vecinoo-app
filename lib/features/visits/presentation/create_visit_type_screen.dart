@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 
 /// "V03 · Nueva visita" — Figma node `118:256`. Lets the resident pick which
@@ -37,18 +38,24 @@ class CreateVisitTypeScreen extends ConsumerWidget {
                     width: 44,
                     height: 44,
                     child: IconButton(
-                      tooltip: 'Volver',
+                      tooltip: context.l10n.visitsBack,
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.arrow_back, size: 24),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
                   const SizedBox(width: GatesSpacing.space12),
-                  Text('¿Quién viene?', style: GatesTypography.headingMedium),
+                  Text(
+                    context.l10n.visitsNewTypeTitle,
+                    style: GatesTypography.headingMedium,
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
-              Text('Acceso para', style: context.gatesText.labelSecondary),
+              Text(
+                context.l10n.visitsNewTypeAccessFor,
+                style: context.gatesText.labelSecondary,
+              ),
               const SizedBox(height: GatesSpacing.space4),
               Text(
                 membership.label,
@@ -59,22 +66,22 @@ class CreateVisitTypeScreen extends ConsumerWidget {
               const SizedBox(height: GatesSpacing.space12),
               _ActionRow(
                 icon: Icons.person_outline,
-                title: 'Invitado',
-                subtitle: 'Crea una invitación con registro del visitante',
+                title: context.l10n.visitsNewTypeGuest,
+                subtitle: context.l10n.visitsNewTypeGuestSubtitle,
                 onTap: () => context.push('/visits/new/fastlane'),
               ),
               const SizedBox(height: GatesSpacing.space12),
               _ActionRow(
                 icon: Icons.inventory_2_outlined,
-                title: 'Delivery o proveedor',
-                subtitle: 'Autoriza una entrega o servicio',
+                title: context.l10n.visitsDeliveryOrProvider,
+                subtitle: context.l10n.visitsNewTypeDeliverySubtitle,
                 onTap: () => context.push('/visits/new/delivery'),
               ),
               const SizedBox(height: GatesSpacing.space12),
               _ActionRow(
                 icon: Icons.repeat,
-                title: 'Acceso frecuente',
-                subtitle: 'Para personas que vienen regularmente',
+                title: context.l10n.visitsFrequentAccess,
+                subtitle: context.l10n.visitsNewTypeFrequentSubtitle,
                 onTap: () => context.push('/visits/new/frequent'),
               ),
             ],

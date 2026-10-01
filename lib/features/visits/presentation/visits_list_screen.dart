@@ -9,6 +9,7 @@ import '../../../core/widgets/gates_segmented_tabs.dart';
 import '../../../core/widgets/nav_clearance.dart';
 import '../../../core/widgets/gates_switch_row.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/visit.dart';
 import 'frequent_visit_formatters.dart';
@@ -24,10 +25,10 @@ bool _isOngoing(Visit v) =>
     v.status == VisitStatus.active || v.status == VisitStatus.inside;
 bool _isHistory(Visit v) => !_isPending(v) && !_isOngoing(v);
 
-String _emptyMessage(_VisitsTab tab) => switch (tab) {
-  _VisitsTab.pending => 'No tienes visitas pendientes.',
-  _VisitsTab.ongoing => 'No tienes visitas en curso.',
-  _VisitsTab.history => 'Aún no tienes historial de visitas.',
+String _emptyMessage(AppLocalizations l10n, _VisitsTab tab) => switch (tab) {
+  _VisitsTab.pending => l10n.visitsListEmptyPending,
+  _VisitsTab.ongoing => l10n.visitsListEmptyOngoing,
+  _VisitsTab.history => l10n.visitsListEmptyHistory,
 };
 
 final _dayMonthFormat = DateFormat('d MMM', 'es');
@@ -35,51 +36,55 @@ final _timeFormat = DateFormat('HH:mm', 'es');
 
 /// "Hoy · 26 sep.", "Mañana · 27 sep." or, for any other day, just the date —
 /// matches the Figma date-group headings ("V02A · Visitas / Pendientes").
-String _dateGroupLabel(DateTime date) {
+String _dateGroupLabel(AppLocalizations l10n, DateTime date) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final tomorrow = today.add(const Duration(days: 1));
   final day = DateTime(date.year, date.month, date.day);
   final dayMonth = '${_dayMonthFormat.format(date).replaceAll('.', '')}.';
-  if (day == today) return 'Accesos para hoy · $dayMonth';
-  if (day == tomorrow) return 'Mañana · $dayMonth';
+  if (day == today) return l10n.visitsListGroupToday(dayMonth);
+  if (day == tomorrow) return l10n.visitsListGroupTomorrow(dayMonth);
   return dayMonth;
 }
 
 /// "Hoy", "Mañana" or "27 sep." — how the card's date line names a day.
-String _relativeDay(DateTime date) {
+String _relativeDay(AppLocalizations l10n, DateTime date) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(date.year, date.month, date.day);
-  if (day == today) return 'Hoy';
-  if (day == today.add(const Duration(days: 1))) return 'Mañana';
+  if (day == today) return l10n.visitsToday;
+  if (day == today.add(const Duration(days: 1))) return l10n.visitsTomorrow;
   return '${_dayMonthFormat.format(date).replaceAll('.', '')}.';
 }
 
-String _scheduleLabel(Visit v) {
+String _scheduleLabel(AppLocalizations l10n, Visit v) {
   switch (v.visitType) {
     case VisitType.frequent:
-      return frequentScheduleSummary(v);
+      return frequentScheduleSummary(l10n, v);
     case VisitType.fastlane:
-      return '${_relativeDay(v.validFrom)} · Llegada prevista ${_timeFormat.format(v.validFrom)}';
+      return l10n.visitsListFastlaneSchedule(
+        _relativeDay(l10n, v.validFrom),
+        _timeFormat.format(v.validFrom),
+      );
     case VisitType.delivery:
-      return '${_relativeDay(v.validFrom)} · ${_timeFormat.format(v.validFrom)}–${_timeFormat.format(v.validUntil)}';
+      return '${_relativeDay(l10n, v.validFrom)} · ${_timeFormat.format(v.validFrom)}–${_timeFormat.format(v.validUntil)}';
   }
 }
 
-String _visitSubtitle(Visit v) {
+String _visitSubtitle(AppLocalizations l10n, Visit v) {
   switch (v.visitType) {
     case VisitType.delivery:
-      final kind = v.providerKind != null
-          ? ' · ${providerKindLabel(v.providerKind!)}'
-          : '';
-      return 'Delivery o proveedor$kind';
+      return v.providerKind != null
+          ? l10n.visitsListSubtitleDeliveryKind(
+              providerKindLabel(l10n, v.providerKind!),
+            )
+          : l10n.visitsDeliveryOrProvider;
     case VisitType.fastlane:
-      return 'Invitado · FastLane';
+      return l10n.visitsListSubtitleFastlane;
     case VisitType.frequent:
       return v.visitorRole != null
-          ? visitorRoleLabel(v.visitorRole!)
-          : 'Frecuente';
+          ? visitorRoleLabel(l10n, v.visitorRole!)
+          : l10n.visitsTypeFrequent;
   }
 }
 
@@ -144,12 +149,12 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Visitas',
+                      context.l10n.visitsListTitle,
                       style: GatesTypography.headingMedium,
                     ),
                   ),
                   GatesAddButton(
-                    semanticLabel: 'Nueva visita',
+                    semanticLabel: context.l10n.visitsListNewVisit,
                     onTap: () async {
                       await context.push('/visits/new');
                       ref.invalidate(visitsListProvider(membership.unitId));
@@ -172,15 +177,15 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                   options: [
                     GatesSegmentedTabOption(
                       value: _VisitsTab.pending,
-                      label: 'Pendientes',
+                      label: context.l10n.visitsTabPending,
                     ),
                     GatesSegmentedTabOption(
                       value: _VisitsTab.ongoing,
-                      label: 'En curso',
+                      label: context.l10n.visitsTabOngoing,
                     ),
-                    const GatesSegmentedTabOption(
+                    GatesSegmentedTabOption(
                       value: _VisitsTab.history,
-                      label: 'Historial',
+                      label: context.l10n.visitsTabHistory,
                     ),
                   ],
                   selected: _tab,
@@ -197,7 +202,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
               ),
               child: GatesSwitchRow(
                 compact: true,
-                label: 'Mostrar visitas frecuentes',
+                label: context.l10n.visitsListShowFrequent,
                 value: _showFrequent,
                 onChanged: (v) => setState(() => _showFrequent = v),
               ),
@@ -206,7 +211,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
               child: visitsAsync.when(
                 loading: () => const LoadingView(),
                 error: (e, _) => ErrorView(
-                  message: 'No se pudieron cargar tus visitas.',
+                  message: context.l10n.visitsListLoadError,
                   onRetry: () =>
                       ref.invalidate(visitsListProvider(membership.unitId)),
                 ),
@@ -236,8 +241,8 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                     final hidden = filtered.length - regular.length;
                     return EmptyView(
                       message: hidden > 0 && !_showFrequent
-                          ? '${_emptyMessage(_tab)}\nTienes $hidden ${hidden == 1 ? 'acceso frecuente oculto' : 'accesos frecuentes ocultos'}.'
-                          : _emptyMessage(_tab),
+                          ? '${_emptyMessage(context.l10n, _tab)}\n${context.l10n.visitsListHiddenFrequent(hidden)}'
+                          : _emptyMessage(context.l10n, _tab),
                       icon: Icons.person_add_alt_outlined,
                     );
                   }
@@ -272,7 +277,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                               bottom: GatesSpacing.space8,
                             ),
                             child: Text(
-                              _dateGroupLabel(day),
+                              _dateGroupLabel(context.l10n, day),
                               style: context.gatesText.caption,
                             ),
                           ),
@@ -287,7 +292,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                               bottom: GatesSpacing.space8,
                             ),
                             child: Text(
-                              'Accesos frecuentes',
+                              context.l10n.visitsListFrequentHeading,
                               style: context.gatesText.caption,
                             ),
                           ),
@@ -341,7 +346,7 @@ class _VisitCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    visit.name ?? 'Invitación por completar',
+                    visit.name ?? context.l10n.visitsPendingInvitationName,
                     style: GatesTypography.body.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -352,10 +357,13 @@ class _VisitCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: GatesSpacing.space4),
-            Text(_visitSubtitle(visit), style: context.gatesText.caption),
+            Text(
+              _visitSubtitle(context.l10n, visit),
+              style: context.gatesText.caption,
+            ),
             const SizedBox(height: GatesSpacing.space4),
             Text(
-              _scheduleLabel(visit),
+              _scheduleLabel(context.l10n, visit),
               style: context.gatesText.labelSecondary,
             ),
             if (showStatus) ...[
@@ -402,7 +410,9 @@ class _AccessChip extends StatelessWidget {
           ),
           const SizedBox(width: GatesSpacing.space4),
           Text(
-            frequent ? 'Frecuente' : 'Visita del día',
+            frequent
+                ? context.l10n.visitsTypeFrequent
+                : context.l10n.visitsListDailyVisit,
             style: context.gatesText.caption.copyWith(color: foreground),
           ),
         ],
@@ -449,7 +459,7 @@ class _VisitStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
       ),
       child: Text(
-        visitStatusLabel(status),
+        visitStatusLabel(context.l10n, status),
         style: context.gatesText.caption.copyWith(color: foreground),
       ),
     );

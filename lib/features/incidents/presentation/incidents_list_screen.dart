@@ -10,6 +10,8 @@ import '../../../core/widgets/nav_clearance.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/incident.dart';
+import '../../../l10n/l10n.dart';
+import 'incident_labels.dart';
 import 'incidents_controller.dart';
 
 enum _IncidentsTab { pending, inProgress, history }
@@ -18,10 +20,10 @@ bool _isPending(Incident i) => i.status == IncidentStatus.newIncident;
 bool _isInProgress(Incident i) => i.status == IncidentStatus.inProgress;
 bool _isHistory(Incident i) => !_isPending(i) && !_isInProgress(i);
 
-String _emptyMessage(_IncidentsTab tab) => switch (tab) {
-  _IncidentsTab.pending => 'No tienes incidencias pendientes.',
-  _IncidentsTab.inProgress => 'No tienes incidencias en curso.',
-  _IncidentsTab.history => 'Aún no tienes historial de incidencias.',
+String _emptyMessage(AppLocalizations l10n, _IncidentsTab tab) => switch (tab) {
+  _IncidentsTab.pending => l10n.incidentsListEmptyPending,
+  _IncidentsTab.inProgress => l10n.incidentsListEmptyInProgress,
+  _IncidentsTab.history => l10n.incidentsListEmptyHistory,
 };
 
 final _dateFormat = DateFormat('d MMM y, HH:mm', 'es');
@@ -66,12 +68,12 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Incidencias',
+                      context.l10n.incidentsListTitle,
                       style: GatesTypography.headingMedium,
                     ),
                   ),
                   GatesAddButton(
-                    semanticLabel: 'Reportar incidencia',
+                    semanticLabel: context.l10n.incidentsReportAction,
                     onTap: () async {
                       await context.push('/incidents/report');
                       ref.invalidate(incidentsListProvider(residentialId));
@@ -91,18 +93,18 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                   0,
                 ),
                 child: GatesSegmentedTabs<_IncidentsTab>(
-                  options: const [
+                  options: [
                     GatesSegmentedTabOption(
                       value: _IncidentsTab.pending,
-                      label: 'Pendientes',
+                      label: context.l10n.incidentsTabPending,
                     ),
                     GatesSegmentedTabOption(
                       value: _IncidentsTab.inProgress,
-                      label: 'En curso',
+                      label: context.l10n.incidentsTabInProgress,
                     ),
                     GatesSegmentedTabOption(
                       value: _IncidentsTab.history,
-                      label: 'Historial',
+                      label: context.l10n.incidentsTabHistory,
                     ),
                   ],
                   selected: _tab,
@@ -114,7 +116,7 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
               child: incidentsAsync.when(
                 loading: () => const LoadingView(),
                 error: (e, _) => ErrorView(
-                  message: 'No se pudieron cargar las incidencias.',
+                  message: context.l10n.incidentsListLoadError,
                   onRetry: () =>
                       ref.invalidate(incidentsListProvider(residentialId)),
                 ),
@@ -130,7 +132,7 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
 
                   if (filtered.isEmpty) {
                     return EmptyView(
-                      message: _emptyMessage(_tab),
+                      message: _emptyMessage(context.l10n, _tab),
                       icon: Icons.report_gmailerrorred_outlined,
                     );
                   }
@@ -252,7 +254,7 @@ class IncidentStatusBadge extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        statusLabel(status),
+        incidentStatusLabel(context.l10n, status),
         style: context.gatesText.caption.copyWith(color: foreground),
       ),
     );

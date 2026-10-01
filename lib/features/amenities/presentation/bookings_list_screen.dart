@@ -9,6 +9,7 @@ import '../../../core/widgets/amenity_thumbnail.dart';
 import '../../../core/widgets/gates_add_button.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/amenity_booking.dart';
 import 'amenities_controller.dart';
 import 'booking_bottom_sheets.dart';
@@ -64,12 +65,12 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Reservas',
+                      context.l10n.amenitiesBookingsTitle,
                       style: GatesTypography.headingMedium,
                     ),
                   ),
                   GatesAddButton(
-                    semanticLabel: 'Nueva reserva',
+                    semanticLabel: context.l10n.amenitiesNewBooking,
                     onTap: () => context.push('/amenities'),
                   ),
                 ],
@@ -92,15 +93,15 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
                   options: [
                     GatesSegmentedTabOption(
                       value: _BookingsTab.pending,
-                      label: 'Pendientes',
+                      label: context.l10n.amenitiesTabPending,
                     ),
                     GatesSegmentedTabOption(
                       value: _BookingsTab.confirmed,
-                      label: 'Confirmadas',
+                      label: context.l10n.amenitiesTabConfirmed,
                     ),
-                    const GatesSegmentedTabOption(
+                    GatesSegmentedTabOption(
                       value: _BookingsTab.history,
-                      label: 'Historial',
+                      label: context.l10n.amenitiesTabHistory,
                     ),
                   ],
                   selected: _tab,
@@ -113,7 +114,7 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
                 loading: () => const LoadingView(key: ValueKey('body-loading')),
                 error: (e, _) => ErrorView(
                   key: const ValueKey('body-error'),
-                  message: 'No se pudieron cargar tus reservas.',
+                  message: context.l10n.amenitiesBookingsLoadError,
                   onRetry: () => ref.invalidate(myBookingsProvider),
                 ),
                 data: (bookings) {
@@ -131,7 +132,7 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
                   if (filtered.isEmpty) {
                     return EmptyView(
                       key: const ValueKey('body-empty'),
-                      message: _emptyMessage(_tab),
+                      message: _emptyMessage(context, _tab),
                       icon: Icons.event_busy_outlined,
                     );
                   }
@@ -168,10 +169,10 @@ bool _isConfirmed(AmenityBooking b) =>
     b.status == BookingStatus.confirmed && b.isUpcoming;
 bool _isHistory(AmenityBooking b) => !_isPending(b) && !_isConfirmed(b);
 
-String _emptyMessage(_BookingsTab tab) => switch (tab) {
-  _BookingsTab.pending => 'No tienes reservas pendientes.',
-  _BookingsTab.confirmed => 'No tienes reservas confirmadas.',
-  _BookingsTab.history => 'Aún no tienes historial de reservas.',
+String _emptyMessage(BuildContext context, _BookingsTab tab) => switch (tab) {
+  _BookingsTab.pending => context.l10n.amenitiesEmptyPending,
+  _BookingsTab.confirmed => context.l10n.amenitiesEmptyConfirmed,
+  _BookingsTab.history => context.l10n.amenitiesEmptyHistory,
 };
 
 /// "Reservation card / Compact" — Figma node 292:861.
@@ -240,22 +241,22 @@ class _StatusBadge extends StatelessWidget {
       BookingStatus.pending => (
         context.palette.statusWarningBg,
         context.palette.statusWarning,
-        'Pendiente',
+        context.l10n.amenitiesStatusPending,
       ),
       BookingStatus.confirmed => (
         context.palette.bgAccent,
         context.palette.textBrand,
-        'Confirmada',
+        context.l10n.amenitiesStatusConfirmed,
       ),
       BookingStatus.cancelled => (
         context.palette.bgSubtle,
         context.palette.textSecondary,
-        'Cancelada',
+        context.l10n.amenitiesStatusCancelled,
       ),
       BookingStatus.expired => (
         context.palette.bgSubtle,
         context.palette.textSecondary,
-        'Expirada',
+        context.l10n.amenitiesStatusExpired,
       ),
     };
     return Container(

@@ -10,6 +10,7 @@ import '../../auth/presentation/auth_controller.dart';
 import '../../auth/presentation/register_screen.dart'
     show pendingInvitationCodePrefsKey;
 import 'session_controller.dart';
+import '../../../l10n/l10n.dart';
 
 /// Shown when the resident has signed in but no admin has linked them to
 /// a unit yet (see `unit_members` in gates-admin). Also where an
@@ -60,7 +61,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
       ref.invalidate(myMembershipsProvider);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorText = 'Código inválido, ya usado o expirado.');
+      setState(() => _errorText = context.l10n.authInvitationInvalid);
     } finally {
       if (mounted) setState(() => _isRedeeming = false);
     }
@@ -80,7 +81,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: IconButton(
-                  tooltip: 'Cerrar sesión',
+                  tooltip: context.l10n.commonLogout,
                   icon: Icon(
                     Icons.logout,
                     color: context.palette.textSecondary,
@@ -99,35 +100,40 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),
-                  Text('PARA RESIDENTES', style: context.gatesText.caption),
+                  Text(
+                    context.l10n.commonForResidents,
+                    style: context.gatesText.caption,
+                  ),
                 ],
               ),
               const SizedBox(height: 32),
-              Text('Cuenta pendiente', style: GatesTypography.headingLarge),
+              Text(
+                context.l10n.sessionPendingTitle,
+                style: GatesTypography.headingLarge,
+              ),
               const SizedBox(height: 12),
               Text(
-                'Todavía no tienes una unidad vinculada. Pide al administrador que te '
-                'vincule o ingresa un código de invitación.',
+                context.l10n.sessionPendingBody,
                 style: GatesTypography.body.copyWith(
                   color: context.palette.textSecondary,
                 ),
               ),
               const SizedBox(height: 32),
               GatesTextField(
-                label: 'Código de invitación',
+                label: context.l10n.authInvitationCode,
                 controller: _codeController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(6),
                 ],
-                helperText: '6 dígitos.',
+                helperText: context.l10n.sessionCodeDigitsHelper,
                 errorText: _errorText,
                 enabled: !_isRedeeming,
               ),
               const SizedBox(height: 16),
               GatesButton(
-                label: 'Usar código',
+                label: context.l10n.sessionUseCode,
                 onPressed: _isRedeeming
                     ? null
                     : () => _redeem(_codeController.text),
@@ -135,7 +141,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
               ),
               const SizedBox(height: 12),
               GatesButton(
-                label: 'Ya me vincularon, reintentar',
+                label: context.l10n.sessionAlreadyLinkedRetry,
                 style: GatesButtonStyle.secondary,
                 onPressed: () => ref.invalidate(myMembershipsProvider),
               ),

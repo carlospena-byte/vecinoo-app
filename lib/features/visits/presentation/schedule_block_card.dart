@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_time_picker.dart';
+import '../../../l10n/l10n.dart';
 import 'frequent_visit_formatters.dart';
 import '../domain/visit.dart';
 
@@ -21,14 +22,14 @@ class ScheduleBlockDraft {
       ScheduleBlock(days: {...days}, start: start, end: end);
 }
 
-const _dayInitials = {
-  'mon': 'L',
-  'tue': 'M',
-  'wed': 'M',
-  'thu': 'J',
-  'fri': 'V',
-  'sat': 'S',
-  'sun': 'D',
+String _dayInitial(AppLocalizations l10n, String day) => switch (day) {
+  'mon' => l10n.visitsWeekdayInitialMon,
+  'tue' => l10n.visitsWeekdayInitialTue,
+  'wed' => l10n.visitsWeekdayInitialWed,
+  'thu' => l10n.visitsWeekdayInitialThu,
+  'fri' => l10n.visitsWeekdayInitialFri,
+  'sat' => l10n.visitsWeekdayInitialSat,
+  _ => l10n.visitsWeekdayInitialSun,
 };
 
 /// Figma "Visitas / Bloque de horario" (node 384:842): weekday pills plus a
@@ -83,7 +84,7 @@ class ScheduleBlockCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Bloque de horario ${index + 1}',
+                    context.l10n.visitsScheduleBlockTitle(index + 1),
                     style: context.gatesText.caption,
                   ),
                 ),
@@ -97,7 +98,7 @@ class ScheduleBlockCard extends StatelessWidget {
                         Icons.close,
                         size: 20,
                         color: context.palette.textSecondary,
-                        semanticLabel: 'Eliminar bloque',
+                        semanticLabel: context.l10n.visitsScheduleBlockRemove,
                       ),
                     ),
                   ),
@@ -110,8 +111,8 @@ class ScheduleBlockCard extends StatelessWidget {
             children: [
               for (final day in weekdayKeys)
                 _DayPill(
-                  label: _dayInitials[day]!,
-                  semanticLabel: weekdayShortLabels[day]!,
+                  label: _dayInitial(context.l10n, day),
+                  semanticLabel: weekdayShortLabel(context.l10n, day),
                   selected: draft.days.contains(day),
                   enabled: !takenDays.contains(day),
                   onTap: () {
@@ -126,7 +127,7 @@ class ScheduleBlockCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _TimeField(
-                  label: 'Desde',
+                  label: context.l10n.visitsScheduleFrom,
                   value: formatClockField(draft.start),
                   onTap: () => _pickTime(context, isStart: true),
                 ),
@@ -134,7 +135,7 @@ class ScheduleBlockCard extends StatelessWidget {
               const SizedBox(width: GatesSpacing.space8),
               Expanded(
                 child: _TimeField(
-                  label: 'Hasta',
+                  label: context.l10n.visitsScheduleTo,
                   value: formatClockField(draft.end),
                   onTap: () => _pickTime(context, isStart: false),
                 ),

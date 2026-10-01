@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/env/env.dart';
+import 'l10n/l10n.dart';
 import 'core/notifications/push_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_providers.dart';
@@ -52,6 +54,15 @@ class GatesApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ref.watch(themeModeProvider),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      // Spanish only for now; also the fallback for any other device locale.
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('es'),
       routerConfig: router,
       builder: (context, child) => GatesBackground(child: child),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 /// A "slide to confirm" track for a destructive action that shouldn't be a
 /// single accidental tap away — replaces stacking a confirm AlertDialog on
@@ -127,7 +128,7 @@ class _SwipeToConfirmState extends State<SwipeToConfirm> {
           button: true,
           enabled: !widget.loading,
           label: widget.label,
-          hint: 'Toca dos veces para confirmar',
+          hint: context.l10n.commonTapTwiceToConfirm,
           excludeSemantics: true,
           onTap: _confirmWithoutDragging,
           child: Container(

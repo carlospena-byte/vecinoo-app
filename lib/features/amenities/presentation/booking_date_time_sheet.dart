@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_calendar.dart';
 import '../../../core/widgets/gates_time_picker.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/amenity.dart';
 import '../domain/amenity_blackout.dart';
+import 'amenity_formatters.dart';
 
 /// A day + time range picked in [BookingDateTimeSheet]. For a fixed-duration
 /// amenity, [end] is always [start] + `bookingDurationMinutes`.
@@ -28,29 +28,8 @@ class BookingSelection {
       DateTime(day.year, day.month, day.day, end.hour, end.minute);
 }
 
-/// [withPrefix] matches the design's copy, which only spells out "Cerrado"
-/// once for the group rather than repeating it before every date range.
-String _blackoutLabel(AmenityBlackout blackout, {bool withPrefix = true}) {
-  final formatter = DateFormat('d MMM', 'es');
-  final range = isSameDay(blackout.startDate, blackout.endDate)
-      ? formatter.format(blackout.startDate)
-      : '${formatter.format(blackout.startDate)} – ${formatter.format(blackout.endDate)}';
-  final prefix = withPrefix ? 'Cerrado ' : '';
-  return blackout.reason == null || blackout.reason!.isEmpty
-      ? '$prefix$range'
-      : '$prefix$range: ${blackout.reason}';
-}
-
 String _time(TimeOfDay t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
-String _durationLabel(int minutes) {
-  if (minutes % 60 == 0) {
-    final hours = minutes ~/ 60;
-    return hours == 1 ? '1 hora' : '$hours horas';
-  }
-  return '$minutes minutos';
-}
 
 /// Bottom sheet for picking a booking's day and time — Figma "B01 · Elegir
 /// fecha y horario" / "B03 · Cambiar fecha y horario" (node 265:1504 /
@@ -62,7 +41,7 @@ Future<BookingSelection?> showBookingDateTimeSheet(
   required Amenity amenity,
   required List<AmenityBlackout> blackouts,
   BookingSelection? initial,
-  String primaryLabel = 'Continuar',
+  String? primaryLabel,
 }) {
   return showModalBottomSheet<BookingSelection>(
     context: context,
@@ -87,13 +66,15 @@ class BookingDateTimeSheet extends StatefulWidget {
     required this.amenity,
     required this.blackouts,
     this.initial,
-    this.primaryLabel = 'Continuar',
+    this.primaryLabel,
   });
 
   final Amenity amenity;
   final List<AmenityBlackout> blackouts;
   final BookingSelection? initial;
-  final String primaryLabel;
+
+  /// Defaults to the localized "Continuar".
+  final String? primaryLabel;
 
   @override
   State<BookingDateTimeSheet> createState() => _BookingDateTimeSheetState();
@@ -152,10 +133,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
       final start = DateTime(2000, 1, 1, _startTime.hour, _startTime.minute);
       final end = DateTime(2000, 1, 1, _endTime!.hour, _endTime!.minute);
       if (!end.isAfter(start)) {
-        setState(
-          () =>
-              _error = 'La hora de fin debe ser después de la hora de inicio.',
-        );
+        setState(() => _error = context.l10n.amenitiesEndAfterStartError);
         return;
       }
     }
@@ -190,9 +168,12 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Fecha y horario', style: GatesTypography.headingMedium),
+                  Text(
+                    context.l10n.amenitiesDateTimeTitle,
+                    style: GatesTypography.headingMedium,
+                  ),
                   IconButton(
-                    tooltip: 'Cerrar',
+                    tooltip: context.l10n.amenitiesClose,
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -215,7 +196,8 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                     children: [
                       for (var i = 0; i < widget.blackouts.length; i++)
                         Text(
-                          _blackoutLabel(
+                          amenityBlackoutSheetLabel(
+                            context.l10n,
                             widget.blackouts[i],
                             withPrefix: i == 0,
                           ),
@@ -252,7 +234,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                   children: [
                     Expanded(
                       child: _TimeField(
-                        label: 'Inicio',
+                        label: context.l10n.amenitiesStart,
                         value: _time(_startTime),
                         onTap: () => _pickTime(isStart: true),
                       ),
@@ -267,13 +249,13 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Termina a las',
+                              context.l10n.amenitiesEndsAt,
                               style: context.gatesText.caption,
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '${_time(_computedEndTime)} · '
-                              '${_durationLabel(widget.amenity.bookingDurationMinutes!)}',
+                              '${amenityDurationLabel(context.l10n, widget.amenity.bookingDurationMinutes!)}',
                               style: GatesTypography.body,
                             ),
                           ],
@@ -287,7 +269,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                   children: [
                     Expanded(
                       child: _TimeField(
-                        label: 'Inicio',
+                        label: context.l10n.amenitiesStart,
                         value: _time(_startTime),
                         onTap: () => _pickTime(isStart: true),
                       ),
@@ -295,7 +277,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                     const SizedBox(width: GatesSpacing.space12),
                     Expanded(
                       child: _TimeField(
-                        label: 'Fin',
+                        label: context.l10n.amenitiesEnd,
                         value: _time(_endTime!),
                         onTap: () => _pickTime(isStart: false),
                       ),
@@ -305,7 +287,12 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
               if (_isFixedDuration) ...[
                 const SizedBox(height: GatesSpacing.space8),
                 Text(
-                  'Cada reserva dura ${_durationLabel(widget.amenity.bookingDurationMinutes!)}.',
+                  context.l10n.amenitiesEachBookingLasts(
+                    amenityDurationLabel(
+                      context.l10n,
+                      widget.amenity.bookingDurationMinutes!,
+                    ),
+                  ),
                   style: context.gatesText.caption,
                 ),
               ],
@@ -322,7 +309,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
               SizedBox(
                 width: double.infinity,
                 child: GatesButton(
-                  label: widget.primaryLabel,
+                  label: widget.primaryLabel ?? context.l10n.amenitiesContinue,
                   onPressed: _submit,
                 ),
               ),

@@ -1,13 +1,3 @@
-const _dayLabels = {
-  'mon': 'Lun',
-  'tue': 'Mar',
-  'wed': 'Mié',
-  'thu': 'Jue',
-  'fri': 'Vie',
-  'sat': 'Sáb',
-  'sun': 'Dom',
-};
-
 String _trimSeconds(String time) =>
     time.length >= 5 ? time.substring(0, 5) : time;
 
@@ -25,11 +15,11 @@ class AmenityScheduleBlock {
   final String openTime;
   final String closeTime;
 
-  /// e.g. "Lun, Mar, Mié, Jue 8:00-9:00".
-  String get label {
-    final dayLabels = days.map((d) => _dayLabels[d] ?? d).join(', ');
-    return '$dayLabels ${_trimSeconds(openTime)}-${_trimSeconds(closeTime)}';
-  }
+  /// `openTime` without seconds, e.g. "08:00".
+  String get openLabel => _trimSeconds(openTime);
+
+  /// `closeTime` without seconds, e.g. "09:00".
+  String get closeLabel => _trimSeconds(closeTime);
 
   factory AmenityScheduleBlock.fromMap(Map<String, dynamic> map) {
     return AmenityScheduleBlock(
@@ -83,7 +73,7 @@ class Amenity {
   final bool requiresPayment;
   final double? price;
 
-  /// Values from `{cash, card, transfer}`, see [paymentMethodLabel].
+  /// Values from `{cash, card, transfer}`, localized in the presentation layer.
   final List<String> paymentMethods;
 
   final int? bookingDurationMinutes;
@@ -106,15 +96,6 @@ class Amenity {
       ),
     ];
   }
-
-  /// Label for a `paymentMethods` entry, matching gates-admin's Spanish
-  /// copy for `{cash, card, transfer}`.
-  static String paymentMethodLabel(String value) => switch (value) {
-    'cash' => 'Efectivo',
-    'card' => 'Tarjeta',
-    'transfer' => 'Transferencia',
-    _ => value,
-  };
 
   factory Amenity.fromMap(Map<String, dynamic> map) {
     return Amenity(

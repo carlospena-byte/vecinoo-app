@@ -6,7 +6,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/swipe_to_confirm.dart';
 import '../domain/amenity_booking.dart';
+import '../../../l10n/l10n.dart';
 import 'amenities_controller.dart';
+import 'amenity_formatters.dart';
 import '../../../core/widgets/gates_toast.dart';
 
 final _fullDateFormat = DateFormat('EEEE d \'de\' MMMM \'de\' y', 'es');
@@ -62,24 +64,16 @@ _StatusPillSpec _statusPillSpec(BuildContext context, AmenityBooking booking) {
   );
   switch (booking.status) {
     case BookingStatus.pending:
-      return spec(p.tonePending, 'Pendiente de confirmación');
+      return spec(p.tonePending, context.l10n.amenitiesPendingConfirmation);
     case BookingStatus.confirmed:
       return booking.isUpcoming
-          ? spec(p.toneConfirmed, 'Reserva confirmada')
-          : spec(p.toneNeutral, 'Reserva pasada');
+          ? spec(p.toneConfirmed, context.l10n.amenitiesPillConfirmed)
+          : spec(p.toneNeutral, context.l10n.amenitiesPillPast);
     case BookingStatus.cancelled:
-      return spec(p.toneCancelled, 'Reserva cancelada');
+      return spec(p.toneCancelled, context.l10n.amenitiesPillCancelled);
     case BookingStatus.expired:
-      return spec(p.toneNeutral, 'Reserva expirada');
+      return spec(p.toneNeutral, context.l10n.amenitiesPillExpired);
   }
-}
-
-String _durationLabel(AmenityBooking booking) {
-  final minutes = booking.endTime.difference(booking.startTime).inMinutes;
-  final hours = minutes / 60;
-  return hours == hours.roundToDouble()
-      ? '${hours.round()} horas'
-      : '$minutes minutos';
 }
 
 String _capitalize(String value) =>
@@ -136,8 +130,8 @@ class _BookingDetailSheetBodyState
         showGatesToast(
           context,
           type: GatesToastType.error,
-          title: 'No pudimos cancelar la reserva',
-          message: 'Intenta de nuevo.',
+          title: context.l10n.amenitiesCancelFailedTitle,
+          message: context.l10n.amenitiesTryAgain,
         );
       }
     }
@@ -164,7 +158,7 @@ class _BookingDetailSheetBodyState
               children: [
                 Expanded(
                   child: Text(
-                    'Detalle de reserva',
+                    context.l10n.amenitiesBookingDetailTitle,
                     style: _detailHeaderStyle(context),
                   ),
                 ),
@@ -172,7 +166,7 @@ class _BookingDetailSheetBodyState
                   width: 44,
                   height: 44,
                   child: IconButton(
-                    tooltip: 'Cerrar',
+                    tooltip: context.l10n.amenitiesClose,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: _cancelling
@@ -185,23 +179,29 @@ class _BookingDetailSheetBodyState
             const SizedBox(height: GatesSpacing.space16),
             _StatusPill(spec: pill),
             const SizedBox(height: GatesSpacing.space16),
-            _DetailRow(label: 'Espacio', value: booking.amenityName),
+            _DetailRow(
+              label: context.l10n.amenitiesSpace,
+              value: booking.amenityName,
+            ),
             const SizedBox(height: GatesSpacing.space16),
             _DetailRow(
-              label: 'Fecha',
+              label: context.l10n.amenitiesDate,
               value: _capitalize(_fullDateFormat.format(booking.startTime)),
             ),
             const SizedBox(height: GatesSpacing.space16),
             _DetailRow(
-              label: 'Horario',
+              label: context.l10n.amenitiesSchedule,
               value:
                   '${_timeFormat.format(booking.startTime)}–${_timeFormat.format(booking.endTime)}'
-                  ' · ${_durationLabel(booking)}',
+                  ' · ${amenityDurationLabel(context.l10n, booking.endTime.difference(booking.startTime).inMinutes)}',
             ),
             if (booking.status == BookingStatus.cancelled &&
                 (booking.rejectionReason?.isNotEmpty ?? false)) ...[
               const SizedBox(height: GatesSpacing.space16),
-              _DetailRow(label: 'Motivo', value: booking.rejectionReason!),
+              _DetailRow(
+                label: context.l10n.amenitiesReason,
+                value: booking.rejectionReason!,
+              ),
             ],
             if (booking.isCancellable) ...[
               const SizedBox(height: GatesSpacing.space16),
@@ -209,15 +209,15 @@ class _BookingDetailSheetBodyState
                 controller: _reasonController,
                 maxLines: 3,
                 enabled: !_cancelling,
-                decoration: const InputDecoration(
-                  labelText: 'Motivo (opcional)',
-                  hintText: 'Cuéntanos por qué cancelas, si quieres',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.l10n.amenitiesReasonOptional,
+                  hintText: context.l10n.amenitiesReasonHint,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: GatesSpacing.space16),
               SwipeToConfirm(
-                label: 'Desliza para cancelar',
+                label: context.l10n.amenitiesSwipeToCancel,
                 loading: _cancelling,
                 onConfirmed: _handleConfirmCancel,
               ),

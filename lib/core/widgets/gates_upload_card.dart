@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 enum GatesUploadState { empty, ready, uploading, error }
 
@@ -14,7 +15,7 @@ class GatesUploadCard extends StatelessWidget {
     required this.state,
     required this.onPick,
     required this.onRemove,
-    this.emptyDescription = 'JPG o PNG · hasta 10 MB',
+    this.emptyDescription,
     this.fileLabel,
     this.errorDescription,
   });
@@ -24,7 +25,9 @@ class GatesUploadCard extends StatelessWidget {
   final GatesUploadState state;
   final VoidCallback onPick;
   final VoidCallback onRemove;
-  final String emptyDescription;
+
+  /// Defaults to the localized "JPG or PNG · up to 10 MB".
+  final String? emptyDescription;
 
   /// "file.jpg · 2.4 MB" once a file is picked.
   final String? fileLabel;
@@ -32,28 +35,29 @@ class GatesUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isError = state == GatesUploadState.error;
     final isReady = state == GatesUploadState.ready;
     final heading = switch (state) {
       GatesUploadState.empty => title,
-      GatesUploadState.ready => 'Foto lista',
-      GatesUploadState.uploading => 'Subiendo foto…',
+      GatesUploadState.ready => l10n.commonUploadReady,
+      GatesUploadState.uploading => l10n.commonUploadUploading,
       GatesUploadState.error => title,
     };
     final description = switch (state) {
-      GatesUploadState.empty => emptyDescription,
+      GatesUploadState.empty => emptyDescription ?? l10n.commonUploadFormats,
       GatesUploadState.ready => fileLabel ?? '',
-      GatesUploadState.uploading => fileLabel ?? 'Preparando…',
+      GatesUploadState.uploading => fileLabel ?? l10n.commonUploadPreparing,
       GatesUploadState.error =>
-        errorDescription ?? 'Revisa tu conexión e inténtalo de nuevo.',
+        errorDescription ?? l10n.commonUploadErrorDefault,
     };
     final (actionLabel, action) = switch (state) {
-      GatesUploadState.empty => ('Subir documento', onPick),
+      GatesUploadState.empty => (l10n.commonUploadDocument, onPick),
       GatesUploadState.ready || GatesUploadState.uploading => (
-        'Quitar',
+        l10n.commonRemove,
         state == GatesUploadState.uploading ? null : onRemove,
       ),
-      GatesUploadState.error => ('Elegir archivo', onPick),
+      GatesUploadState.error => (l10n.commonChooseFile, onPick),
     };
 
     return Container(

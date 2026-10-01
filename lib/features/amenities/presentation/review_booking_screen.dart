@@ -5,12 +5,14 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
+import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../data/amenities_repository.dart';
 import '../domain/amenity.dart';
 import '../domain/amenity_details.dart';
 import 'amenities_controller.dart';
 import 'amenity_bottom_sheets.dart';
+import 'amenity_formatters.dart';
 import 'booking_date_time_sheet.dart';
 import 'booking_result_screen.dart';
 
@@ -26,14 +28,6 @@ class ReviewBookingArgs {
 
 final _dateFormat = DateFormat('EEE, d MMM y', 'es');
 final _timeFormat = DateFormat('HH:mm');
-
-String _durationLabel(int minutes) {
-  if (minutes % 60 == 0) {
-    final hours = minutes ~/ 60;
-    return hours == 1 ? '1 hora' : '$hours horas';
-  }
-  return '$minutes minutos';
-}
 
 /// "Revisar reserva" — Figma "B02" (node 265:1422). Lets the resident change
 /// the date/time, notes, or check cost/terms before confirming; on submit it
@@ -69,7 +63,7 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
       amenity: _amenity,
       blackouts: widget.args.details.blackouts,
       initial: _selection,
-      primaryLabel: 'Guardar',
+      primaryLabel: context.l10n.amenitiesSave,
     );
     if (result != null && mounted) {
       setState(() {
@@ -87,13 +81,13 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
   }
 
   Future<void> _confirm() async {
+    final l10n = context.l10n;
     final now = DateTime.now();
     if (_selection.startDateTime.isBefore(now)) {
       setState(
         () => _error = (
-          title: 'Fecha en el pasado',
-          message:
-              'La fecha seleccionada ya pasó. Elige una fecha actual o futura.',
+          title: l10n.amenitiesErrorPastDateTitle,
+          message: l10n.amenitiesErrorPastDateMessage,
         ),
       );
       return;
@@ -101,8 +95,8 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
     if (!_selection.endDateTime.isAfter(_selection.startDateTime)) {
       setState(
         () => _error = (
-          title: 'Error de horario',
-          message: 'La hora de fin debe ser después de la hora de inicio.',
+          title: l10n.amenitiesErrorScheduleTitle,
+          message: l10n.amenitiesEndAfterStartError,
         ),
       );
       return;
@@ -135,22 +129,22 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
     } on BookingConflictException {
       setState(
         () => _error = (
-          title: 'Horario no disponible',
-          message: 'Otra reserva ocupa este horario. Tus notas se conservaron.',
+          title: l10n.amenitiesErrorConflictTitle,
+          message: l10n.amenitiesErrorConflictMessage,
         ),
       );
     } on AmenityBlackoutException {
       setState(
         () => _error = (
-          title: 'Fecha cerrada',
-          message: 'La amenidad estará cerrada el día elegido. Selecciona otra fecha.',
+          title: l10n.amenitiesErrorBlackoutTitle,
+          message: l10n.amenitiesErrorBlackoutMessage,
         ),
       );
     } catch (_) {
       setState(
         () => _error = (
-          title: 'No se pudo enviar la reserva',
-          message: 'Intenta de nuevo en unos segundos.',
+          title: l10n.amenitiesErrorSubmitTitle,
+          message: l10n.amenitiesErrorSubmitMessage,
         ),
       );
     } finally {
@@ -164,7 +158,7 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Revisar reserva'),
+        title: Text(context.l10n.amenitiesReviewTitle),
       ),
       body: SafeArea(
         top: false,
@@ -207,38 +201,38 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
                   ),
                   const _Divider(),
                   _ReviewRow(
-                    label: 'Fecha',
+                    label: context.l10n.amenitiesDate,
                     value: _capitalize(_dateFormat.format(_selection.day)),
-                    actionLabel: 'Cambiar',
+                    actionLabel: context.l10n.amenitiesChange,
                     onTap: _changeDateTime,
                   ),
                   const _Divider(),
                   _ReviewRow(
-                    label: 'Horario',
+                    label: context.l10n.amenitiesSchedule,
                     value:
                         '${_timeFormat.format(_selection.startDateTime)}–'
                         '${_timeFormat.format(_selection.endDateTime)} · '
-                        '${_durationLabel(_selection.endDateTime.difference(_selection.startDateTime).inMinutes)}',
-                    actionLabel: 'Cambiar',
+                        '${amenityDurationLabel(context.l10n, _selection.endDateTime.difference(_selection.startDateTime).inMinutes)}',
+                    actionLabel: context.l10n.amenitiesChange,
                     onTap: _changeDateTime,
                   ),
                   const _Divider(),
                   _ReviewRow(
-                    label: 'Costo de la reserva',
+                    label: context.l10n.amenitiesCostHeading,
                     value: _amenity.requiresPayment && _amenity.price != null
                         ? '\$${_amenity.price!.toStringAsFixed(2)}'
-                        : 'Sin costo',
+                        : context.l10n.amenitiesNoCost,
                   ),
                   const _Divider(),
                   _ReviewRow(
-                    label: 'Notas (opcional)',
-                    value: _notes ?? 'Sin notas',
-                    actionLabel: 'Editar',
+                    label: context.l10n.amenitiesNotesOptional,
+                    value: _notes ?? context.l10n.amenitiesNoNotes,
+                    actionLabel: context.l10n.amenitiesEdit,
                     onTap: _editNotes,
                   ),
                   const _Divider(),
                   Text(
-                    'Puedes cancelar una reserva futura desde Mis reservas.',
+                    context.l10n.amenitiesCancelFutureHint,
                     style: context.gatesText.caption,
                   ),
                   if (_amenity.terms != null) ...[
@@ -247,7 +241,7 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
                       child: TextButton(
                         onPressed: () =>
                             showTermsSheet(context, _amenity.terms!),
-                        child: const Text('Términos y condiciones'),
+                        child: Text(context.l10n.amenitiesTerms),
                       ),
                     ),
                   ],
@@ -264,7 +258,7 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: GatesButton(
-                  label: 'Confirmar reserva',
+                  label: context.l10n.amenitiesConfirmBooking,
                   loading: _isSubmitting,
                   onPressed: _isSubmitting ? null : _confirm,
                 ),

@@ -8,6 +8,7 @@ import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_text_action.dart';
 import '../../../core/widgets/gates_toast.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../data/visits_repository.dart';
 import '../domain/visit.dart';
@@ -43,17 +44,19 @@ class _FrequentVisitDetailScreenState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GatesSheetHeader(title: 'Cancelar acceso'),
+            GatesSheetHeader(title: context.l10n.visitsCancelAccess),
             const SizedBox(height: GatesSpacing.space8),
             Text(
-              '${visit.name ?? 'Tu visita'} ya no podrá ingresar con este acceso frecuente.',
+              context.l10n.visitsFrequentCancelBody(
+                visit.name ?? context.l10n.visitsFrequentDefaultName,
+              ),
               style: GatesTypography.body,
             ),
             const SizedBox(height: GatesSpacing.space24),
             SizedBox(
               width: double.infinity,
               child: GatesButton(
-                label: 'Sí, cancelar acceso',
+                label: context.l10n.visitsFrequentCancelConfirm,
                 style: GatesButtonStyle.destructive,
                 onPressed: () => Navigator.of(sheetContext).pop(true),
               ),
@@ -71,7 +74,7 @@ class _FrequentVisitDetailScreenState
       showGatesToast(
         context,
         type: GatesToastType.success,
-        title: 'Acceso cancelado',
+        title: context.l10n.visitsFrequentCancelledToast,
       );
       context.pop();
     } catch (_) {
@@ -80,8 +83,8 @@ class _FrequentVisitDetailScreenState
       showGatesToast(
         context,
         type: GatesToastType.error,
-        title: 'No pudimos cancelar el acceso',
-        message: 'Intenta de nuevo.',
+        title: context.l10n.visitsFrequentCancelError,
+        message: context.l10n.visitsTryAgain,
       );
     }
   }
@@ -97,10 +100,10 @@ class _FrequentVisitDetailScreenState
         .firstOrNull;
     if (visit == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Acceso frecuente')),
+        appBar: AppBar(title: Text(context.l10n.visitsFrequentAccess)),
         body: visitsAsync.hasError
             ? ErrorView(
-                message: 'No se pudo cargar el acceso.',
+                message: context.l10n.visitsFrequentLoadError,
                 onRetry: () =>
                     ref.invalidate(visitsListProvider(membership.unitId)),
               )
@@ -120,7 +123,7 @@ class _FrequentVisitDetailScreenState
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Acceso frecuente'),
+        title: Text(context.l10n.visitsFrequentAccess),
       ),
       body: SafeArea(
         top: false,
@@ -129,8 +132,8 @@ class _FrequentVisitDetailScreenState
           children: [
             Text(
               isActive
-                  ? 'Tu visita puede ingresar en los días y horarios que definiste.'
-                  : 'Este acceso ya no está disponible.',
+                  ? context.l10n.visitsFrequentActiveIntro
+                  : context.l10n.visitsFrequentInactiveIntro,
               style: GatesTypography.body.copyWith(
                 color: context.palette.textSecondary,
               ),
@@ -152,7 +155,7 @@ class _FrequentVisitDetailScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GatesTextAction(
-                    label: 'Editar acceso',
+                    label: context.l10n.visitsFrequentEditAccess,
                     filled: true,
                     onPressed: _isCancelling
                         ? null
@@ -163,7 +166,7 @@ class _FrequentVisitDetailScreenState
                   ),
                   const SizedBox(height: 20),
                   GatesTextAction(
-                    label: 'Cancelar acceso',
+                    label: context.l10n.visitsCancelAccess,
                     color: context.palette.statusError,
                     onPressed: _isCancelling ? null : () => _cancel(visit),
                   ),
@@ -194,7 +197,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final role = visit.visitorRole == null
         ? null
-        : visitorRoleLabel(visit.visitorRole!);
+        : visitorRoleLabel(context.l10n, visit.visitorRole!);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -207,12 +210,14 @@ class _SummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            role == null ? 'Visita' : 'Visita · $role',
+            role == null
+                ? context.l10n.visitsFrequentVisitCaption
+                : context.l10n.visitsFrequentVisitCaptionRole(role),
             style: context.gatesText.caption.copyWith(fontSize: 13),
           ),
           const SizedBox(height: GatesSpacing.space4),
           Text(
-            visit.name ?? 'Sin nombre',
+            visit.name ?? context.l10n.visitsFrequentNoName,
             style: GatesTypography.body.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -229,7 +234,9 @@ class _SummaryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
             ),
             child: Text(
-              isActive ? 'Acceso activo' : visitStatusLabel(visit.status),
+              isActive
+                  ? context.l10n.visitsFrequentActiveStatus
+                  : visitStatusLabel(context.l10n, visit.status),
               style: context.gatesText.caption.copyWith(
                 color: isActive
                     ? context.palette.statusSuccess
@@ -241,7 +248,7 @@ class _SummaryCard extends StatelessWidget {
           if (isActive) ...[
             const SizedBox(height: 10),
             Text(
-              'Vigente hasta que lo canceles.',
+              context.l10n.visitsFrequentValidUntilCancelled,
               style: GatesTypography.body.copyWith(
                 fontSize: 14,
                 color: context.palette.textSecondary,
@@ -249,14 +256,20 @@ class _SummaryCard extends StatelessWidget {
               ),
             ),
           ],
-          _Row(label: 'Días y horario', value: frequentScheduleSummary(visit)),
-          _Row(label: 'Unidad', value: unitName),
+          _Row(
+            label: context.l10n.visitsFrequentDaysAndHours,
+            value: frequentScheduleSummary(context.l10n, visit),
+          ),
+          _Row(label: context.l10n.visitsUnit, value: unitName),
           if (visit.hasVehicle && (visit.plate ?? '').isNotEmpty)
-            _Row(label: 'Vehículo', value: visit.plate!),
+            _Row(
+              label: context.l10n.visitsFrequentVehicle,
+              value: visit.plate!,
+            ),
           if (movement != null)
             _Row(
-              label: 'Último movimiento',
-              value: lastMovementLabel(movement!),
+              label: context.l10n.visitsFrequentLastMovement,
+              value: lastMovementLabel(context.l10n, movement!),
             ),
         ],
       ),

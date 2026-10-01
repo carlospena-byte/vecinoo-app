@@ -26,34 +26,6 @@ IncidentStatus statusFromString(String value) {
   }
 }
 
-String statusLabel(IncidentStatus status) {
-  switch (status) {
-    case IncidentStatus.newIncident:
-      return 'Nueva';
-    case IncidentStatus.inProgress:
-      return 'En progreso';
-    case IncidentStatus.resolved:
-      return 'Resuelta';
-    case IncidentStatus.closed:
-      return 'Cerrada';
-    case IncidentStatus.cancelled:
-      return 'Cancelada';
-  }
-}
-
-String priorityLabel(IncidentPriority priority) {
-  switch (priority) {
-    case IncidentPriority.low:
-      return 'Baja';
-    case IncidentPriority.medium:
-      return 'Media';
-    case IncidentPriority.high:
-      return 'Alta';
-    case IncidentPriority.urgent:
-      return 'Urgente';
-  }
-}
-
 class Incident {
   const Incident({
     required this.id,

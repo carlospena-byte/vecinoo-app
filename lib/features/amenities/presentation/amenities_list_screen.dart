@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/amenity_thumbnail.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/amenity_card.dart';
 import 'amenities_controller.dart';
@@ -25,19 +26,19 @@ class AmenitiesListScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Nueva reserva'),
+        title: Text(context.l10n.amenitiesNewBooking),
       ),
       body: amenitiesAsync.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(
-          message: 'No se pudieron cargar las amenidades.',
+          message: context.l10n.amenitiesListLoadError,
           onRetry: () =>
               ref.invalidate(amenitiesListProvider(membership.residentialId)),
         ),
         data: (amenities) {
           if (amenities.isEmpty) {
-            return const EmptyView(
-              message: 'Tu residencial aún no tiene amenidades configuradas.',
+            return EmptyView(
+              message: context.l10n.amenitiesListEmpty,
               icon: Icons.pool_outlined,
             );
           }
@@ -47,7 +48,10 @@ class AmenitiesListScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.all(GatesSpacing.space16),
               children: [
-                Text('Amenidades', style: GatesTypography.headingSmall),
+                Text(
+                  context.l10n.amenitiesListHeading,
+                  style: GatesTypography.headingSmall,
+                ),
                 const SizedBox(height: GatesSpacing.space12),
                 for (final card in amenities) ...[
                   _AmenityCardTile(card: card),
@@ -96,7 +100,7 @@ class _AmenityCardTile extends StatelessWidget {
                 if (amenity.capacity != null) ...[
                   const SizedBox(height: GatesSpacing.space4),
                   Text(
-                    '${amenity.capacity} personas',
+                    context.l10n.amenitiesCapacity(amenity.capacity!),
                     style: context.gatesText.labelSecondary,
                   ),
                 ],
@@ -149,7 +153,9 @@ class _BookingStatusBadge extends StatelessWidget {
           ),
           const SizedBox(width: GatesSpacing.space8),
           Text(
-            requiresBooking ? 'Reserva obligatoria' : 'Sin reserva',
+            requiresBooking
+                ? context.l10n.amenitiesBookingRequiredBadge
+                : context.l10n.amenitiesNoBookingBadge,
             style: context.gatesText.caption.copyWith(
               color: foreground,
               height: 16 / 12,

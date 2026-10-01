@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/presentation/auth_controller.dart';
 import 'session_controller.dart';
+import '../../../l10n/l10n.dart';
 
 /// Shown when the resident belongs to more than one unit/residential and
 /// no prior selection is saved.
@@ -25,7 +26,7 @@ class UnitSelectorScreen extends ConsumerWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: IconButton(
-                  tooltip: 'Cerrar sesión',
+                  tooltip: context.l10n.commonLogout,
                   icon: Icon(
                     Icons.logout,
                     color: context.palette.textSecondary,
@@ -44,14 +45,20 @@ class UnitSelectorScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),
-                  Text('PARA RESIDENTES', style: context.gatesText.caption),
+                  Text(
+                    context.l10n.commonForResidents,
+                    style: context.gatesText.caption,
+                  ),
                 ],
               ),
               const SizedBox(height: 32),
-              Text('Selecciona tu unidad', style: GatesTypography.headingLarge),
+              Text(
+                context.l10n.sessionSelectUnitTitle,
+                style: GatesTypography.headingLarge,
+              ),
               const SizedBox(height: 12),
               Text(
-                'Elige la unidad que quieres consultar.',
+                context.l10n.sessionSelectUnitBody,
                 style: GatesTypography.body.copyWith(
                   color: context.palette.textSecondary,
                 ),
