@@ -91,7 +91,7 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
                 width: double.infinity,
                 padding: const EdgeInsets.all(GatesSpacing.space16),
                 decoration: BoxDecoration(
-                  color: GatesColors.bgSurface,
+                  color: context.palette.bgSurface,
                   borderRadius: BorderRadius.circular(GatesRadius.radius24),
                 ),
                 child: TableCalendar(
@@ -119,21 +119,21 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
                     formatButtonVisible: false,
                     titleTextStyle: GatesTypography.label,
                     titleTextFormatter: (date, locale) => _monthTitle(date),
-                    leftChevronIcon: const Icon(
+                    leftChevronIcon: Icon(
                       Icons.chevron_left,
                       size: 20,
-                      color: GatesColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
-                    rightChevronIcon: const Icon(
+                    rightChevronIcon: Icon(
                       Icons.chevron_right,
                       size: 20,
-                      color: GatesColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                     headerPadding: EdgeInsets.zero,
                   ),
-                  daysOfWeekStyle: const DaysOfWeekStyle(
-                    weekdayStyle: GatesTypography.caption,
-                    weekendStyle: GatesTypography.caption,
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: context.gatesText.caption,
+                    weekendStyle: context.gatesText.caption,
                   ),
                   calendarBuilders: CalendarBuilders(
                     dowBuilder: (context, day) {
@@ -141,7 +141,7 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
                       return Center(
                         child: Text(
                           labels[day.weekday - 1],
-                          style: GatesTypography.caption,
+                          style: context.gatesText.caption,
                         ),
                       );
                     },
@@ -152,20 +152,26 @@ Future<DateTime?> _showVisitDateSheet(BuildContext context, DateTime initial) {
                     defaultTextStyle: GatesTypography.body,
                     weekendTextStyle: GatesTypography.body,
                     outsideTextStyle: GatesTypography.body,
-                    todayDecoration: const BoxDecoration(
+                    todayDecoration: BoxDecoration(
                       color: Colors.transparent,
                       shape: BoxShape.circle,
                       border: Border.fromBorderSide(
-                        BorderSide(color: GatesColors.bgBrand),
+                        BorderSide(color: context.palette.bgBrand),
                       ),
                     ),
                     todayTextStyle: GatesTypography.body,
-                    selectedDecoration: const BoxDecoration(
-                      color: GatesColors.bgBrand,
+                    selectedDecoration: BoxDecoration(
+                      color: context.palette.bgBrand,
                       shape: BoxShape.circle,
+                      border: Border.fromBorderSide(
+                        BorderSide(
+                          color: context.palette.borderSelectedBrand,
+                          width: 2,
+                        ),
+                      ),
                     ),
                     selectedTextStyle: GatesTypography.body.copyWith(
-                      color: GatesColors.textInverse,
+                      color: context.palette.textOnBrand,
                     ),
                   ),
                 ),
@@ -195,7 +201,7 @@ Future<TimeOfDay?> _showArrivalTimeSheet(
   var selected = initial;
   return showModalBottomSheet<TimeOfDay>(
     context: context,
-    backgroundColor: GatesColors.bgSurface,
+    backgroundColor: context.palette.bgElevated,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(GatesRadius.radius24),
@@ -518,8 +524,8 @@ class _SelectedCatalogField extends StatelessWidget {
           vertical: GatesSpacing.space12,
         ),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
-          border: Border.all(color: GatesColors.borderDefault),
+          color: context.palette.bgSurface,
+          border: Border.all(color: context.palette.borderDefault),
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
         ),
         child: Row(
@@ -530,16 +536,16 @@ class _SelectedCatalogField extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GatesTypography.caption),
+                  Text(label, style: context.gatesText.caption),
                   const SizedBox(height: GatesSpacing.space4),
                   Text(value, style: GatesTypography.body),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.expand_more,
               size: 20,
-              color: GatesColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ],
         ),
@@ -580,8 +586,8 @@ class _PickerField extends StatelessWidget {
               vertical: GatesSpacing.space12,
             ),
             decoration: BoxDecoration(
-              color: GatesColors.bgSurface,
-              border: Border.all(color: GatesColors.borderDefault),
+              color: context.palette.bgSurface,
+              border: Border.all(color: context.palette.borderDefault),
               borderRadius: BorderRadius.circular(GatesRadius.radius16),
             ),
             child: Row(
@@ -592,20 +598,20 @@ class _PickerField extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(label, style: GatesTypography.caption),
+                      Text(label, style: context.gatesText.caption),
                       const SizedBox(height: GatesSpacing.space4),
                       Text(value, style: GatesTypography.body),
                     ],
                   ),
                 ),
-                Icon(icon, size: 20, color: GatesColors.textBrand),
+                Icon(icon, size: 20, color: context.palette.textBrand),
               ],
             ),
           ),
         ),
         if (helper != null) ...[
           const SizedBox(height: GatesSpacing.space8),
-          Text(helper!, style: GatesTypography.caption),
+          Text(helper!, style: context.gatesText.caption),
         ],
       ],
     );
@@ -645,8 +651,8 @@ class _NotesFieldState extends State<_NotesField> {
         Container(
           padding: const EdgeInsets.all(GatesSpacing.space16),
           decoration: BoxDecoration(
-            color: GatesColors.bgSurface,
-            border: Border.all(color: GatesColors.borderDefault),
+            color: context.palette.bgSurface,
+            border: Border.all(color: context.palette.borderDefault),
             borderRadius: BorderRadius.circular(GatesRadius.radius16),
           ),
           child: Column(
@@ -654,7 +660,7 @@ class _NotesFieldState extends State<_NotesField> {
             children: [
               Text(
                 'Notas para portería (opcional)',
-                style: GatesTypography.caption,
+                style: context.gatesText.caption,
               ),
               const SizedBox(height: GatesSpacing.space8),
               TextField(
@@ -684,7 +690,7 @@ class _NotesFieldState extends State<_NotesField> {
           alignment: Alignment.centerRight,
           child: Text(
             '${widget.controller.text.length}/$_notesMaxLength',
-            style: GatesTypography.caption,
+            style: context.gatesText.caption,
           ),
         ),
       ],
@@ -708,8 +714,8 @@ class _NotifySwitch extends StatelessWidget {
         height: 88,
         padding: const EdgeInsets.all(GatesSpacing.space16),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
-          border: Border.all(color: GatesColors.borderDefault),
+          color: context.palette.bgSurface,
+          border: Border.all(color: context.palette.borderDefault),
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
         ),
         child: Row(
@@ -723,7 +729,7 @@ class _NotifySwitch extends StatelessWidget {
                   const SizedBox(height: GatesSpacing.space4),
                   Text(
                     'Notificaciones de mis visitas',
-                    style: GatesTypography.caption,
+                    style: context.gatesText.caption,
                   ),
                 ],
               ),
@@ -731,7 +737,7 @@ class _NotifySwitch extends StatelessWidget {
             Switch(
               value: value,
               onChanged: onChanged,
-              activeTrackColor: GatesColors.bgBrand,
+              activeTrackColor: context.palette.bgBrand,
             ),
           ],
         ),
@@ -850,21 +856,21 @@ class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
                             height: 40,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: GatesColors.bgSubtle,
+                              color: context.palette.bgSubtle,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               providerInitials(item.name),
                               style: GatesTypography.label.copyWith(
-                                color: GatesColors.textBrand,
+                                color: context.palette.textBrand,
                               ),
                             ),
                           ),
                           title: Text(item.name, style: GatesTypography.body),
                           trailing: item.id == widget.selectedId
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check,
-                                  color: GatesColors.textBrand,
+                                  color: context.palette.textBrand,
                                 )
                               : null,
                           onTap: () =>
@@ -881,7 +887,7 @@ class _ProviderSheetState extends ConsumerState<_ProviderSheet> {
                         title: Text('Otro', style: GatesTypography.body),
                         trailing: Icon(
                           _otherOpen ? Icons.expand_less : Icons.expand_more,
-                          color: GatesColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                         onTap: () => setState(() => _otherOpen = !_otherOpen),
                       ),

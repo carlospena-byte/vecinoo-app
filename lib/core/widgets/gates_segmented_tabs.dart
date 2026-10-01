@@ -32,7 +32,7 @@ class GatesSegmentedTabs<T> extends StatelessWidget {
       height: 56,
       padding: const EdgeInsets.all(GatesSpacing.space8),
       decoration: BoxDecoration(
-        color: GatesColors.bgSubtle,
+        color: context.palette.bgSubtle,
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
       ),
       child: Row(
@@ -67,8 +67,16 @@ class _GatesTabPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? GatesColors.bgBrand : Colors.transparent,
-      borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+      color: selected ? context.palette.bgBrand : Colors.transparent,
+      // Outline marks the selection without relying on the fill alone.
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: selected
+              ? context.palette.borderSelectedBrand
+              : Colors.transparent,
+          width: 2,
+        ),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
@@ -79,8 +87,8 @@ class _GatesTabPill extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GatesTypography.label.copyWith(
               color: selected
-                  ? GatesColors.textInverse
-                  : GatesColors.textSecondary,
+                  ? context.palette.textOnBrand
+                  : context.palette.textSecondary,
             ),
           ),
         ),

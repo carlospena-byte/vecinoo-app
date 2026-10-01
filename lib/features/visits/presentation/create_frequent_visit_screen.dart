@@ -386,7 +386,7 @@ class _CreateFrequentVisitScreenState
                   isFirstStep
                       ? '1 de 2 · Datos de la visita'
                       : '2 de 2 · Permisos de acceso',
-                  style: GatesTypography.caption,
+                  style: context.gatesText.caption,
                 ),
                 const SizedBox(height: GatesSpacing.space16),
                 if (isFirstStep) ..._dataStep() else ..._scheduleStep(),
@@ -493,7 +493,9 @@ class _CreateFrequentVisitScreenState
       if (isCustom) ...[
         Text(
           'Agrupa los días que comparten el mismo horario.',
-          style: GatesTypography.caption.copyWith(fontWeight: FontWeight.w400),
+          style: context.gatesText.caption.copyWith(
+            fontWeight: FontWeight.w400,
+          ),
         ),
         const SizedBox(height: GatesSpacing.space12),
         for (var i = 0; i < _blocks.length; i++) ...[
@@ -575,9 +577,9 @@ class _AddBlockButton extends StatelessWidget {
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          backgroundColor: GatesColors.bgSurface,
-          foregroundColor: GatesColors.textBrand,
-          disabledForegroundColor: GatesColors.textSecondary,
+          backgroundColor: context.palette.bgSurface,
+          foregroundColor: context.palette.textBrand,
+          disabledForegroundColor: context.palette.textSecondary,
           shape: const StadiumBorder(),
           textStyle: GatesTypography.label,
         ),

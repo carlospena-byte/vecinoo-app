@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_mode_controller.dart';
+import '../../../core/widgets/gates_segmented_tabs.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../session/presentation/session_controller.dart';
@@ -29,6 +32,8 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 32,
+                backgroundColor: context.palette.bgAccent,
+                foregroundColor: context.palette.textBrand,
                 child: Text(
                   profile.displayName.isNotEmpty
                       ? profile.displayName[0].toUpperCase()
@@ -75,6 +80,28 @@ class ProfileScreen extends ConsumerWidget {
                   label: const Text('Cambiar unidad'),
                 ),
               ],
+              const SizedBox(height: 24),
+              Text('Apariencia', style: context.gatesText.labelSecondary),
+              const SizedBox(height: 8),
+              GatesSegmentedTabs<ThemeMode>(
+                options: const [
+                  GatesSegmentedTabOption(
+                    value: ThemeMode.light,
+                    label: 'Claro',
+                  ),
+                  GatesSegmentedTabOption(
+                    value: ThemeMode.dark,
+                    label: 'Oscuro',
+                  ),
+                  GatesSegmentedTabOption(
+                    value: ThemeMode.system,
+                    label: 'Sistema',
+                  ),
+                ],
+                selected: ref.watch(themeModeProvider),
+                onSelect: (mode) =>
+                    ref.read(themeModeProvider.notifier).select(mode),
+              ),
               const SizedBox(height: 24),
               FilledButton.tonalIcon(
                 onPressed: () => ref.read(authRepositoryProvider).signOut(),

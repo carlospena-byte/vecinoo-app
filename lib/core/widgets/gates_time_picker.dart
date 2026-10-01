@@ -16,7 +16,7 @@ Future<TimeOfDay?> showGatesTimePicker(
   var selected = TimeOfDay(hour: initialTime.hour, minute: roundedMinute);
   return showModalBottomSheet<TimeOfDay>(
     context: context,
-    backgroundColor: GatesColors.bgSurface,
+    backgroundColor: context.palette.bgElevated,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(GatesRadius.radius24),

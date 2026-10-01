@@ -100,11 +100,11 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                           child: thumbnailUrl != null
                               ? Image.network(thumbnailUrl, fit: BoxFit.cover)
                               : Container(
-                                  color: GatesColors.bgSubtle,
+                                  color: context.palette.bgSubtle,
                                   alignment: Alignment.center,
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.deck_outlined,
-                                    color: GatesColors.textSecondary,
+                                    color: context.palette.textSecondary,
                                   ),
                                 ),
                         ),
@@ -122,7 +122,7 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 amenity.location!,
-                                style: GatesTypography.caption,
+                                style: context.gatesText.caption,
                               ),
                             ],
                           ],
@@ -130,11 +130,14 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                       ),
                     ],
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(
                       vertical: GatesSpacing.space16,
                     ),
-                    child: Divider(height: 1, color: GatesColors.borderDefault),
+                    child: Divider(
+                      height: 1,
+                      color: context.palette.borderSubtle,
+                    ),
                   ),
                   Text(
                     _capitalize(_summaryFormat.format(booking.startTime)),
@@ -149,7 +152,7 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                     const SizedBox(height: GatesSpacing.space16),
                     Text(
                       'Notas: ${booking.notes}',
-                      style: GatesTypography.caption,
+                      style: context.gatesText.caption,
                     ),
                   ],
                 ],
@@ -166,9 +169,11 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                 MediaQuery.paddingOf(context).bottom,
               ),
             ),
-            decoration: const BoxDecoration(
-              color: GatesColors.bgSurface,
-              border: Border(top: BorderSide(color: GatesColors.borderDefault)),
+            decoration: BoxDecoration(
+              color: context.palette.bgSurface,
+              border: Border(
+                top: BorderSide(color: context.palette.borderSubtle),
+              ),
             ),
             child: SizedBox(
               width: double.infinity,
@@ -210,7 +215,9 @@ class _StatusBanner extends StatelessWidget {
       height: 72,
       padding: const EdgeInsets.all(GatesSpacing.space16),
       decoration: BoxDecoration(
-        color: confirmed ? GatesColors.statusSuccessBg : GatesColors.bgLilac,
+        color: confirmed
+            ? context.palette.statusSuccessBg
+            : context.palette.bgLilac,
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: Row(
@@ -218,7 +225,7 @@ class _StatusBanner extends StatelessWidget {
           Icon(
             confirmed ? Icons.check_circle_outline : Icons.info_outline,
             size: 20,
-            color: GatesColors.textBrand,
+            color: context.palette.textBrand,
           ),
           const SizedBox(width: GatesSpacing.space12),
           Expanded(
@@ -234,7 +241,7 @@ class _StatusBanner extends StatelessWidget {
                   confirmed
                       ? 'La reserva se registró correctamente.'
                       : 'La solicitud espera confirmación.',
-                  style: GatesTypography.caption,
+                  style: context.gatesText.caption,
                 ),
               ],
             ),
@@ -242,12 +249,12 @@ class _StatusBanner extends StatelessWidget {
           InkWell(
             onTap: onDismiss,
             customBorder: const CircleBorder(),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(GatesSpacing.space4),
               child: Icon(
                 Icons.close,
                 size: 20,
-                color: GatesColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
           ),

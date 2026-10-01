@@ -132,7 +132,7 @@ class _FrequentVisitDetailScreenState
                   ? 'Tu visita puede ingresar en los días y horarios que definiste.'
                   : 'Este acceso ya no está disponible.',
               style: GatesTypography.body.copyWith(
-                color: GatesColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
             const SizedBox(height: GatesSpacing.space24),
@@ -164,7 +164,7 @@ class _FrequentVisitDetailScreenState
                   const SizedBox(height: 20),
                   GatesTextAction(
                     label: 'Cancelar acceso',
-                    color: GatesColors.statusError,
+                    color: context.palette.statusError,
                     onPressed: _isCancelling ? null : () => _cancel(visit),
                   ),
                 ],
@@ -199,8 +199,8 @@ class _SummaryCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgSurface,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: Column(
@@ -208,7 +208,7 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(
             role == null ? 'Visita' : 'Visita · $role',
-            style: GatesTypography.caption.copyWith(fontSize: 13),
+            style: context.gatesText.caption.copyWith(fontSize: 13),
           ),
           const SizedBox(height: GatesSpacing.space4),
           Text(
@@ -224,16 +224,16 @@ class _SummaryCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: isActive
-                  ? GatesColors.statusSuccessBg
-                  : GatesColors.bgSubtle,
+                  ? context.palette.statusSuccessBg
+                  : context.palette.bgSubtle,
               borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
             ),
             child: Text(
               isActive ? 'Acceso activo' : visitStatusLabel(visit.status),
-              style: GatesTypography.caption.copyWith(
+              style: context.gatesText.caption.copyWith(
                 color: isActive
-                    ? GatesColors.statusSuccess
-                    : GatesColors.textSecondary,
+                    ? context.palette.statusSuccess
+                    : context.palette.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -244,7 +244,7 @@ class _SummaryCard extends StatelessWidget {
               'Vigente hasta que lo canceles.',
               style: GatesTypography.body.copyWith(
                 fontSize: 14,
-                color: GatesColors.textSecondary,
+                color: context.palette.textSecondary,
                 height: 21 / 14,
               ),
             ),
@@ -277,14 +277,14 @@ class _Row extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GatesTypography.caption),
+          Text(label, style: context.gatesText.caption),
           const SizedBox(height: GatesSpacing.space4),
           Text(
             value,
             style: GatesTypography.body.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: GatesColors.textSecondary,
+              color: context.palette.textSecondary,
               height: 20 / 13,
             ),
           ),

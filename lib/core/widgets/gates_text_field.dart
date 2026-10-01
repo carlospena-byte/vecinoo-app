@@ -84,22 +84,22 @@ class _GatesTextFieldState extends State<GatesTextField> {
             : field.errorText;
         final isFocused = _focusNode.hasFocus;
         final labelColor = hasError
-            ? GatesColors.statusError
-            : GatesColors.textSecondary;
+            ? context.palette.statusError
+            : context.palette.textSecondary;
 
         Color borderColor;
         double borderWidth;
         if (!widget.enabled) {
-          borderColor = GatesColors.borderDefault;
+          borderColor = context.palette.borderDefault;
           borderWidth = 1;
         } else if (hasError) {
-          borderColor = GatesColors.statusError;
+          borderColor = context.palette.statusError;
           borderWidth = isFocused ? 2 : 1;
         } else if (isFocused) {
-          borderColor = GatesColors.borderFocus;
+          borderColor = context.palette.borderFocus;
           borderWidth = 2;
         } else {
-          borderColor = GatesColors.borderDefault;
+          borderColor = context.palette.borderDefault;
           borderWidth = 1;
         }
 
@@ -109,8 +109,8 @@ class _GatesTextFieldState extends State<GatesTextField> {
             Container(
               decoration: BoxDecoration(
                 color: widget.enabled
-                    ? GatesColors.bgSurface
-                    : GatesColors.bgSubtle,
+                    ? context.palette.bgSurface
+                    : context.palette.bgSubtle,
                 borderRadius: BorderRadius.circular(GatesRadius.radius16),
                 border: Border.all(color: borderColor, width: borderWidth),
               ),
@@ -124,7 +124,9 @@ class _GatesTextFieldState extends State<GatesTextField> {
                 children: [
                   Text(
                     widget.label,
-                    style: GatesTypography.caption.copyWith(color: labelColor),
+                    style: context.gatesText.caption.copyWith(
+                      color: labelColor,
+                    ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),
                   TextField(
@@ -144,17 +146,17 @@ class _GatesTextFieldState extends State<GatesTextField> {
                     },
                     style: GatesTypography.body.copyWith(
                       color: widget.enabled
-                          ? GatesColors.textPrimary
-                          : GatesColors.textSecondary,
+                          ? context.palette.textPrimary
+                          : context.palette.textSecondary,
                     ),
-                    cursorColor: GatesColors.borderFocus,
+                    cursorColor: context.palette.borderFocus,
                     decoration: InputDecoration(
                       isDense: true,
                       isCollapsed: true,
                       border: InputBorder.none,
                       hintText: widget.hintText,
                       hintStyle: GatesTypography.body.copyWith(
-                        color: GatesColors.textSecondary,
+                        color: context.palette.textSecondary,
                       ),
                     ),
                   ),
@@ -167,10 +169,10 @@ class _GatesTextFieldState extends State<GatesTextField> {
               const SizedBox(height: GatesSpacing.space4),
               Text(
                 hasError ? errorMessage! : widget.helperText!,
-                style: GatesTypography.caption.copyWith(
+                style: context.gatesText.caption.copyWith(
                   color: hasError
-                      ? GatesColors.statusError
-                      : GatesColors.textSecondary,
+                      ? context.palette.statusError
+                      : context.palette.textSecondary,
                 ),
               ),
             ],

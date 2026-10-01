@@ -69,7 +69,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GatesColors.bgSubtle,
+      backgroundColor: context.palette.bgSubtle,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -81,9 +81,9 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                 alignment: Alignment.centerRight,
                 child: IconButton(
                   tooltip: 'Cerrar sesión',
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.logout,
-                    color: GatesColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                   onPressed: () => ref.read(authRepositoryProvider).signOut(),
                 ),
@@ -95,11 +95,11 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                   Text(
                     'gates',
                     style: GatesTypography.headingMedium.copyWith(
-                      color: GatesColors.textBrand,
+                      color: context.palette.textBrand,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),
-                  Text('PARA RESIDENTES', style: GatesTypography.caption),
+                  Text('PARA RESIDENTES', style: context.gatesText.caption),
                 ],
               ),
               const SizedBox(height: 32),
@@ -109,7 +109,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                 'Todavía no tienes una unidad vinculada. Pide al administrador que te '
                 'vincule o ingresa un código de invitación.',
                 style: GatesTypography.body.copyWith(
-                  color: GatesColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
               const SizedBox(height: 32),

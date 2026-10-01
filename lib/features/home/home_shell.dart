@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/gates_svg_icon.dart';
 import '../amenities/presentation/bookings_list_screen.dart';
 import '../incidents/presentation/incidents_list_screen.dart';
 import '../visits/presentation/visits_list_screen.dart';
@@ -77,9 +77,9 @@ class _HomeShellState extends State<HomeShell> {
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x1A252D29),
+                  color: context.palette.shadow,
                   offset: Offset(0, 8),
                   blurRadius: 24,
                 ),
@@ -93,11 +93,9 @@ class _HomeShellState extends State<HomeShell> {
                   height: 72,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: GatesColors.bgSurface.withValues(alpha: 0.62),
+                    color: context.palette.navGlass,
                     borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
+                    border: Border.all(color: context.palette.navGlassBorder),
                   ),
                   child: Row(
                     children: [
@@ -142,8 +140,15 @@ class _NavPillItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? GatesColors.bgAccent : Colors.transparent,
-      borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
+      color: selected ? context.palette.bgAccent : Colors.transparent,
+      // The selected tab is outlined (invisible in light mode) so it never
+      // relies on its fill alone to stand out.
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: selected ? context.palette.borderSelected : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
@@ -153,12 +158,12 @@ class _NavPillItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(item.icon, width: 24, height: 24),
+              GatesSvgIcon(item.icon, size: 24),
               const SizedBox(height: 4),
               Text(
                 item.label,
-                style: GatesTypography.caption.copyWith(
-                  color: GatesColors.textPrimary,
+                style: context.gatesText.caption.copyWith(
+                  color: context.palette.textPrimary,
                 ),
               ),
             ],

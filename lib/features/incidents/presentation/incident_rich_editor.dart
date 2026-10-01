@@ -254,7 +254,7 @@ class RichTextController extends TextEditingController {
           style: TextStyle(
             fontWeight: flags & _bold != 0 ? FontWeight.w700 : null,
             fontStyle: flags & _italic != 0 ? FontStyle.italic : null,
-            color: link != null ? GatesColors.textBrand : null,
+            color: link != null ? context.palette.textBrand : null,
             decoration: link != null ? TextDecoration.underline : null,
           ),
         ),
@@ -350,8 +350,8 @@ class IncidentRichEditor extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(GatesSpacing.space16),
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgSurface,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: ListenableBuilder(
@@ -362,7 +362,7 @@ class IncidentRichEditor extends StatelessWidget {
             Text(
               'Descripción (opcional)',
               style: GatesTypography.label.copyWith(
-                color: GatesColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
             const SizedBox(height: GatesSpacing.space12),
@@ -376,7 +376,7 @@ class IncidentRichEditor extends StatelessWidget {
                     'B',
                     style: GatesTypography.body.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: GatesColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                 ),
@@ -388,7 +388,7 @@ class IncidentRichEditor extends StatelessWidget {
                   child: Text(
                     'I',
                     style: GatesTypography.body.copyWith(
-                      color: GatesColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                 ),
@@ -397,10 +397,10 @@ class IncidentRichEditor extends StatelessWidget {
                   active: controller.isBullet,
                   onTap: controller.toggleBullet,
                   semanticLabel: 'Lista',
-                  child: const Icon(
+                  child: Icon(
                     Icons.format_list_bulleted,
                     size: 20,
-                    color: GatesColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const SizedBox(width: GatesSpacing.space4),
@@ -408,10 +408,10 @@ class IncidentRichEditor extends StatelessWidget {
                   active: false,
                   onTap: () => _addLink(context),
                   semanticLabel: 'Enlace',
-                  child: const Icon(
+                  child: Icon(
                     Icons.link,
                     size: 20,
-                    color: GatesColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
               ],
@@ -423,17 +423,17 @@ class IncidentRichEditor extends StatelessWidget {
               maxLines: null,
               keyboardType: TextInputType.multiline,
               textCapitalization: TextCapitalization.sentences,
-              style: GatesTypography.labelSecondary.copyWith(
-                color: GatesColors.textPrimary,
+              style: context.gatesText.labelSecondary.copyWith(
+                color: context.palette.textPrimary,
               ),
-              cursorColor: GatesColors.borderFocus,
+              cursorColor: context.palette.borderFocus,
               decoration: InputDecoration(
                 isDense: true,
                 isCollapsed: true,
                 border: InputBorder.none,
                 hintText: 'Describe qué ocurrió y dónde…',
-                hintStyle: GatesTypography.labelSecondary.copyWith(
-                  color: GatesColors.textSecondary,
+                hintStyle: context.gatesText.labelSecondary.copyWith(
+                  color: context.palette.textSecondary,
                 ),
               ),
             ),
@@ -464,7 +464,7 @@ class _ToolButton extends StatelessWidget {
       selected: active,
       label: semanticLabel,
       child: Material(
-        color: active ? GatesColors.bgAccent : Colors.transparent,
+        color: active ? context.palette.bgAccent : Colors.transparent,
         borderRadius: BorderRadius.circular(GatesRadius.radius8),
         child: InkWell(
           borderRadius: BorderRadius.circular(GatesRadius.radius8),
@@ -533,8 +533,8 @@ class _LinkSheetState extends State<_LinkSheet> {
             const SizedBox(height: GatesSpacing.space4),
             Text(
               'Sin texto seleccionado, se insertará el enlace tal cual.',
-              style: GatesTypography.labelSecondary.copyWith(
-                color: GatesColors.textSecondary,
+              style: context.gatesText.labelSecondary.copyWith(
+                color: context.palette.textSecondary,
               ),
             ),
           ],

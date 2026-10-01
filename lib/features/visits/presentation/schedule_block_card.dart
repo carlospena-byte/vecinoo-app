@@ -71,8 +71,8 @@ class ScheduleBlockCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(GatesSpacing.space8),
       decoration: BoxDecoration(
-        color: GatesColors.bgCanvas,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgCanvas,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: Column(
@@ -84,19 +84,19 @@ class ScheduleBlockCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Bloque de horario ${index + 1}',
-                    style: GatesTypography.caption,
+                    style: context.gatesText.caption,
                   ),
                 ),
                 if (onRemove != null)
                   InkWell(
                     onTap: onRemove,
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 44,
                       height: 32,
                       child: Icon(
                         Icons.close,
                         size: 20,
-                        color: GatesColors.textSecondary,
+                        color: context.palette.textSecondary,
                         semanticLabel: 'Eliminar bloque',
                       ),
                     ),
@@ -172,10 +172,13 @@ class _DayPill extends StatelessWidget {
       child: Opacity(
         opacity: enabled ? 1 : 0.4,
         child: Material(
-          color: selected ? GatesColors.bgBrand : GatesColors.bgSurface,
+          color: selected ? context.palette.bgBrand : context.palette.bgSurface,
           shape: CircleBorder(
             side: BorderSide(
-              color: selected ? GatesColors.bgBrand : GatesColors.borderDefault,
+              color: selected
+                  ? context.palette.borderSelectedBrand
+                  : context.palette.borderDefault,
+              width: selected ? 2 : 1,
             ),
           ),
           child: InkWell(
@@ -189,8 +192,8 @@ class _DayPill extends StatelessWidget {
                   label,
                   style: GatesTypography.body.copyWith(
                     color: selected
-                        ? GatesColors.textInverse
-                        : GatesColors.textSecondary,
+                        ? context.palette.textOnBrand
+                        : context.palette.textSecondary,
                   ),
                 ),
               ),
@@ -234,10 +237,10 @@ class _TimeField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: GatesColors.bgSurface,
+      color: context.palette.bgSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
-        side: const BorderSide(color: GatesColors.borderDefault),
+        side: BorderSide(color: context.palette.borderDefault),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -251,7 +254,7 @@ class _TimeField extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(label, style: GatesTypography.caption),
+                    Text(label, style: context.gatesText.caption),
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
                       value,
@@ -260,11 +263,7 @@ class _TimeField extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.schedule,
-                size: 20,
-                color: GatesColors.textBrand,
-              ),
+              Icon(Icons.schedule, size: 20, color: context.palette.textBrand),
             ],
           ),
         ),

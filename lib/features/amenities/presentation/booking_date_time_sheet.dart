@@ -206,7 +206,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: GatesColors.statusWarningBg,
+                    color: context.palette.statusWarningBg,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -218,8 +218,8 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                             widget.blackouts[i],
                             withPrefix: i == 0,
                           ),
-                          style: GatesTypography.caption.copyWith(
-                            color: GatesColors.statusWarning,
+                          style: context.gatesText.caption.copyWith(
+                            color: context.palette.statusWarning,
                           ),
                         ),
                     ],
@@ -267,7 +267,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                           children: [
                             Text(
                               'Termina a las',
-                              style: GatesTypography.caption,
+                              style: context.gatesText.caption,
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -305,15 +305,15 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                 const SizedBox(height: GatesSpacing.space8),
                 Text(
                   'Cada reserva dura ${_durationLabel(widget.amenity.bookingDurationMinutes!)}.',
-                  style: GatesTypography.caption,
+                  style: context.gatesText.caption,
                 ),
               ],
               if (_error != null) ...[
                 const SizedBox(height: GatesSpacing.space8),
                 Text(
                   _error!,
-                  style: GatesTypography.caption.copyWith(
-                    color: GatesColors.statusError,
+                  style: context.gatesText.caption.copyWith(
+                    color: context.palette.statusError,
                   ),
                 ),
               ],
@@ -356,8 +356,8 @@ class _TimeField extends StatelessWidget {
         height: 64,
         padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space12),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
-          border: Border.all(color: GatesColors.borderDefault),
+          color: context.palette.bgSurface,
+          border: Border.all(color: context.palette.borderDefault),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -367,17 +367,13 @@ class _TimeField extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GatesTypography.caption),
+                  Text(label, style: context.gatesText.caption),
                   const SizedBox(height: 4),
                   Text(value, style: GatesTypography.body),
                 ],
               ),
             ),
-            const Icon(
-              Icons.access_time,
-              color: GatesColors.textBrand,
-              size: 20,
-            ),
+            Icon(Icons.access_time, color: context.palette.textBrand, size: 20),
           ],
         ),
       ),

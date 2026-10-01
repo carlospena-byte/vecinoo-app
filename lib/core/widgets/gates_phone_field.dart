@@ -91,11 +91,11 @@ class GatesPhoneField extends StatelessWidget {
             Container(
               height: 64,
               decoration: BoxDecoration(
-                color: GatesColors.bgSurface,
+                color: context.palette.bgSurface,
                 border: Border.all(
                   color: hasError
-                      ? GatesColors.statusError
-                      : GatesColors.borderDefault,
+                      ? context.palette.statusError
+                      : context.palette.borderDefault,
                 ),
                 borderRadius: BorderRadius.circular(GatesRadius.radius16),
               ),
@@ -123,7 +123,7 @@ class GatesPhoneField extends StatelessWidget {
                   Container(
                     width: 1,
                     height: 40,
-                    color: GatesColors.borderDefault,
+                    color: context.palette.borderDefault,
                   ),
                   Expanded(
                     child: Padding(
@@ -134,10 +134,10 @@ class GatesPhoneField extends StatelessWidget {
                         children: [
                           Text(
                             'Teléfono',
-                            style: GatesTypography.caption.copyWith(
+                            style: context.gatesText.caption.copyWith(
                               color: hasError
-                                  ? GatesColors.statusError
-                                  : GatesColors.textSecondary,
+                                  ? context.palette.statusError
+                                  : context.palette.textSecondary,
                             ),
                           ),
                           const SizedBox(height: GatesSpacing.space4),
@@ -151,14 +151,14 @@ class GatesPhoneField extends StatelessWidget {
                             ],
                             onChanged: (_) => field.didChange(controller.text),
                             style: GatesTypography.body,
-                            cursorColor: GatesColors.borderFocus,
+                            cursorColor: context.palette.borderFocus,
                             decoration: InputDecoration(
                               isDense: true,
                               isCollapsed: true,
                               border: InputBorder.none,
                               hintText: hintText,
                               hintStyle: GatesTypography.body.copyWith(
-                                color: GatesColors.textSecondary,
+                                color: context.palette.textSecondary,
                               ),
                             ),
                           ),
@@ -173,8 +173,8 @@ class GatesPhoneField extends StatelessWidget {
               const SizedBox(height: GatesSpacing.space4),
               Text(
                 field.errorText!,
-                style: GatesTypography.caption.copyWith(
-                  color: GatesColors.statusError,
+                style: context.gatesText.caption.copyWith(
+                  color: context.palette.statusError,
                 ),
               ),
             ],

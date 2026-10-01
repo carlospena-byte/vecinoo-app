@@ -88,7 +88,7 @@ class IncidentDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 20),
                       GatesTextAction(
                         label: 'Cancelar incidencia',
-                        color: GatesColors.statusError,
+                        color: context.palette.statusError,
                         onPressed: () => _confirmCancel(context, ref),
                       ),
                     ],
@@ -185,8 +185,8 @@ class _SummaryCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgSurface,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: Column(
@@ -194,7 +194,7 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(
             'Reportada el ${_dateFormat.format(incident.createdAt)}',
-            style: GatesTypography.caption.copyWith(fontSize: 13),
+            style: context.gatesText.caption.copyWith(fontSize: 13),
           ),
           const SizedBox(height: GatesSpacing.space4),
           Text(
@@ -215,13 +215,13 @@ class _SummaryCard extends StatelessWidget {
               if (incident.incidentTypeName != null)
                 Text(
                   incident.incidentTypeName!,
-                  style: GatesTypography.labelSecondary,
+                  style: context.gatesText.labelSecondary,
                 ),
             ],
           ),
           if (description != null && description.trim().isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text('Descripción', style: GatesTypography.caption),
+            Text('Descripción', style: context.gatesText.caption),
             const SizedBox(height: GatesSpacing.space4),
             Html(
               data: description,
@@ -238,7 +238,7 @@ class _SummaryCard extends StatelessWidget {
                   fontFamily: 'Manrope',
                   fontSize: FontSize(14),
                   lineHeight: const LineHeight(21 / 14),
-                  color: GatesColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
                 'p': Style(margin: Margins.only(bottom: 4)),
                 'ul': Style(
@@ -246,13 +246,13 @@ class _SummaryCard extends StatelessWidget {
                   padding: HtmlPaddings.only(left: 16),
                 ),
                 'li': Style(padding: HtmlPaddings.zero),
-                'a': Style(color: GatesColors.textBrand),
+                'a': Style(color: context.palette.textBrand),
               },
             ),
           ],
           if (photos.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text('Fotografías', style: GatesTypography.caption),
+            Text('Fotografías', style: context.gatesText.caption),
             const SizedBox(height: GatesSpacing.space8),
             Wrap(
               spacing: GatesSpacing.space12,
@@ -295,10 +295,10 @@ class _AttachmentThumb extends StatelessWidget {
           errorBuilder: (_, _, _) => Container(
             width: 104,
             height: 100,
-            color: GatesColors.bgSubtle,
-            child: const Icon(
+            color: context.palette.bgSubtle,
+            child: Icon(
               Icons.broken_image_outlined,
-              color: GatesColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ),
         ),

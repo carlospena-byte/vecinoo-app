@@ -47,10 +47,10 @@ class GatesSwitchRow extends StatelessWidget {
       toggled: value,
       label: label,
       child: Material(
-        color: GatesColors.bgSurface,
+        color: context.palette.bgSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
-          side: const BorderSide(color: GatesColors.borderDefault),
+          side: BorderSide(color: context.palette.borderDefault),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -68,7 +68,7 @@ class GatesSwitchRow extends StatelessWidget {
                       Text(label, style: GatesTypography.label),
                       if (description != null) ...[
                         const SizedBox(height: GatesSpacing.space4),
-                        Text(description!, style: GatesTypography.caption),
+                        Text(description!, style: context.gatesText.caption),
                       ],
                     ],
                   ),
@@ -98,9 +98,11 @@ class _Track extends StatelessWidget {
       padding: const EdgeInsets.all(GatesSpacing.space4),
       alignment: value ? Alignment.centerRight : Alignment.centerLeft,
       decoration: BoxDecoration(
-        color: value ? GatesColors.bgBrand : GatesColors.bgSubtle,
+        color: value ? context.palette.bgBrand : context.palette.bgSubtle,
         border: Border.all(
-          color: value ? GatesColors.bgBrand : GatesColors.borderDefault,
+          color: value
+              ? context.palette.bgBrand
+              : context.palette.borderDefault,
         ),
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
       ),
@@ -108,14 +110,16 @@ class _Track extends StatelessWidget {
         width: 24,
         height: 24,
         alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: GatesColors.bgSurface,
+        decoration: BoxDecoration(
+          color: value ? context.palette.textOnBrand : context.palette.knobOff,
           shape: BoxShape.circle,
         ),
         child: Text(
           value ? '✓' : '−',
-          style: GatesTypography.caption.copyWith(
-            color: GatesColors.textBrand,
+          style: context.gatesText.caption.copyWith(
+            color: value
+                ? context.palette.bgBrand
+                : context.palette.knobOffGlyph,
             height: 1,
           ),
         ),

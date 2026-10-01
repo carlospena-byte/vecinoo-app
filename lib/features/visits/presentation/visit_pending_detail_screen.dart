@@ -193,7 +193,7 @@ class _VisitPendingDetailScreenState
             Text(
               'Comparte el enlace para que tu visitante complete sus datos.',
               style: GatesTypography.body.copyWith(
-                color: GatesColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
             const SizedBox(height: GatesSpacing.space24),
@@ -236,7 +236,7 @@ class _VisitPendingDetailScreenState
             else
               GatesTextAction(
                 label: 'Cancelar invitación',
-                color: GatesColors.statusError,
+                color: context.palette.statusError,
                 onPressed: _isCancelling ? null : () => _cancel(visit),
               ),
           ],
@@ -259,8 +259,8 @@ class _SummaryCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgSurface,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: Column(
@@ -268,7 +268,7 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(
             'Llegada prevista',
-            style: GatesTypography.caption.copyWith(fontSize: 13),
+            style: context.gatesText.caption.copyWith(fontSize: 13),
           ),
           const SizedBox(height: GatesSpacing.space4),
           Text(
@@ -283,13 +283,13 @@ class _SummaryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: GatesColors.bgSubtle,
+              color: context.palette.bgSubtle,
               borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
             ),
             child: Text(
               'Pendiente de datos',
-              style: GatesTypography.caption.copyWith(
-                color: GatesColors.textBrand,
+              style: context.gatesText.caption.copyWith(
+                color: context.palette.textBrand,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -299,20 +299,20 @@ class _SummaryCard extends StatelessWidget {
             'Tu visitante completará sus datos al abrir el enlace.',
             style: GatesTypography.body.copyWith(
               fontSize: 14,
-              color: GatesColors.textSecondary,
+              color: context.palette.textSecondary,
               height: 21 / 14,
             ),
           ),
           if (link != null) ...[
             const SizedBox(height: 20),
-            Text('Enlace de invitación', style: GatesTypography.caption),
+            Text('Enlace de invitación', style: context.gatesText.caption),
             const SizedBox(height: GatesSpacing.space4),
             Text(
               link!,
               style: GatesTypography.body.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: GatesColors.textSecondary,
+                color: context.palette.textSecondary,
                 height: 20 / 13,
               ),
             ),

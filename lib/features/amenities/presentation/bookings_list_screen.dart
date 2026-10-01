@@ -185,8 +185,8 @@ class _BookingCard extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(GatesSpacing.space16),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
-          border: Border.all(color: GatesColors.borderDefault),
+          color: context.palette.bgSurface,
+          border: Border.all(color: context.palette.borderDefault),
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
         ),
         child: Row(
@@ -206,7 +206,7 @@ class _BookingCard extends ConsumerWidget {
                   const SizedBox(height: GatesSpacing.space4),
                   Text(
                     '${_shortDateLabel(booking.startTime)}\n${_timeRangeLabel(booking)}',
-                    style: GatesTypography.labelSecondary,
+                    style: context.gatesText.labelSecondary,
                   ),
                   const SizedBox(height: GatesSpacing.space4),
                   _StatusBadge(
@@ -235,23 +235,23 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (background, foreground, label) = switch (status) {
       BookingStatus.pending => (
-        GatesColors.statusWarningBg,
-        GatesColors.statusWarning,
+        context.palette.statusWarningBg,
+        context.palette.statusWarning,
         'Pendiente',
       ),
       BookingStatus.confirmed => (
-        GatesColors.bgAccent,
-        GatesColors.textBrand,
+        context.palette.bgAccent,
+        context.palette.textBrand,
         'Confirmada',
       ),
       BookingStatus.cancelled => (
-        GatesColors.bgSubtle,
-        GatesColors.textSecondary,
+        context.palette.bgSubtle,
+        context.palette.textSecondary,
         'Cancelada',
       ),
       BookingStatus.expired => (
-        GatesColors.bgSubtle,
-        GatesColors.textSecondary,
+        context.palette.bgSubtle,
+        context.palette.textSecondary,
         'Expirada',
       ),
     };
@@ -265,7 +265,7 @@ class _StatusBadge extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         label,
-        style: GatesTypography.caption.copyWith(color: foreground),
+        style: context.gatesText.caption.copyWith(color: foreground),
       ),
     );
   }

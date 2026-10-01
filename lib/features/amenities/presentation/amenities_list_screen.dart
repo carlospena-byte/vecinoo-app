@@ -74,8 +74,8 @@ class _AmenityCardTile extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 112),
       padding: const EdgeInsets.all(GatesSpacing.space16),
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgSurface,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: Row(
@@ -97,7 +97,7 @@ class _AmenityCardTile extends StatelessWidget {
                   const SizedBox(height: GatesSpacing.space4),
                   Text(
                     '${amenity.capacity} personas',
-                    style: GatesTypography.labelSecondary,
+                    style: context.gatesText.labelSecondary,
                   ),
                 ],
                 const SizedBox(height: GatesSpacing.space4),
@@ -127,11 +127,11 @@ class _BookingStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = requiresBooking
-        ? GatesColors.bgBrand
-        : GatesColors.bgAccent;
+        ? context.palette.bgBrand
+        : context.palette.bgAccent;
     final foreground = requiresBooking
-        ? GatesColors.textInverse
-        : GatesColors.textBrand;
+        ? context.palette.textOnBrand
+        : context.palette.textBrand;
     return Container(
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space8),
@@ -150,7 +150,7 @@ class _BookingStatusBadge extends StatelessWidget {
           const SizedBox(width: GatesSpacing.space8),
           Text(
             requiresBooking ? 'Reserva obligatoria' : 'Sin reserva',
-            style: GatesTypography.caption.copyWith(
+            style: context.gatesText.caption.copyWith(
               color: foreground,
               height: 16 / 12,
             ),

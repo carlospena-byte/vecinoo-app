@@ -12,28 +12,28 @@ import '../../../core/widgets/gates_toast.dart';
 final _fullDateFormat = DateFormat('EEEE d \'de\' MMMM \'de\' y', 'es');
 final _timeFormat = DateFormat('HH:mm', 'es');
 
-const _detailHeaderStyle = TextStyle(
+TextStyle _detailHeaderStyle(BuildContext context) => TextStyle(
   fontFamily: 'Manrope',
   fontWeight: FontWeight.w700,
   fontSize: 22,
   height: 30 / 22,
-  color: Color(0xFF1A1E1C),
+  color: context.palette.textPrimary,
 );
 
-const _detailLabelStyle = TextStyle(
+TextStyle _detailLabelStyle(BuildContext context) => TextStyle(
   fontFamily: 'Manrope',
   fontWeight: FontWeight.w500,
   fontSize: 12,
   height: 16 / 12,
-  color: Color(0xFF6F7972),
+  color: context.palette.textSecondary,
 );
 
-const _detailValueStyle = TextStyle(
+TextStyle _detailValueStyle(BuildContext context) => TextStyle(
   fontFamily: 'Manrope',
   fontWeight: FontWeight.w600,
   fontSize: 15,
   height: 22 / 15,
-  color: GatesColors.textPrimary,
+  color: context.palette.textPrimary,
 );
 
 class _StatusPillSpec {
@@ -52,43 +52,25 @@ class _StatusPillSpec {
 
 /// "Status pill / …" — Figma nodes 317:215 (Pendiente), 319:1490 (Confirmada),
 /// 321:1490 (Cancelada) and 321:1508 (Pasada).
-_StatusPillSpec _statusPillSpec(AmenityBooking booking) {
+_StatusPillSpec _statusPillSpec(BuildContext context, AmenityBooking booking) {
+  final p = context.palette;
+  _StatusPillSpec spec(GatesTone tone, String label) => _StatusPillSpec(
+    background: tone.background,
+    border: tone.border,
+    foreground: tone.foreground,
+    label: label,
+  );
   switch (booking.status) {
     case BookingStatus.pending:
-      return const _StatusPillSpec(
-        background: Color(0xFFFFF6E3),
-        border: Color(0xFFF1BE60),
-        foreground: Color(0xFF8C4F09),
-        label: 'Pendiente de confirmación',
-      );
+      return spec(p.tonePending, 'Pendiente de confirmación');
     case BookingStatus.confirmed:
       return booking.isUpcoming
-          ? const _StatusPillSpec(
-              background: Color(0xFFE8F3EC),
-              border: Color(0xFFA7C7B0),
-              foreground: Color(0xFF2F5A3A),
-              label: 'Reserva confirmada',
-            )
-          : const _StatusPillSpec(
-              background: Color(0xFFF3F4F6),
-              border: Color(0xFFD1D5DB),
-              foreground: Color(0xFF4B5563),
-              label: 'Reserva pasada',
-            );
+          ? spec(p.toneConfirmed, 'Reserva confirmada')
+          : spec(p.toneNeutral, 'Reserva pasada');
     case BookingStatus.cancelled:
-      return const _StatusPillSpec(
-        background: Color(0xFFFDECEC),
-        border: Color(0xFFE7B7B3),
-        foreground: Color(0xFF8A3A2E),
-        label: 'Reserva cancelada',
-      );
+      return spec(p.toneCancelled, 'Reserva cancelada');
     case BookingStatus.expired:
-      return const _StatusPillSpec(
-        background: Color(0xFFF3F4F6),
-        border: Color(0xFFD1D5DB),
-        foreground: Color(0xFF4B5563),
-        label: 'Reserva expirada',
-      );
+      return spec(p.toneNeutral, 'Reserva expirada');
   }
 }
 
@@ -164,7 +146,7 @@ class _BookingDetailSheetBodyState
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
-    final pill = _statusPillSpec(booking);
+    final pill = _statusPillSpec(context, booking);
 
     return SafeArea(
       child: Padding(
@@ -181,7 +163,10 @@ class _BookingDetailSheetBodyState
             Row(
               children: [
                 Expanded(
-                  child: Text('Detalle de reserva', style: _detailHeaderStyle),
+                  child: Text(
+                    'Detalle de reserva',
+                    style: _detailHeaderStyle(context),
+                  ),
                 ),
                 SizedBox(
                   width: 44,
@@ -298,9 +283,9 @@ class _DetailRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: _detailLabelStyle),
+        Text(label, style: _detailLabelStyle(context)),
         const SizedBox(height: GatesSpacing.space4),
-        Text(value, style: _detailValueStyle),
+        Text(value, style: _detailValueStyle(context)),
       ],
     );
   }

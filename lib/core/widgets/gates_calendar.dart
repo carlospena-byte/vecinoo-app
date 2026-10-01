@@ -40,7 +40,7 @@ class GatesCalendar extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(GatesSpacing.space16),
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
+        color: context.palette.bgSurface,
         borderRadius: BorderRadius.circular(GatesRadius.radius24),
       ),
       child: TableCalendar(
@@ -71,21 +71,21 @@ class GatesCalendar extends StatelessWidget {
           formatButtonVisible: false,
           titleTextStyle: GatesTypography.label,
           titleTextFormatter: (date, locale) => _monthTitle(date),
-          leftChevronIcon: const Icon(
+          leftChevronIcon: Icon(
             Icons.chevron_left,
             size: 20,
-            color: GatesColors.textPrimary,
+            color: context.palette.textPrimary,
           ),
-          rightChevronIcon: const Icon(
+          rightChevronIcon: Icon(
             Icons.chevron_right,
             size: 20,
-            color: GatesColors.textPrimary,
+            color: context.palette.textPrimary,
           ),
           headerPadding: EdgeInsets.zero,
         ),
-        daysOfWeekStyle: const DaysOfWeekStyle(
-          weekdayStyle: GatesTypography.caption,
-          weekendStyle: GatesTypography.caption,
+        daysOfWeekStyle: DaysOfWeekStyle(
+          weekdayStyle: context.gatesText.caption,
+          weekendStyle: context.gatesText.caption,
         ),
         calendarBuilders: CalendarBuilders(
           dowBuilder: (context, day) {
@@ -93,7 +93,7 @@ class GatesCalendar extends StatelessWidget {
             return Center(
               child: Text(
                 labels[day.weekday - 1],
-                style: GatesTypography.caption,
+                style: context.gatesText.caption,
               ),
             );
           },
@@ -105,22 +105,25 @@ class GatesCalendar extends StatelessWidget {
           weekendTextStyle: GatesTypography.body,
           outsideTextStyle: GatesTypography.body,
           disabledTextStyle: GatesTypography.body.copyWith(
-            color: GatesColors.textSecondary,
+            color: context.palette.textSecondary,
           ),
-          todayDecoration: const BoxDecoration(
+          todayDecoration: BoxDecoration(
             color: Colors.transparent,
             shape: BoxShape.circle,
             border: Border.fromBorderSide(
-              BorderSide(color: GatesColors.bgBrand),
+              BorderSide(color: context.palette.bgBrand),
             ),
           ),
           todayTextStyle: GatesTypography.body,
-          selectedDecoration: const BoxDecoration(
-            color: GatesColors.bgBrand,
+          selectedDecoration: BoxDecoration(
+            color: context.palette.bgBrand,
             shape: BoxShape.circle,
+            border: Border.fromBorderSide(
+              BorderSide(color: context.palette.borderSelectedBrand, width: 2),
+            ),
           ),
           selectedTextStyle: GatesTypography.body.copyWith(
-            color: GatesColors.textInverse,
+            color: context.palette.textOnBrand,
           ),
         ),
       ),

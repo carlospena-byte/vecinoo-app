@@ -272,7 +272,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                             ),
                             child: Text(
                               _dateGroupLabel(day),
-                              style: GatesTypography.caption,
+                              style: context.gatesText.caption,
                             ),
                           ),
                           for (final visit in groups[day]!) ...[
@@ -287,7 +287,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                             ),
                             child: Text(
                               'Accesos frecuentes',
-                              style: GatesTypography.caption,
+                              style: context.gatesText.caption,
                             ),
                           ),
                           for (final visit in frequent) ...[
@@ -328,8 +328,8 @@ class _VisitCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(GatesSpacing.space16),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
-          border: Border.all(color: GatesColors.borderDefault),
+          color: context.palette.bgSurface,
+          border: Border.all(color: context.palette.borderDefault),
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
         ),
         child: Column(
@@ -351,9 +351,12 @@ class _VisitCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: GatesSpacing.space4),
-            Text(_visitSubtitle(visit), style: GatesTypography.caption),
+            Text(_visitSubtitle(visit), style: context.gatesText.caption),
             const SizedBox(height: GatesSpacing.space4),
-            Text(_scheduleLabel(visit), style: GatesTypography.labelSecondary),
+            Text(
+              _scheduleLabel(visit),
+              style: context.gatesText.labelSecondary,
+            ),
             if (showStatus) ...[
               const SizedBox(height: GatesSpacing.space12),
               _VisitStatusBadge(status: visit.status),
@@ -374,11 +377,11 @@ class _AccessChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = frequent
-        ? GatesColors.bgSubtle
-        : const Color(0xFFE9F1FA);
+        ? context.palette.bgSubtle
+        : context.palette.toneInfo.background;
     final foreground = frequent
-        ? GatesColors.textBrand
-        : const Color(0xFF355C85);
+        ? context.palette.textBrand
+        : context.palette.toneInfo.foreground;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: GatesSpacing.space8,
@@ -399,7 +402,7 @@ class _AccessChip extends StatelessWidget {
           const SizedBox(width: GatesSpacing.space4),
           Text(
             frequent ? 'Frecuente' : 'Visita del día',
-            style: GatesTypography.caption.copyWith(color: foreground),
+            style: context.gatesText.caption.copyWith(color: foreground),
           ),
         ],
       ),
@@ -416,16 +419,24 @@ class _VisitStatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (background, foreground) = switch (status) {
       VisitStatus.pendingRegistration => (
-        GatesColors.statusWarningBg,
-        GatesColors.statusWarning,
+        context.palette.statusWarningBg,
+        context.palette.statusWarning,
       ),
-      VisitStatus.scheduled => (GatesColors.bgSubtle, GatesColors.textBrand),
-      VisitStatus.active ||
-      VisitStatus.inside => (GatesColors.bgAccent, GatesColors.textBrand),
+      VisitStatus.scheduled => (
+        context.palette.bgSubtle,
+        context.palette.textBrand,
+      ),
+      VisitStatus.active || VisitStatus.inside => (
+        context.palette.bgAccent,
+        context.palette.textBrand,
+      ),
       VisitStatus.completed ||
       VisitStatus.cancelled ||
       VisitStatus.rejected ||
-      VisitStatus.expired => (GatesColors.bgSubtle, GatesColors.textSecondary),
+      VisitStatus.expired => (
+        context.palette.bgSubtle,
+        context.palette.textSecondary,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -438,7 +449,7 @@ class _VisitStatusBadge extends StatelessWidget {
       ),
       child: Text(
         visitStatusLabel(status),
-        style: GatesTypography.caption.copyWith(color: foreground),
+        style: context.gatesText.caption.copyWith(color: foreground),
       ),
     );
   }

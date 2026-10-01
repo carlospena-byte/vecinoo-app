@@ -19,7 +19,19 @@ Future<void> showTermsSheet(BuildContext context, String terms) {
             const GatesSheetHeader(title: 'Términos y condiciones'),
             const SizedBox(height: GatesSpacing.space12),
             Flexible(
-              child: SingleChildScrollView(child: Html(data: terms)),
+              child: SingleChildScrollView(
+                child: Html(
+                  data: terms,
+                  style: {
+                    'body': Style(
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                      color: context.palette.textPrimary,
+                    ),
+                    'a': Style(color: context.palette.textBrand),
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -53,7 +65,7 @@ Future<void> showCostDetailsSheet(BuildContext context, Amenity amenity) {
               const SizedBox(height: GatesSpacing.space8),
               Text(
                 'Por reserva de ${amenity.bookingDurationMinutes! ~/ 60} horas',
-                style: GatesTypography.labelSecondary,
+                style: context.gatesText.labelSecondary,
               ),
             ],
             if (hasCost && amenity.paymentMethods.isNotEmpty) ...[
@@ -64,13 +76,13 @@ Future<void> showCostDetailsSheet(BuildContext context, Amenity amenity) {
                 amenity.paymentMethods
                     .map(Amenity.paymentMethodLabel)
                     .join(' · '),
-                style: GatesTypography.labelSecondary,
+                style: context.gatesText.labelSecondary,
               ),
             ],
             const SizedBox(height: GatesSpacing.space16),
             Text(
               'El costo y los métodos son informativos; esta app no procesa pagos.',
-              style: GatesTypography.labelSecondary,
+              style: context.gatesText.labelSecondary,
             ),
           ],
         ),

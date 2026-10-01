@@ -22,9 +22,8 @@ import 'service_icons.dart';
 
 final _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: r'$');
 
-final _bodySecondary = GatesTypography.body.copyWith(
-  color: GatesColors.textSecondary,
-);
+TextStyle _bodySecondary(BuildContext context) =>
+    GatesTypography.body.copyWith(color: context.palette.textSecondary);
 
 String _durationLabel(int minutes) {
   if (minutes % 60 == 0) {
@@ -169,9 +168,9 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: GatesSpacing.space12),
-      child: Divider(height: 1, color: GatesColors.borderDefault),
+      child: Divider(height: 1, color: context.palette.borderSubtle),
     );
   }
 }
@@ -259,7 +258,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
                       horizontal: GatesSpacing.space16,
                     ),
                     decoration: BoxDecoration(
-                      color: GatesColors.bgSurface,
+                      color: context.palette.bgSurface,
                       borderRadius: BorderRadius.circular(
                         GatesRadius.radiusFull,
                       ),
@@ -268,7 +267,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
                     child: Text(
                       '${_page + 1} / ${photoUrls.length}',
                       style: GatesTypography.label.copyWith(
-                        color: GatesColors.textBrand,
+                        color: context.palette.textBrand,
                       ),
                     ),
                   ),
@@ -303,9 +302,9 @@ class _GalleryPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 260,
-      color: GatesColors.bgSubtle,
+      color: context.palette.bgSubtle,
       alignment: Alignment.center,
-      child: Icon(icon, size: 48, color: GatesColors.textSecondary),
+      child: Icon(icon, size: 48, color: context.palette.textSecondary),
     );
   }
 }
@@ -356,10 +355,10 @@ class _Identity extends StatelessWidget {
         Text(amenity.name, style: GatesTypography.headingLarge),
         if (amenity.location != null) ...[
           const SizedBox(height: GatesSpacing.space8),
-          Text(amenity.location!, style: _bodySecondary),
+          Text(amenity.location!, style: _bodySecondary(context)),
         ],
         const SizedBox(height: GatesSpacing.space4),
-        Text(metaParts, style: GatesTypography.labelSecondary),
+        Text(metaParts, style: context.gatesText.labelSecondary),
       ],
     );
   }
@@ -387,7 +386,7 @@ class _FeaturedServices extends StatelessWidget {
                 Icon(
                   serviceIconFor(entry.service.icon),
                   size: 24,
-                  color: GatesColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
                 const SizedBox(width: GatesSpacing.space16),
                 Expanded(
@@ -464,7 +463,7 @@ class _AllServicesSheet extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
                       serviceIconFor(service.icon),
-                      color: GatesColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                     title: Text(service.name, style: GatesTypography.body),
                   );
@@ -497,8 +496,9 @@ class _Description extends StatelessWidget {
               padding: HtmlPaddings.zero,
               fontFamily: 'Manrope',
               fontSize: FontSize(16),
-              color: GatesColors.textPrimary,
+              color: context.palette.textPrimary,
             ),
+            'a': Style(color: context.palette.textBrand),
           },
         ),
       ],
@@ -544,7 +544,7 @@ class _BookingRules extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             _durationLabel(amenity.bookingDurationMinutes!),
-            style: _bodySecondary,
+            style: _bodySecondary(context),
           ),
           const SizedBox(height: GatesSpacing.space16),
         ],
@@ -552,7 +552,7 @@ class _BookingRules extends StatelessWidget {
           Text('Límite por residente', style: GatesTypography.label),
           const SizedBox(height: 4),
           for (final limit in details.bookingLimits)
-            Text(limit.label, style: _bodySecondary),
+            Text(limit.label, style: _bodySecondary(context)),
           const SizedBox(height: GatesSpacing.space16),
         ],
         if (details.blackouts.isNotEmpty)
@@ -560,7 +560,7 @@ class _BookingRules extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(GatesSpacing.space16),
             decoration: BoxDecoration(
-              color: GatesColors.statusWarningBg,
+              color: context.palette.statusWarningBg,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -569,15 +569,15 @@ class _BookingRules extends StatelessWidget {
                 Text(
                   'Fechas cerradas',
                   style: GatesTypography.label.copyWith(
-                    color: GatesColors.statusWarning,
+                    color: context.palette.statusWarning,
                   ),
                 ),
                 const SizedBox(height: GatesSpacing.space8),
                 for (final blackout in details.blackouts)
                   Text(
                     _blackoutLabel(blackout),
-                    style: GatesTypography.labelSecondary.copyWith(
-                      color: GatesColors.statusWarning,
+                    style: context.gatesText.labelSecondary.copyWith(
+                      color: context.palette.statusWarning,
                     ),
                   ),
               ],
@@ -608,7 +608,7 @@ class _Cost extends StatelessWidget {
           const SizedBox(height: GatesSpacing.space8),
           Text(
             'Por reserva de ${_durationLabel(amenity.bookingDurationMinutes!)}',
-            style: GatesTypography.labelSecondary,
+            style: context.gatesText.labelSecondary,
           ),
         ],
         if (hasCost && amenity.paymentMethods.isNotEmpty) ...[
@@ -617,7 +617,7 @@ class _Cost extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             amenity.paymentMethods.map(Amenity.paymentMethodLabel).join(' · '),
-            style: GatesTypography.labelSecondary,
+            style: context.gatesText.labelSecondary,
           ),
         ],
       ],
@@ -687,9 +687,9 @@ class _FixedActionBar extends StatelessWidget {
         GatesSpacing.space24,
         bottomPadding,
       ),
-      decoration: const BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border(top: BorderSide(color: GatesColors.borderDefault)),
+      decoration: BoxDecoration(
+        color: context.palette.bgSurface,
+        border: Border(top: BorderSide(color: context.palette.borderSubtle)),
       ),
       child: Row(
         children: [
@@ -698,7 +698,7 @@ class _FixedActionBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(priceLabel, style: GatesTypography.headingSmall),
-                Text(durationLabel, style: GatesTypography.caption),
+                Text(durationLabel, style: context.gatesText.caption),
               ],
             ),
           ),

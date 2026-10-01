@@ -29,10 +29,10 @@ class GatesSelectField<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: GatesColors.bgSurface,
+      color: context.palette.bgSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
-        side: const BorderSide(color: GatesColors.borderDefault),
+        side: BorderSide(color: context.palette.borderDefault),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -57,23 +57,23 @@ class GatesSelectField<T> extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(label, style: GatesTypography.caption),
+                    Text(label, style: context.gatesText.caption),
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
                       options[value] ?? placeholder ?? '',
                       style: options[value] == null && placeholder != null
                           ? GatesTypography.body.copyWith(
-                              color: GatesColors.textSecondary,
+                              color: context.palette.textSecondary,
                             )
                           : GatesTypography.body,
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.keyboard_arrow_down,
                 size: 20,
-                color: GatesColors.textPrimary,
+                color: context.palette.textPrimary,
               ),
             ],
           ),
@@ -107,7 +107,7 @@ Future<T?> showGatesOptionSheet<T>(
               contentPadding: EdgeInsets.zero,
               title: Text(entry.value, style: GatesTypography.body),
               trailing: entry.key == selected
-                  ? const Icon(Icons.check, color: GatesColors.textBrand)
+                  ? Icon(Icons.check, color: context.palette.textBrand)
                   : null,
               onTap: () => Navigator.of(sheetContext).pop(entry.key),
             ),

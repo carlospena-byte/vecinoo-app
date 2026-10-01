@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/gates_svg_icon.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../amenities/presentation/amenities_controller.dart';
 import '../../incidents/domain/incident.dart';
@@ -79,7 +79,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Tu comunidad, más cerca.',
-                  style: GatesTypography.labelSecondary,
+                  style: context.gatesText.labelSecondary,
                 ),
                 const SizedBox(height: 16),
                 _ReservationCard(
@@ -144,8 +144,8 @@ class _HeaderRow extends StatelessWidget {
             children: [
               Text(
                 membership.residentialName.toUpperCase(),
-                style: GatesTypography.caption.copyWith(
-                  color: GatesColors.textBrand,
+                style: context.gatesText.caption.copyWith(
+                  color: context.palette.textBrand,
                 ),
               ),
               Text(membership.unitName, style: GatesTypography.label),
@@ -155,20 +155,18 @@ class _HeaderRow extends StatelessWidget {
         const SizedBox(width: 12),
         _CircleIconButton(
           onTap: onBellTap,
-          backgroundColor: GatesColors.bgSurface,
-          child: SvgPicture.asset(
-            'assets/icons/home/bell.svg',
-            width: 20,
-            height: 20,
-          ),
+          backgroundColor: context.palette.bgSurface,
+          child: const GatesSvgIcon('assets/icons/home/bell.svg', size: 20),
         ),
         const SizedBox(width: 12),
         _CircleIconButton(
           onTap: onAvatarTap,
-          backgroundColor: GatesColors.bgAccent,
+          backgroundColor: context.palette.bgAccent,
           child: Text(
             avatarLetter,
-            style: GatesTypography.label.copyWith(color: GatesColors.textBrand),
+            style: GatesTypography.label.copyWith(
+              color: context.palette.textBrand,
+            ),
           ),
         ),
       ],
@@ -236,17 +234,20 @@ class _ReservationCard extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: GatesColors.bgBrand,
+        color: context.palette.bgBrand,
         borderRadius: BorderRadius.circular(GatesRadius.radius24),
       ),
       child: bookingsAsync.when(
-        loading: () => const SizedBox(
+        loading: () => SizedBox(
           height: 148,
           child: Center(
-            child: CircularProgressIndicator(color: GatesColors.textInverse),
+            child: CircularProgressIndicator(
+              color: context.palette.textOnBrand,
+            ),
           ),
         ),
         error: (e, _) => _content(
+          context,
           title: 'No se pudieron cargar tus reservas.',
           detail: null,
           actionLabel: 'Reintentar',
@@ -258,6 +259,7 @@ class _ReservationCard extends ConsumerWidget {
 
           if (upcoming.isEmpty) {
             return _content(
+              context,
               title: 'Un espacio para disfrutar',
               detail: 'Aún no tienes reservas próximas.',
               actionLabel: 'Explorar amenidades',
@@ -267,6 +269,7 @@ class _ReservationCard extends ConsumerWidget {
 
           final next = upcoming.first;
           return _content(
+            context,
             title: '${next.amenityName} · ${_dayLabel(next.startTime)}',
             detail: _range(next.startTime, next.endTime),
             actionLabel: 'Explorar amenidades',
@@ -277,7 +280,8 @@ class _ReservationCard extends ConsumerWidget {
     );
   }
 
-  Widget _content({
+  Widget _content(
+    BuildContext context, {
     required String title,
     required String? detail,
     required String actionLabel,
@@ -295,8 +299,8 @@ class _ReservationCard extends ConsumerWidget {
                 children: [
                   Text(
                     'Reservas',
-                    style: GatesTypography.caption.copyWith(
-                      color: GatesColors.textInverse,
+                    style: context.gatesText.caption.copyWith(
+                      color: context.palette.textOnBrand,
                       height: 16 / 12,
                     ),
                   ),
@@ -304,7 +308,7 @@ class _ReservationCard extends ConsumerWidget {
                   Text(
                     title,
                     style: GatesTypography.headingSmall.copyWith(
-                      color: GatesColors.textInverse,
+                      color: context.palette.textOnBrand,
                       letterSpacing: 0,
                     ),
                   ),
@@ -313,7 +317,7 @@ class _ReservationCard extends ConsumerWidget {
                     Text(
                       detail,
                       style: GatesTypography.label.copyWith(
-                        color: GatesColors.textInverse,
+                        color: context.palette.textOnBrand,
                       ),
                     ),
                   ],
@@ -324,15 +328,15 @@ class _ReservationCard extends ConsumerWidget {
             Container(
               width: 56,
               height: 56,
-              decoration: const BoxDecoration(
-                color: GatesColors.bgWarm,
+              decoration: BoxDecoration(
+                color: context.palette.bgWarm,
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: SvgPicture.asset(
+                child: GatesSvgIcon(
                   'assets/icons/home/emblem_reservations.svg',
-                  width: 28,
-                  height: 28,
+                  size: 28,
+                  color: context.palette.iconBrand,
                 ),
               ),
             ),
@@ -343,7 +347,7 @@ class _ReservationCard extends ConsumerWidget {
           width: double.infinity,
           height: 44,
           child: Material(
-            color: GatesColors.bgAccent,
+            color: context.palette.bgOnBrandAction,
             shape: const StadiumBorder(),
             child: InkWell(
               onTap: onAction,
@@ -352,7 +356,7 @@ class _ReservationCard extends ConsumerWidget {
                 child: Text(
                   actionLabel,
                   style: GatesTypography.label.copyWith(
-                    color: GatesColors.textBrand,
+                    color: context.palette.textOnBrandAction,
                   ),
                 ),
               ),
@@ -399,7 +403,7 @@ class _GraphicCard extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: radius,
           side: bordered
-              ? const BorderSide(color: GatesColors.borderDefault)
+              ? BorderSide(color: context.palette.borderDefault)
               : BorderSide.none,
         ),
         clipBehavior: Clip.antiAlias,
@@ -416,8 +420,8 @@ class _GraphicCard extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: GatesTypography.caption.copyWith(
-                        color: GatesColors.textPrimary,
+                      style: context.gatesText.caption.copyWith(
+                        color: context.palette.textPrimary,
                       ),
                     ),
                     Text(
@@ -431,7 +435,7 @@ class _GraphicCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GatesTypography.label.copyWith(
-                        color: GatesColors.textBrand,
+                        color: context.palette.textBrand,
                       ),
                     ),
                   ],
@@ -447,7 +451,11 @@ class _GraphicCard extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: SvgPicture.asset(iconAsset, width: 20, height: 20),
+                      child: GatesSvgIcon(
+                        iconAsset,
+                        size: 20,
+                        color: context.palette.iconBrand,
+                      ),
                     ),
                   ),
                 ),
@@ -499,8 +507,8 @@ class _VisitsSummaryCard extends ConsumerWidget {
           : '$count visitas\npara hoy',
       action: count == 0 ? 'Invitar' : 'Ver visitas',
       iconAsset: 'assets/icons/home/emblem_visits.svg',
-      backgroundColor: GatesColors.bgSurface,
-      emblemColor: GatesColors.bgAccent,
+      backgroundColor: context.palette.bgSurface,
+      emblemColor: context.palette.bgAccent,
       bordered: true,
       onTap: count == 0 ? () => context.push('/visits/new') : onViewVisits,
     );
@@ -539,8 +547,8 @@ class _IncidentsSummaryCard extends ConsumerWidget {
           : '$count reportes\nen seguimiento',
       action: count == 0 ? 'Reportar' : 'Ver reporte',
       iconAsset: 'assets/icons/home/emblem_incidents.svg',
-      backgroundColor: GatesColors.bgAccent,
-      emblemColor: GatesColors.bgSurface,
+      backgroundColor: context.palette.bgAccent,
+      emblemColor: context.palette.bgSurface,
       onTap: count == 0
           ? () => context.push('/incidents/report')
           : onViewIncidents,

@@ -47,7 +47,7 @@ class CreateVisitTypeScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              Text('Acceso para', style: GatesTypography.labelSecondary),
+              Text('Acceso para', style: context.gatesText.labelSecondary),
               const SizedBox(height: GatesSpacing.space4),
               Text(
                 membership.label,
@@ -108,8 +108,8 @@ class _ActionRow extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 96),
         padding: const EdgeInsets.all(GatesSpacing.space16),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
-          border: Border.all(color: GatesColors.borderDefault),
+          color: context.palette.bgSurface,
+          border: Border.all(color: context.palette.borderDefault),
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
         ),
         child: Row(
@@ -119,10 +119,10 @@ class _ActionRow extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: GatesColors.bgSubtle,
+                color: context.palette.bgSubtle,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 24, color: GatesColors.textPrimary),
+              child: Icon(icon, size: 24, color: context.palette.textPrimary),
             ),
             const SizedBox(width: GatesSpacing.space12),
             Expanded(
@@ -138,14 +138,14 @@ class _ActionRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),
-                  Text(subtitle, style: GatesTypography.labelSecondary),
+                  Text(subtitle, style: context.gatesText.labelSecondary),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 16,
-              color: GatesColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ],
         ),

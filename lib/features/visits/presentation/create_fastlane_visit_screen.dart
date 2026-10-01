@@ -201,7 +201,7 @@ class _CreateFastlaneVisitScreenState
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('UNIDAD', style: GatesTypography.caption),
+                    Text('UNIDAD', style: context.gatesText.caption),
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
                       membership.label,
@@ -286,8 +286,8 @@ class _TapField extends StatelessWidget {
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
-              color: GatesColors.bgSurface,
-              border: Border.all(color: GatesColors.borderDefault),
+              color: context.palette.bgSurface,
+              border: Border.all(color: context.palette.borderDefault),
               borderRadius: BorderRadius.circular(GatesRadius.radius16),
             ),
             padding: const EdgeInsets.symmetric(
@@ -301,21 +301,21 @@ class _TapField extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(label, style: GatesTypography.caption),
+                      Text(label, style: context.gatesText.caption),
                       const SizedBox(height: GatesSpacing.space4),
                       Text(value, style: GatesTypography.body),
                     ],
                   ),
                 ),
                 if (icon != null)
-                  Icon(icon, size: 20, color: GatesColors.textBrand),
+                  Icon(icon, size: 20, color: context.palette.textBrand),
               ],
             ),
           ),
         ),
         if (helper != null) ...[
           const SizedBox(height: GatesSpacing.space4),
-          Text(helper!, style: GatesTypography.caption),
+          Text(helper!, style: context.gatesText.caption),
         ],
       ],
     );

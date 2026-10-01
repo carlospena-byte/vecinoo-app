@@ -90,23 +90,23 @@ class _SwipeToConfirmState extends State<SwipeToConfirm> {
         // "danger zone" the moment the sheet opens, only once it's really
         // about to fire.
         final trackColor = Color.lerp(
-          GatesColors.bgSubtle,
-          GatesColors.statusError.withValues(alpha: 0.1),
+          context.palette.bgSubtle,
+          context.palette.statusError.withValues(alpha: 0.1),
           progress,
         )!;
         final borderColor = Color.lerp(
-          GatesColors.borderDefault,
-          GatesColors.statusError.withValues(alpha: 0.3),
+          context.palette.borderDefault,
+          context.palette.statusError.withValues(alpha: 0.3),
           progress,
         )!;
         final thumbColor = Color.lerp(
-          GatesColors.textSecondary,
-          GatesColors.statusError,
+          context.palette.textSecondary,
+          context.palette.statusError,
           progress,
         )!;
         final labelColor = Color.lerp(
-          GatesColors.textSecondary,
-          GatesColors.statusError,
+          context.palette.textSecondary,
+          context.palette.statusError,
           progress,
         )!;
 
@@ -159,16 +159,16 @@ class _SwipeToConfirmState extends State<SwipeToConfirm> {
                       shape: BoxShape.circle,
                     ),
                     child: widget.loading
-                        ? const Padding(
+                        ? Padding(
                             padding: EdgeInsets.all(14),
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: GatesColors.textInverse,
+                              color: context.palette.textOnBrand,
                             ),
                           )
-                        : const Icon(
+                        : Icon(
                             Icons.chevron_right_rounded,
-                            color: GatesColors.textInverse,
+                            color: context.palette.textOnBrand,
                           ),
                   ),
                 ),

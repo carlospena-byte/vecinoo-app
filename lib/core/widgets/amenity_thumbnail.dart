@@ -18,13 +18,10 @@ class AmenityThumbnail extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: GatesColors.bgSubtle,
+          color: context.palette.bgSubtle,
           borderRadius: radius,
         ),
-        child: const Icon(
-          Icons.image_outlined,
-          color: GatesColors.textSecondary,
-        ),
+        child: Icon(Icons.image_outlined, color: context.palette.textSecondary),
       );
     }
     return ClipRRect(
@@ -37,10 +34,10 @@ class AmenityThumbnail extends StatelessWidget {
         errorBuilder: (context, error, stackTrace) => Container(
           width: size,
           height: size,
-          color: GatesColors.bgSubtle,
-          child: const Icon(
+          color: context.palette.bgSubtle,
+          child: Icon(
             Icons.image_outlined,
-            color: GatesColors.textSecondary,
+            color: context.palette.textSecondary,
           ),
         ),
       ),

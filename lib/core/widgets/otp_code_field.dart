@@ -104,15 +104,15 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
     const gap = GatesSpacing.space8;
 
     final labelColor = hasError
-        ? GatesColors.statusError
-        : (widget.accentColor ?? GatesColors.textSecondary);
+        ? context.palette.statusError
+        : (widget.accentColor ?? context.palette.textSecondary);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           widget.label,
-          style: GatesTypography.caption.copyWith(color: labelColor),
+          style: context.gatesText.caption.copyWith(color: labelColor),
         ),
         const SizedBox(height: GatesSpacing.space8),
         SizedBox(
@@ -190,7 +190,7 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
           const SizedBox(height: GatesSpacing.space8),
           Text(
             hasError ? widget.errorText! : widget.helper!,
-            style: GatesTypography.caption.copyWith(color: labelColor),
+            style: context.gatesText.caption.copyWith(color: labelColor),
           ),
         ],
       ],
@@ -228,13 +228,13 @@ class _DigitBox extends StatelessWidget {
     Color borderColor;
     double borderWidth;
     if (hasError) {
-      borderColor = GatesColors.statusError;
+      borderColor = context.palette.statusError;
       borderWidth = focused ? 2 : 1;
     } else if (focused) {
-      borderColor = GatesColors.borderFocus;
+      borderColor = context.palette.borderFocus;
       borderWidth = 2;
     } else {
-      borderColor = idleBorderColor ?? GatesColors.borderDefault;
+      borderColor = idleBorderColor ?? context.palette.borderDefault;
       borderWidth = 1;
     }
 
@@ -243,7 +243,7 @@ class _DigitBox extends StatelessWidget {
       height: 56,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
+        color: context.palette.bgSurface,
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
         border: Border.all(color: borderColor, width: borderWidth),
       ),

@@ -15,7 +15,7 @@ class UnitSelectorScreen extends ConsumerWidget {
     final memberships = ref.watch(myMembershipsProvider).value ?? [];
 
     return Scaffold(
-      backgroundColor: GatesColors.bgSubtle,
+      backgroundColor: context.palette.bgSubtle,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -26,9 +26,9 @@ class UnitSelectorScreen extends ConsumerWidget {
                 alignment: Alignment.centerRight,
                 child: IconButton(
                   tooltip: 'Cerrar sesión',
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.logout,
-                    color: GatesColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                   onPressed: () => ref.read(authRepositoryProvider).signOut(),
                 ),
@@ -40,11 +40,11 @@ class UnitSelectorScreen extends ConsumerWidget {
                   Text(
                     'gates',
                     style: GatesTypography.headingMedium.copyWith(
-                      color: GatesColors.textBrand,
+                      color: context.palette.textBrand,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),
-                  Text('PARA RESIDENTES', style: GatesTypography.caption),
+                  Text('PARA RESIDENTES', style: context.gatesText.caption),
                 ],
               ),
               const SizedBox(height: 32),
@@ -53,7 +53,7 @@ class UnitSelectorScreen extends ConsumerWidget {
               Text(
                 'Elige la unidad que quieres consultar.',
                 style: GatesTypography.body.copyWith(
-                  color: GatesColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
               const SizedBox(height: 32),
@@ -94,8 +94,8 @@ class _UnitTile extends StatelessWidget {
     return Container(
       height: 80,
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgSurface,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
       ),
       clipBehavior: Clip.antiAlias,
@@ -114,16 +114,16 @@ class _UnitTile extends StatelessWidget {
                   child: Text(
                     label,
                     style: GatesTypography.label.copyWith(
-                      color: GatesColors.textBrand,
+                      color: context.palette.textBrand,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(width: GatesSpacing.space8),
-                const Icon(
+                Icon(
                   Icons.arrow_forward,
                   size: 16,
-                  color: GatesColors.textBrand,
+                  color: context.palette.textBrand,
                 ),
               ],
             ),

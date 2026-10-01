@@ -8,6 +8,7 @@ import 'core/env/env.dart';
 import 'core/notifications/push_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_providers.dart';
+import 'core/theme/theme_mode_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/vecinoo_brand.dart';
 import 'features/auth/presentation/auth_controller.dart';
@@ -21,7 +22,13 @@ Future<void> main() async {
     publishableKey: Env.supabasePublishableKey,
   );
   await PushNotificationService.initialize();
-  runApp(const ProviderScope(child: GatesApp()));
+  final themeMode = await ThemeModeStorage.read();
+  runApp(
+    ProviderScope(
+      overrides: [initialThemeModeProvider.overrideWithValue(themeMode)],
+      child: const GatesApp(),
+    ),
+  );
 }
 
 class GatesApp extends ConsumerWidget {
@@ -44,11 +51,9 @@ class GatesApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: router,
-      builder: (context, child) =>
-          Theme.of(context).brightness == Brightness.light
-          ? GatesBackground(child: child)
-          : child ?? const SizedBox.shrink(),
+      builder: (context, child) => GatesBackground(child: child),
     );
   }
 }

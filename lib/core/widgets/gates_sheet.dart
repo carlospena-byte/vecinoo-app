@@ -11,7 +11,7 @@ Future<T?> showGatesSheet<T>(BuildContext context, WidgetBuilder builder) {
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
-    backgroundColor: GatesColors.bgSurface,
+    backgroundColor: context.palette.bgElevated,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(GatesRadius.radius24),

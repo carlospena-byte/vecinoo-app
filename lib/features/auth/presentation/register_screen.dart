@@ -118,14 +118,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Ingresa el código de $_invitationCodeLength dígitos que recibiste en tu invitación.',
-                  style: GatesTypography.labelSecondary,
+                  style: context.gatesText.labelSecondary,
                 ),
                 const SizedBox(height: 16),
                 OtpCodeField(
                   controller: _codeController,
                   label: 'Código de invitación',
                   length: _invitationCodeLength,
-                  accentColor: GatesColors.accentCoral,
+                  accentColor: context.palette.accentCoral,
                   helper: 'Revisa tu tarjeta o correo de bienvenida.',
                   errorText: _errorText,
                   onCompleted: (_) => _acceptInvitation(),
@@ -146,7 +146,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: Text(
                       '¿No recibiste tu invitación? Contactar soporte',
                       style: GatesTypography.label.copyWith(
-                        color: GatesColors.textBrand,
+                        color: context.palette.textBrand,
                       ),
                     ),
                   ),
@@ -179,18 +179,18 @@ class _BackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: GatesColors.bgSurface,
+      color: context.palette.bgSurface,
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
-        child: const SizedBox(
+        child: SizedBox(
           width: 40,
           height: 40,
           child: Icon(
             Icons.arrow_back,
             size: 20,
-            color: GatesColors.textPrimary,
+            color: context.palette.textPrimary,
           ),
         ),
       ),

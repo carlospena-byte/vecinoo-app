@@ -27,15 +27,15 @@ class GatesTextArea extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: GatesColors.bgSurface,
-              border: Border.all(color: GatesColors.borderDefault),
+              color: context.palette.bgSurface,
+              border: Border.all(color: context.palette.borderDefault),
               borderRadius: BorderRadius.circular(GatesRadius.radius16),
             ),
             padding: const EdgeInsets.all(GatesSpacing.space16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: GatesTypography.caption),
+                Text(label, style: context.gatesText.caption),
                 const SizedBox(height: GatesSpacing.space8),
                 TextField(
                   controller: controller,
@@ -55,7 +55,7 @@ class GatesTextArea extends StatelessWidget {
                     border: InputBorder.none,
                     hintText: hintText,
                     hintStyle: GatesTypography.body.copyWith(
-                      color: GatesColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                   ),
                 ),
@@ -67,7 +67,7 @@ class GatesTextArea extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               '${controller.text.length}/$maxLength',
-              style: GatesTypography.caption,
+              style: context.gatesText.caption,
             ),
           ),
         ],

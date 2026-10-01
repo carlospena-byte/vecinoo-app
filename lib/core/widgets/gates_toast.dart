@@ -49,11 +49,11 @@ class _GatesToast extends StatelessWidget {
 
   bool get _isError => type == GatesToastType.error;
 
-  Color get _background => switch (type) {
-    GatesToastType.success => GatesColors.statusSuccessBg,
-    GatesToastType.info => GatesColors.bgLilac,
-    GatesToastType.warning => GatesColors.statusWarningBg,
-    GatesToastType.error => GatesColors.statusErrorBg,
+  Color _background(BuildContext context) => switch (type) {
+    GatesToastType.success => context.palette.statusSuccessBg,
+    GatesToastType.info => context.palette.bgLilac,
+    GatesToastType.warning => context.palette.statusWarningBg,
+    GatesToastType.error => context.palette.statusErrorBg,
   };
 
   String get _glyph => switch (type) {
@@ -64,12 +64,14 @@ class _GatesToast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = _isError ? GatesColors.statusError : GatesColors.textBrand;
+    final accent = _isError
+        ? context.palette.statusError
+        : context.palette.textBrand;
     return Container(
       constraints: const BoxConstraints(minHeight: 72),
       padding: const EdgeInsets.all(GatesSpacing.space16),
       decoration: BoxDecoration(
-        color: _background,
+        color: _background(context),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
       ),
       child: Row(
@@ -85,14 +87,14 @@ class _GatesToast extends StatelessWidget {
                   title,
                   style: GatesTypography.label.copyWith(
                     color: _isError
-                        ? GatesColors.statusError
-                        : GatesColors.textPrimary,
+                        ? context.palette.statusError
+                        : context.palette.textPrimary,
                   ),
                 ),
                 if (message != null)
                   Text(
                     message!,
-                    style: GatesTypography.caption.copyWith(height: 16 / 12),
+                    style: context.gatesText.caption.copyWith(height: 16 / 12),
                   ),
               ],
             ),
@@ -107,7 +109,7 @@ class _GatesToast extends StatelessWidget {
               child: Text(
                 '×',
                 style: GatesTypography.headingSmall.copyWith(
-                  color: GatesColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
             ),

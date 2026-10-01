@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
 
@@ -12,7 +13,7 @@ class VecinooWordmark extends StatelessWidget {
     return Text(
       'vecinoo',
       style: GatesTypography.headingLarge.copyWith(
-        color: GatesColors.textBrand,
+        color: context.palette.textBrand,
       ),
     );
   }
@@ -51,7 +52,7 @@ class _Ring extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: GatesColors.textBrand,
+          color: context.palette.textBrand,
           width: VecinooMark._ringWidth,
         ),
       ),
@@ -66,11 +67,9 @@ class _Ring extends StatelessWidget {
 class AmbientGlow extends StatelessWidget {
   const AmbientGlow({super.key});
 
-  static const _color = Color(0xFFF8D68F);
-  static const _colorSoft = Color(0xFFF8E0A6);
-
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return Positioned(
       top: 55,
       left: 0,
@@ -78,7 +77,7 @@ class AmbientGlow extends StatelessWidget {
       child: IgnorePointer(
         child: Center(
           child: Opacity(
-            opacity: 0.5,
+            opacity: palette.glowOpacity,
             child: Container(
               width: 680,
               height: 610,
@@ -86,9 +85,9 @@ class AmbientGlow extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    _color.withValues(alpha: 0.48),
-                    _colorSoft.withValues(alpha: 0.2),
-                    _colorSoft.withValues(alpha: 0),
+                    palette.glowStrong.withValues(alpha: 0.48),
+                    palette.glowSoft.withValues(alpha: 0.2),
+                    palette.glowSoft.withValues(alpha: 0),
                   ],
                   stops: const [0, 0.55, 1],
                 ),
@@ -111,14 +110,18 @@ class GatesBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: GatesColors.bgCanvas,
-      child: Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          const AmbientGlow(),
-          if (child != null) Positioned.fill(child: child!),
-        ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: ColoredBox(
+        color: context.palette.bgCanvas,
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            const AmbientGlow(),
+            if (child != null) Positioned.fill(child: child!),
+          ],
+        ),
       ),
     );
   }

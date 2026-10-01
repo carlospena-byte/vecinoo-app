@@ -197,7 +197,7 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 _amenity.location!,
-                                style: GatesTypography.caption,
+                                style: context.gatesText.caption,
                               ),
                             ],
                           ],
@@ -239,7 +239,7 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
                   const _Divider(),
                   Text(
                     'Puedes cancelar una reserva futura desde Mis reservas.',
-                    style: GatesTypography.caption,
+                    style: context.gatesText.caption,
                   ),
                   if (_amenity.terms != null) ...[
                     const SizedBox(height: GatesSpacing.space16),
@@ -320,9 +320,9 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: GatesSpacing.space16),
-      child: Divider(height: 1, color: GatesColors.borderDefault),
+      child: Divider(height: 1, color: context.palette.borderSubtle),
     );
   }
 }
@@ -339,7 +339,7 @@ class _ErrorBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(GatesSpacing.space16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer,
+        color: context.palette.statusErrorBg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -348,14 +348,14 @@ class _ErrorBanner extends StatelessWidget {
           Text(
             title,
             style: GatesTypography.label.copyWith(
-              color: GatesColors.statusError,
+              color: context.palette.statusError,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             message,
-            style: GatesTypography.caption.copyWith(
-              color: GatesColors.statusError,
+            style: context.gatesText.caption.copyWith(
+              color: context.palette.statusError,
             ),
           ),
         ],
@@ -382,11 +382,11 @@ class _AmenityThumbnail extends ConsumerWidget {
         child: url != null
             ? Image.network(url, fit: BoxFit.cover)
             : Container(
-                color: GatesColors.bgSubtle,
+                color: context.palette.bgSubtle,
                 alignment: Alignment.center,
-                child: const Icon(
+                child: Icon(
                   Icons.deck_outlined,
-                  color: GatesColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
       ),

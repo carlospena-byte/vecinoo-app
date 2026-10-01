@@ -60,13 +60,15 @@ class GatesUploadCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isError ? GatesColors.statusErrorBg : GatesColors.bgSurface,
+        color: isError
+            ? context.palette.statusErrorBg
+            : context.palette.bgSurface,
         border: Border.all(
           color: isError
-              ? GatesColors.statusError
+              ? context.palette.statusError
               : isReady
-              ? GatesColors.borderFocus
-              : GatesColors.borderDefault,
+              ? context.palette.borderFocus
+              : context.palette.borderDefault,
           width: isReady ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
@@ -78,11 +80,11 @@ class GatesUploadCard extends StatelessWidget {
           Text(
             heading,
             style: GatesTypography.label.copyWith(
-              color: isError ? GatesColors.statusError : null,
+              color: isError ? context.palette.statusError : null,
             ),
           ),
           const SizedBox(height: GatesSpacing.space8),
-          Text(description, style: GatesTypography.caption),
+          Text(description, style: context.gatesText.caption),
           const SizedBox(height: GatesSpacing.space8),
           InkWell(
             onTap: action,
@@ -99,7 +101,7 @@ class GatesUploadCard extends StatelessWidget {
                     : Text(
                         actionLabel,
                         style: GatesTypography.label.copyWith(
-                          color: GatesColors.textBrand,
+                          color: context.palette.textBrand,
                         ),
                       ),
               ),

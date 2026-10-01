@@ -209,8 +209,8 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 if (widget.args.registration != null) ...[
                   Text(
                     'Invitación validada',
-                    style: GatesTypography.caption.copyWith(
-                      color: GatesColors.textBrand,
+                    style: context.gatesText.caption.copyWith(
+                      color: context.palette.textBrand,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -224,7 +224,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 Text(
                   _introText,
                   style: GatesTypography.body.copyWith(
-                    color: GatesColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -233,7 +233,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                   style: GatesTypography.label.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: GatesColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -263,12 +263,12 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                           : 'Reenviar código',
                       style: GatesTypography.label.copyWith(
                         color: _cooldownRemaining > 0
-                            ? GatesColors.textSecondary
-                            : GatesColors.textBrand,
+                            ? context.palette.textSecondary
+                            : context.palette.textBrand,
                         decoration: _cooldownRemaining > 0
                             ? TextDecoration.none
                             : TextDecoration.underline,
-                        decorationColor: GatesColors.textBrand,
+                        decorationColor: context.palette.textBrand,
                       ),
                     ),
                   ),
@@ -308,18 +308,18 @@ class _CommunityContext extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tu acceso a la comunidad', style: GatesTypography.caption),
+        Text('Tu acceso a la comunidad', style: context.gatesText.caption),
         const SizedBox(height: 4),
         Text(
           '${registration.unitName} · ${registration.residentialName}',
           style: GatesTypography.label.copyWith(
             fontWeight: FontWeight.w400,
-            color: GatesColors.textPrimary,
+            color: context.palette.textPrimary,
           ),
         ),
         if (name != null) ...[
           const SizedBox(height: 4),
-          Text('$name · Residente', style: GatesTypography.caption),
+          Text('$name · Residente', style: context.gatesText.caption),
         ],
       ],
     );
@@ -336,18 +336,18 @@ class _BackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: GatesColors.bgSurface,
+      color: context.palette.bgSurface,
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
-        child: const SizedBox(
+        child: SizedBox(
           width: 40,
           height: 40,
           child: Icon(
             Icons.arrow_back,
             size: 20,
-            color: GatesColors.textPrimary,
+            color: context.palette.textPrimary,
           ),
         ),
       ),

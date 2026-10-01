@@ -168,7 +168,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.32),
+      barrierColor: context.palette.scrim,
       builder: (sheetContext) => _PhotoSourceSheet(
         onPick: (source) => Navigator.of(sheetContext).pop(source),
         onCancel: () => Navigator.of(sheetContext).pop(),
@@ -388,7 +388,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           children: [
             Text(
               'Cuéntanos qué ocurrió. Un administrador dará seguimiento.',
-              style: GatesTypography.labelSecondary,
+              style: context.gatesText.labelSecondary,
             ),
             const SizedBox(height: GatesSpacing.space16),
             GatesSelectField<String>(
@@ -451,7 +451,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           const SizedBox(height: GatesSpacing.space16),
           Text(
             'Espera un momento mientras guardamos los datos y las fotografías.',
-            style: GatesTypography.labelSecondary,
+            style: context.gatesText.labelSecondary,
           ),
           const SizedBox(height: GatesSpacing.space16),
           _PhotosSection(photos: _photos, showAdd: false),
@@ -481,7 +481,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(GatesSpacing.space16),
               decoration: BoxDecoration(
-                color: GatesColors.statusErrorBg,
+                color: context.palette.statusErrorBg,
                 borderRadius: BorderRadius.circular(GatesRadius.radius16),
               ),
               child: Column(
@@ -490,14 +490,14 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                   Text(
                     'Una foto no se pudo subir',
                     style: GatesTypography.label.copyWith(
-                      color: GatesColors.statusError,
+                      color: context.palette.statusError,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space8),
                   Text(
                     'Reintenta la carga o elimina esa foto para continuar.',
-                    style: GatesTypography.labelSecondary.copyWith(
-                      color: GatesColors.textPrimary,
+                    style: context.gatesText.labelSecondary.copyWith(
+                      color: context.palette.textPrimary,
                     ),
                   ),
                 ],
@@ -554,14 +554,14 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                 Container(
                   width: 64,
                   height: 64,
-                  decoration: const BoxDecoration(
-                    color: GatesColors.statusSuccessBg,
+                  decoration: BoxDecoration(
+                    color: context.palette.statusSuccessBg,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.check,
                     size: 24,
-                    color: GatesColors.textBrand,
+                    color: context.palette.textBrand,
                   ),
                 ),
                 const SizedBox(width: GatesSpacing.space16),
@@ -577,7 +577,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             Text(
               'Un administrador dará seguimiento a la incidencia.',
               style: GatesTypography.body.copyWith(
-                color: GatesColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
             const SizedBox(height: GatesSpacing.space16),
@@ -585,7 +585,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: GatesColors.bgSurface,
+                color: context.palette.bgSurface,
                 borderRadius: BorderRadius.circular(GatesRadius.radius16),
               ),
               child: Column(
@@ -594,13 +594,16 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                   Text(_sentTitle, style: GatesTypography.headingSmall),
                   if (_sentCategory != null) ...[
                     const SizedBox(height: GatesSpacing.space12),
-                    Text(_sentCategory!, style: GatesTypography.labelSecondary),
+                    Text(
+                      _sentCategory!,
+                      style: context.gatesText.labelSecondary,
+                    ),
                   ],
                   const SizedBox(height: GatesSpacing.space12),
                   Text(
                     'Reporte recibido',
                     style: GatesTypography.label.copyWith(
-                      color: GatesColors.statusSuccess,
+                      color: context.palette.statusSuccess,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space12),
@@ -608,12 +611,12 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                     children: [
                       Text(
                         'Fotografías',
-                        style: GatesTypography.labelSecondary,
+                        style: context.gatesText.labelSecondary,
                       ),
                       const SizedBox(width: GatesSpacing.space12),
                       Text(
                         '$_uploadedCount / $_maxPhotos',
-                        style: GatesTypography.labelSecondary,
+                        style: context.gatesText.labelSecondary,
                       ),
                     ],
                   ),
@@ -643,7 +646,7 @@ class _FixedAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: GatesColors.bgSurface,
+      color: context.palette.bgSurface,
       child: SafeArea(
         top: false,
         minimum: const EdgeInsets.only(bottom: GatesSpacing.space24),
@@ -693,7 +696,7 @@ class _PhotosSection extends StatelessWidget {
             Text('Fotografías (opcional)', style: GatesTypography.label),
             Text(
               '${photos.length} / $_maxPhotos',
-              style: GatesTypography.caption.copyWith(height: 16 / 12),
+              style: context.gatesText.caption.copyWith(height: 16 / 12),
             ),
           ],
         ),
@@ -735,10 +738,10 @@ class _AddPhotosCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: GatesColors.bgSurface,
+      color: context.palette.bgSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(GatesRadius.radius16),
-        side: const BorderSide(color: GatesColors.borderDefault),
+        side: BorderSide(color: context.palette.borderDefault),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -747,10 +750,10 @@ class _AddPhotosCard extends StatelessWidget {
           padding: const EdgeInsets.all(GatesSpacing.space16),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.photo_camera_outlined,
                 size: 24,
-                color: GatesColors.textPrimary,
+                color: context.palette.textPrimary,
               ),
               const SizedBox(width: GatesSpacing.space12),
               Expanded(
@@ -760,13 +763,15 @@ class _AddPhotosCard extends StatelessWidget {
                     Text(
                       title,
                       style: GatesTypography.label.copyWith(
-                        color: GatesColors.textBrand,
+                        color: context.palette.textBrand,
                       ),
                     ),
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
                       'Hasta $_maxPhotos fotografías',
-                      style: GatesTypography.caption.copyWith(height: 16 / 12),
+                      style: context.gatesText.caption.copyWith(
+                        height: 16 / 12,
+                      ),
                     ),
                   ],
                 ),
@@ -823,32 +828,32 @@ class _PhotoTile extends StatelessWidget {
                             child: Container(
                               width: 28,
                               height: 28,
-                              decoration: const BoxDecoration(
-                                color: GatesColors.bgSurface,
+                              decoration: BoxDecoration(
+                                color: context.palette.bgSurface,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.close,
                                 size: 20,
-                                color: GatesColors.textPrimary,
+                                color: context.palette.textPrimary,
                               ),
                             ),
                           ),
                         )
                       : const SizedBox(height: 28),
                   if (status == _PhotoStatus.uploading)
-                    const _StatusPill(
+                    _StatusPill(
                       label: 'Subiendo…',
-                      background: GatesColors.bgSurface,
-                      foreground: GatesColors.textBrand,
+                      background: context.palette.bgSurface,
+                      foreground: context.palette.textBrand,
                     ),
                   if (status == _PhotoStatus.error)
                     GestureDetector(
                       onTap: onRetry,
-                      child: const _StatusPill(
+                      child: _StatusPill(
                         label: 'Reintentar',
-                        background: GatesColors.statusErrorBg,
-                        foreground: GatesColors.statusError,
+                        background: context.palette.statusErrorBg,
+                        foreground: context.palette.statusError,
                       ),
                     ),
                 ],
@@ -883,7 +888,7 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GatesTypography.caption.copyWith(
+        style: context.gatesText.caption.copyWith(
           color: foreground,
           height: 16 / 12,
         ),
@@ -913,7 +918,7 @@ class _PhotoSourceSheet extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(GatesSpacing.space24),
               decoration: BoxDecoration(
-                color: GatesColors.bgSurface,
+                color: context.palette.bgSurface,
                 borderRadius: BorderRadius.circular(GatesRadius.radius24),
               ),
               child: Column(
@@ -930,10 +935,10 @@ class _PhotoSourceSheet extends StatelessWidget {
                       ),
                       InkResponse(
                         onTap: onCancel,
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
                           size: 20,
-                          color: GatesColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                       ),
                     ],
@@ -942,7 +947,7 @@ class _PhotoSourceSheet extends StatelessWidget {
                   Text(
                     'Elige cómo quieres agregar tus fotos.',
                     style: GatesTypography.body.copyWith(
-                      color: GatesColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space16),
@@ -962,7 +967,7 @@ class _PhotoSourceSheet extends StatelessWidget {
             _SheetAction(
               label: 'Cancelar',
               onTap: onCancel,
-              background: GatesColors.bgSurface,
+              background: context.palette.bgSurface,
               height: 52,
             ),
           ],
@@ -976,19 +981,19 @@ class _SheetAction extends StatelessWidget {
   const _SheetAction({
     required this.label,
     required this.onTap,
-    this.background = GatesColors.bgSubtle,
+    this.background,
     this.height = 56,
   });
 
   final String label;
   final VoidCallback onTap;
-  final Color background;
+  final Color? background;
   final double height;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: background,
+      color: background ?? context.palette.bgSubtle,
       borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1000,7 +1005,7 @@ class _SheetAction extends StatelessWidget {
             child: Text(
               label,
               style: GatesTypography.label.copyWith(
-                color: GatesColors.textBrand,
+                color: context.palette.textBrand,
               ),
             ),
           ),

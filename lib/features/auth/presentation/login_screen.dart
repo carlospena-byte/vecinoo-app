@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   'Pagos, avisos y visitas.\nTodo cerca, todo en vecinoo.',
                   style: GatesTypography.body.copyWith(
-                    color: GatesColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const Expanded(child: SizedBox()),
@@ -133,8 +133,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 12),
                         Text(
                           _errorText!,
-                          style: GatesTypography.caption.copyWith(
-                            color: GatesColors.statusError,
+                          style: context.gatesText.caption.copyWith(
+                            color: context.palette.statusError,
                           ),
                         ),
                       ],
@@ -155,7 +155,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Text(
                       '¿Tienes un código de invitación? Ingrésalo aquí.',
                       style: GatesTypography.label.copyWith(
-                        color: GatesColors.textBrand,
+                        color: context.palette.textBrand,
                       ),
                     ),
                   ),

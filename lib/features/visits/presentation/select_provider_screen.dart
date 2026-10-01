@@ -157,7 +157,7 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                           const SizedBox(height: GatesSpacing.space8),
                           Text(
                             'Puedes registrar la visita con un nombre personalizado.',
-                            style: GatesTypography.labelSecondary,
+                            style: context.gatesText.labelSecondary,
                           ),
                           const SizedBox(height: GatesSpacing.space16),
                           GatesButton(
@@ -210,7 +210,7 @@ class _CatalogOptionTile extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 60),
         padding: const EdgeInsets.all(GatesSpacing.space16),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
+          color: context.palette.bgSurface,
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
         ),
         child: Row(
@@ -221,13 +221,13 @@ class _CatalogOptionTile extends StatelessWidget {
               height: 48,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: GatesColors.bgSubtle,
+                color: context.palette.bgSubtle,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 providerInitials(item.name),
                 style: GatesTypography.headingSmall.copyWith(
-                  color: GatesColors.textBrand,
+                  color: context.palette.textBrand,
                 ),
               ),
             ),
@@ -245,7 +245,7 @@ class _CatalogOptionTile extends StatelessWidget {
                   const SizedBox(height: GatesSpacing.space4),
                   Text(
                     providerKindLabel(item.kind),
-                    style: GatesTypography.caption,
+                    style: context.gatesText.caption,
                   ),
                 ],
               ),

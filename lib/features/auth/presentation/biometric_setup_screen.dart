@@ -32,7 +32,7 @@ class BiometricSetupScreen extends StatelessWidget {
                 Text(
                   'Usa tu rostro o huella para entrar.\nPuedes configurarlo más adelante.',
                   style: GatesTypography.body.copyWith(
-                    color: GatesColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const Expanded(child: SizedBox()),
@@ -46,7 +46,7 @@ class BiometricSetupScreen extends StatelessWidget {
                     child: Text(
                       'Omitir por ahora',
                       style: GatesTypography.label.copyWith(
-                        color: GatesColors.textBrand,
+                        color: context.palette.textBrand,
                       ),
                     ),
                   ),

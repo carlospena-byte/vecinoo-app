@@ -26,8 +26,10 @@ class GatesTextAction extends StatelessWidget {
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          backgroundColor: filled ? GatesColors.bgSurface : Colors.transparent,
-          foregroundColor: color ?? GatesColors.textBrand,
+          backgroundColor: filled
+              ? context.palette.bgSurface
+              : Colors.transparent,
+          foregroundColor: color ?? context.palette.textBrand,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(
               Radius.circular(GatesRadius.radiusFull),

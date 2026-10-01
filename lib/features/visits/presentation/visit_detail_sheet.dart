@@ -166,19 +166,20 @@ class _StatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final (background, foreground) = switch (status) {
       VisitStatus.pendingRegistration => (
-        GatesColors.statusWarningBg,
-        GatesColors.statusWarning,
+        context.palette.statusWarningBg,
+        context.palette.statusWarning,
       ),
       VisitStatus.scheduled ||
       VisitStatus.active ||
       VisitStatus.inside ||
       VisitStatus.completed => (
-        GatesColors.statusSuccessBg,
-        GatesColors.statusSuccess,
+        context.palette.statusSuccessBg,
+        context.palette.statusSuccess,
       ),
-      VisitStatus.cancelled ||
-      VisitStatus.rejected ||
-      VisitStatus.expired => (GatesColors.bgSubtle, GatesColors.textSecondary),
+      VisitStatus.cancelled || VisitStatus.rejected || VisitStatus.expired => (
+        context.palette.bgSubtle,
+        context.palette.textSecondary,
+      ),
     };
     return Container(
       width: double.infinity,
@@ -221,7 +222,7 @@ class _Field extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GatesTypography.caption),
+          Text(label, style: context.gatesText.caption),
           const SizedBox(height: GatesSpacing.space4),
           Text(
             value,

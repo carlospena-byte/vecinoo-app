@@ -182,8 +182,8 @@ class _IncidentCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(GatesSpacing.space16),
         decoration: BoxDecoration(
-          color: GatesColors.bgSurface,
-          border: Border.all(color: GatesColors.borderDefault),
+          color: context.palette.bgSurface,
+          border: Border.all(color: context.palette.borderDefault),
           borderRadius: BorderRadius.circular(GatesRadius.radius16),
         ),
         child: Column(
@@ -198,12 +198,15 @@ class _IncidentCard extends StatelessWidget {
             ),
             if (incident.incidentTypeName != null) ...[
               const SizedBox(height: GatesSpacing.space4),
-              Text(incident.incidentTypeName!, style: GatesTypography.caption),
+              Text(
+                incident.incidentTypeName!,
+                style: context.gatesText.caption,
+              ),
             ],
             const SizedBox(height: GatesSpacing.space4),
             Text(
               _dateFormat.format(incident.createdAt).replaceAll('.', ''),
-              style: GatesTypography.labelSecondary,
+              style: context.gatesText.labelSecondary,
             ),
             const SizedBox(height: GatesSpacing.space12),
             IncidentStatusBadge(status: incident.status),
@@ -223,20 +226,20 @@ class IncidentStatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (background, foreground) = switch (status) {
       IncidentStatus.newIncident => (
-        GatesColors.statusWarningBg,
-        GatesColors.statusWarning,
+        context.palette.statusWarningBg,
+        context.palette.statusWarning,
       ),
       IncidentStatus.inProgress => (
-        GatesColors.bgAccent,
-        GatesColors.textBrand,
+        context.palette.bgAccent,
+        context.palette.textBrand,
       ),
       IncidentStatus.resolved => (
-        GatesColors.statusSuccessBg,
-        GatesColors.statusSuccess,
+        context.palette.statusSuccessBg,
+        context.palette.statusSuccess,
       ),
       IncidentStatus.closed || IncidentStatus.cancelled => (
-        GatesColors.bgSubtle,
-        GatesColors.textSecondary,
+        context.palette.bgSubtle,
+        context.palette.textSecondary,
       ),
     };
     return Container(
@@ -249,7 +252,7 @@ class IncidentStatusBadge extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         statusLabel(status),
-        style: GatesTypography.caption.copyWith(color: foreground),
+        style: context.gatesText.caption.copyWith(color: foreground),
       ),
     );
   }

@@ -12,15 +12,15 @@ class GatesAddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: GatesColors.bgBrand,
+      color: context.palette.bgBrand,
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
-        child: const SizedBox(
+        child: SizedBox(
           width: 44,
           height: 44,
-          child: Icon(Icons.add, color: GatesColors.textInverse, size: 24),
+          child: Icon(Icons.add, color: context.palette.textOnBrand, size: 24),
         ),
       ),
     );
