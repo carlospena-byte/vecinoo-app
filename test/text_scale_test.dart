@@ -1,8 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'helpers/fonts.dart';
+
 import 'package:gates_app/core/theme/app_theme.dart';
 import 'package:gates_app/core/widgets/gates_add_button.dart';
 import 'package:gates_app/core/widgets/gates_button.dart';
@@ -14,17 +14,8 @@ import 'package:gates_app/core/widgets/swipe_to_confirm.dart';
 
 /// Renders the shared controls at the largest accessibility text sizes on a
 /// phone-width screen; any overflow fails the test.
-Future<void> _loadManrope() async {
-  final loader = FontLoader('Manrope');
-  for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
-    final bytes = File('assets/fonts/Manrope-$weight.ttf').readAsBytesSync();
-    loader.addFont(Future.value(ByteData.sublistView(bytes)));
-  }
-  await loader.load();
-}
-
 void main() {
-  setUpAll(_loadManrope);
+  setUpAll(loadManrope);
 
   final controls = <String, Widget Function()>{
     'button': () => GatesButton(label: 'Aceptar invitación', onPressed: () {}),

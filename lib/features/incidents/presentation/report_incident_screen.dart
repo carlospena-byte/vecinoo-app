@@ -1,46 +1,30 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
+import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_select_field.dart';
+import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../../core/widgets/gates_toast.dart';
-import '../../session/presentation/session_controller.dart';
-import '../domain/incident.dart';
-import 'incident_edit_args.dart';
 import '../../../l10n/l10n.dart';
+import '../domain/incident.dart';
+import '../../session/presentation/session_controller.dart';
+import 'incident_edit_args.dart';
 import 'incident_rich_editor.dart';
-import '../../../core/widgets/gates_sheet.dart';
 import 'incidents_controller.dart';
-
-const _maxPhotos = 10;
-
-enum _Phase { form, sending, photoError, sent }
-
-enum _PhotoStatus { ready, uploading, done, error }
-
-class _Photo {
-  _Photo(File this.file) : status = _PhotoStatus.ready;
-
-  /// A photo already stored on the server (edit mode).
-  _Photo.existing(IncidentAttachment this.attachment)
-    : url = attachment.url,
-      status = _PhotoStatus.done;
-
-  File? file;
-  String? url;
-  IncidentAttachment? attachment;
-  _PhotoStatus status;
-}
+import 'photo_picker.dart';
+import 'report_incident_controller.dart';
+import 'report_incident_photos.dart';
 
 /// "15 · Incidencias / Crear reporte" — Figma nodes I01/I03 (form), I04
 /// (photo source sheet), I06 (photo upload error), I07 (sending) and I08
-/// (sent). One screen drives all of them through [_Phase].
+/// (sent). One screen renders all of them from [ReportPhase]; the flow
+/// itself lives in [ReportIncidentController].
 class ReportIncidentScreen extends ConsumerStatefulWidget {
   const ReportIncidentScreen({super.key, this.editing});
 
@@ -56,254 +40,129 @@ class ReportIncidentScreen extends ConsumerStatefulWidget {
 class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = RichTextController();
-
-  _Phase _phase = _Phase.form;
-  String? _incidentTypeId;
-  final List<_Photo> _photos = [];
-
-  /// Set once the row exists, so retrying photo uploads never creates a
-  /// second incident.
-  String? _incidentId;
-
-  /// Server photos the user removed while editing; deleted on save.
-  final List<IncidentAttachment> _removedAttachments = [];
+  StreamSubscription<ReportEvent>? _events;
 
   bool get _isEditing => widget.editing != null;
 
-  /// Snapshot shown on the confirmation screen.
-  String _sentTitle = '';
-  String? _sentCategory;
+  ReportIncidentController get _controller =>
+      ref.read(reportIncidentControllerProvider(widget.editing).notifier);
 
   @override
   void initState() {
     super.initState();
     final editing = widget.editing;
     if (editing != null) {
-      final incident = editing.incident;
-      _incidentId = incident.id;
-      _incidentTypeId = incident.incidentTypeId;
-      _titleController.text = incident.title;
-      _descriptionController.loadHtml(incident.description);
-      _photos.addAll(editing.attachments.map(_Photo.existing));
+      _titleController.text = editing.incident.title;
+      _descriptionController.loadHtml(editing.incident.description);
     }
-    _baseline = _signature();
-    _titleController.addListener(_syncDirty);
-    _descriptionController.addListener(_syncDirty);
+    _controller.markLoadedDraft(
+      title: _titleController.text,
+      description: _descriptionController.text,
+    );
+    _events = _controller.events.listen(_onEvent);
+    _titleController.addListener(_syncDraft);
+    _descriptionController.addListener(_syncDraft);
   }
-
-  bool _dirty = false;
-
-  /// Only rebuilds when the dirty flag flips, so typing stays cheap.
-  void _syncDirty() {
-    final dirty = _isDirty;
-    if (dirty != _dirty && mounted) setState(() => _dirty = dirty);
-  }
-
-  late final String _baseline;
-
-  String _signature() =>
-      '${_titleController.text}|${_descriptionController.text}|'
-      '$_incidentTypeId|${_photos.length}|${_removedAttachments.length}';
-
-  bool get _isDirty => _signature() != _baseline;
-
-  /// Leaving with unsaved edits asks for confirmation (edit mode only).
-  bool get _confirmsExit => _isEditing && _phase == _Phase.form && _isDirty;
 
   @override
   void dispose() {
+    _events?.cancel();
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
-  bool get _hasErrors => _photos.any((p) => p.status == _PhotoStatus.error);
+  void _syncDraft() => _controller.updateDraft(
+    title: _titleController.text,
+    description: _descriptionController.text,
+  );
 
-  int get _uploadedCount =>
-      _photos.where((p) => p.status == _PhotoStatus.done).length;
+  /// Leaving with unsaved edits asks for confirmation (edit mode only).
+  bool _confirmsExit(ReportIncidentState s) =>
+      _isEditing && s.phase == ReportPhase.form && s.isDirty;
 
-  Future<void> _pickPhotos() async {
-    final remaining = _maxPhotos - _photos.length;
-    if (remaining <= 0) return;
-    final source = await _showPhotoSourceSheet();
-    if (source == null || !mounted) return;
-    try {
-      final picker = ImagePicker();
-      List<XFile> picked;
-      if (source == ImageSource.camera) {
-        final shot = await picker.pickImage(
-          source: ImageSource.camera,
-          imageQuality: 70,
-        );
-        picked = shot == null ? [] : [shot];
-      } else {
-        picked = await picker.pickMultiImage(imageQuality: 70);
-      }
-      if (picked.isEmpty || !mounted) return;
-      if (picked.length > remaining) {
+  void _onEvent(ReportEvent event) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (event) {
+      case PhotoLimitReached(:final added):
         showGatesToast(
           context,
           type: GatesToastType.info,
-          title: context.l10n.incidentsReportMaxPhotos(_maxPhotos),
-          message: context.l10n.incidentsReportAddedFirst(remaining),
+          title: l10n.incidentsReportMaxPhotos(maxIncidentPhotos),
+          message: l10n.incidentsReportAddedFirst(added),
         );
-        picked = picked.take(remaining).toList();
-      }
-      setState(() => _photos.addAll(picked.map((x) => _Photo(File(x.path)))));
-      // After the report already exists, new photos go up right away.
-      if (_incidentId != null) await _uploadPending();
-    } catch (_) {
-      if (!mounted) return;
-      showGatesToast(
-        context,
-        type: GatesToastType.error,
-        title: context.l10n.incidentsReportPhotosOpenFailed,
-        message: context.l10n.incidentsReportPhotosPermissions,
-      );
+      case PhotosOpenFailed():
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.incidentsReportPhotosOpenFailed,
+          message: l10n.incidentsReportPhotosPermissions,
+        );
+      case SaveFailed(:final failure):
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.incidentsReportSaveFailed,
+          message: _withDetail(
+            failureDetail(l10n, failure),
+            l10n.incidentsReportSaveFailedBody,
+          ),
+        );
+      case SendFailed(:final failure):
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.incidentsReportSendFailed,
+          message: _withDetail(
+            failureDetail(l10n, failure),
+            l10n.incidentsReportSendFailedBody,
+          ),
+        );
+      case EditSaved():
+        context.pop();
+        showGatesToast(
+          context,
+          type: GatesToastType.success,
+          title: l10n.incidentsReportChangesSaved,
+        );
     }
   }
 
-  Future<ImageSource?> _showPhotoSourceSheet() {
-    return showModalBottomSheet<ImageSource>(
+  String _withDetail(String? detail, String fallback) =>
+      detail == null ? fallback : '$detail $fallback';
+
+  Future<void> _pickPhotos() async {
+    if (ref
+            .read(reportIncidentControllerProvider(widget.editing))
+            .photos
+            .length >=
+        maxIncidentPhotos) {
+      return;
+    }
+    final source = await _showPhotoSourceSheet();
+    if (source == null || !mounted) return;
+    await _controller.addPhotos(source);
+  }
+
+  Future<PhotoSource?> _showPhotoSourceSheet() {
+    return showModalBottomSheet<PhotoSource>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: context.palette.scrim,
-      builder: (sheetContext) => _PhotoSourceSheet(
+      builder: (sheetContext) => PhotoSourceSheet(
         onPick: (source) => Navigator.of(sheetContext).pop(source),
         onCancel: () => Navigator.of(sheetContext).pop(),
       ),
     );
   }
 
-  Future<void> _submit() async {
-    final membership = ref.read(selectedMembershipProvider).value;
-    if (membership == null) return;
-    final title = _titleController.text.trim();
-    if (title.isEmpty) return;
-
-    final types =
-        ref.read(incidentTypesProvider(membership.residentialId)).value ?? [];
-    _sentTitle = title;
-    _sentCategory = types
-        .where((t) => t.id == _incidentTypeId)
-        .map((t) => t.name)
-        .firstOrNull;
-
-    setState(() => _phase = _Phase.sending);
-    if (_isEditing) {
-      try {
-        final repository = ref.read(incidentsRepositoryProvider);
-        await repository.updateIncident(
-          incidentId: _incidentId!,
-          title: title,
-          description: _descriptionController.toHtml(),
-          incidentTypeId: _incidentTypeId,
-        );
-        for (final attachment in _removedAttachments.toList()) {
-          await repository.deleteAttachment(attachment);
-          _removedAttachments.remove(attachment);
-        }
-        ref.invalidate(incidentsListProvider(membership.residentialId));
-      } catch (_) {
-        if (!mounted) return;
-        // Keep every change so the user can retry.
-        setState(() => _phase = _Phase.form);
-        showGatesToast(
-          context,
-          type: GatesToastType.error,
-          title: context.l10n.incidentsReportSaveFailed,
-          message: context.l10n.incidentsReportSaveFailedBody,
-        );
-        return;
-      }
-      await _uploadPending();
-      return;
-    }
-    try {
-      _incidentId ??= await ref
-          .read(incidentsRepositoryProvider)
-          .createIncident(
-            residentialId: membership.residentialId,
-            unitId: membership.unitId,
-            title: title,
-            description: _descriptionController.toHtml(),
-            incidentTypeId: _incidentTypeId,
-          );
-      ref.invalidate(incidentsListProvider(membership.residentialId));
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _phase = _Phase.form);
-      showGatesToast(
-        context,
-        type: GatesToastType.error,
-        title: context.l10n.incidentsReportSendFailed,
-        message: context.l10n.incidentsReportSendFailedBody,
-      );
-      return;
-    }
-    await _uploadPending();
-  }
-
-  /// Uploads every photo that is waiting (or failed before), one at a time,
-  /// then lands on the error screen if any are left or on the confirmation.
-  Future<void> _uploadPending() async {
-    final membership = ref.read(selectedMembershipProvider).value;
-    final incidentId = _incidentId;
-    if (membership == null || incidentId == null) return;
-
-    setState(() => _phase = _Phase.sending);
-    final repository = ref.read(incidentsRepositoryProvider);
-    for (final photo in _photos.toList()) {
-      if (photo.status != _PhotoStatus.ready &&
-          photo.status != _PhotoStatus.error) {
-        continue;
-      }
-      if (!mounted) return;
-      setState(() => photo.status = _PhotoStatus.uploading);
-      try {
-        await repository.uploadPhoto(
-          residentialId: membership.residentialId,
-          incidentId: incidentId,
-          photo: photo.file!,
-        );
-        photo.status = _PhotoStatus.done;
-      } catch (_) {
-        photo.status = _PhotoStatus.error;
-      }
-      if (mounted) setState(() {});
-    }
-    if (!mounted) return;
-    if (_hasErrors) {
-      setState(() => _phase = _Phase.photoError);
-    } else {
-      _finish();
-    }
-  }
-
-  /// Edit mode returns to the detail once the server confirmed everything;
-  /// a new report shows the confirmation screen.
-  void _finish() {
-    if (_isEditing) {
-      context.pop();
-      showGatesToast(
-        context,
-        type: GatesToastType.success,
-        title: context.l10n.incidentsReportChangesSaved,
-      );
-    } else {
-      setState(() => _phase = _Phase.sent);
-    }
-  }
-
-  void _removePhoto(_Photo photo) {
-    setState(() {
-      _photos.remove(photo);
-      final attachment = photo.attachment;
-      if (attachment != null) _removedAttachments.add(attachment);
-    });
-  }
+  Future<void> _submit() => _controller.submit(
+    title: _titleController.text,
+    descriptionHtml: _descriptionController.toHtml(),
+  );
 
   Future<void> _confirmDiscard() async {
     final discard = await showGatesSheet<bool>(
@@ -344,23 +203,24 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(reportIncidentControllerProvider(widget.editing));
     return PopScope(
-      canPop: _phase != _Phase.sending && !_confirmsExit,
+      canPop: s.phase != ReportPhase.sending && !_confirmsExit(s),
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _confirmsExit) _confirmDiscard();
+        if (!didPop && _confirmsExit(s)) _confirmDiscard();
       },
-      child: switch (_phase) {
-        _Phase.form => _buildForm(context),
-        _Phase.sending => _buildSending(context),
-        _Phase.photoError => _buildPhotoError(context),
-        _Phase.sent => _buildSent(context),
+      child: switch (s.phase) {
+        ReportPhase.form => _buildForm(context, s),
+        ReportPhase.sending => _buildSending(context, s),
+        ReportPhase.photoError => _buildPhotoError(context, s),
+        ReportPhase.sent => _buildSent(context, s),
       },
     );
   }
 
   // ---------------------------------------------------------------- form
 
-  Widget _buildForm(BuildContext context) {
+  Widget _buildForm(BuildContext context, ReportIncidentState s) {
     final membership = ref.watch(selectedMembershipProvider).value;
     final types = membership == null
         ? const <IncidentType>[]
@@ -397,9 +257,9 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             GatesSelectField<String>(
               label: context.l10n.incidentsReportCategoryLabel,
               placeholder: context.l10n.incidentsReportCategoryPlaceholder,
-              value: _incidentTypeId ?? '',
+              value: s.incidentTypeId ?? '',
               options: {for (final t in types) t.id: t.name},
-              onChanged: (id) => setState(() => _incidentTypeId = id),
+              onChanged: _controller.selectType,
             ),
             const SizedBox(height: GatesSpacing.space16),
             GatesTextField(
@@ -412,10 +272,10 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             const SizedBox(height: GatesSpacing.space16),
             IncidentRichEditor(controller: _descriptionController),
             const SizedBox(height: GatesSpacing.space16),
-            _PhotosSection(
-              photos: _photos,
+            PhotosSection(
+              photos: s.photos,
               onAdd: _pickPhotos,
-              onRemove: _removePhoto,
+              onRemove: (photo) => _controller.removePhoto(photo.id),
             ),
           ],
         ),
@@ -436,7 +296,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
 
   // ------------------------------------------------------------- sending
 
-  Widget _buildSending(BuildContext context) {
+  Widget _buildSending(BuildContext context, ReportIncidentState s) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -459,7 +319,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             style: context.gatesText.labelSecondary,
           ),
           const SizedBox(height: GatesSpacing.space16),
-          _PhotosSection(photos: _photos, showAdd: false),
+          PhotosSection(photos: s.photos, showAdd: false),
         ],
       ),
       bottomNavigationBar: _FixedAction(
@@ -473,7 +333,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
 
   // --------------------------------------------------------- photo error
 
-  Widget _buildPhotoError(BuildContext context) {
+  Widget _buildPhotoError(BuildContext context, ReportIncidentState s) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -484,7 +344,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       body: ListView(
         padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
         children: [
-          if (_hasErrors) ...[
+          if (s.hasPhotoErrors) ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(GatesSpacing.space16),
@@ -513,19 +373,19 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             ),
             const SizedBox(height: GatesSpacing.space16),
           ],
-          _PhotosSection(
-            photos: _photos,
+          PhotosSection(
+            photos: s.photos,
             onAdd: _pickPhotos,
-            onRemove: _removePhoto,
-            onRetry: (_) => _uploadPending(),
-            removableStatuses: const {_PhotoStatus.error},
+            onRemove: (photo) => _controller.removePhoto(photo.id),
+            onRetry: (_) => _controller.uploadPending(),
+            removableStatuses: const {PhotoStatus.error},
           ),
-          if (_hasErrors) ...[
+          if (s.hasPhotoErrors) ...[
             const SizedBox(height: GatesSpacing.space16),
             GatesButton(
               label: context.l10n.incidentsReportRetryPhoto,
               style: GatesButtonStyle.secondary,
-              onPressed: _uploadPending,
+              onPressed: _controller.uploadPending,
             ),
           ],
         ],
@@ -533,7 +393,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       bottomNavigationBar: _FixedAction(
         child: GatesButton(
           label: context.l10n.incidentsReportDone,
-          onPressed: _hasErrors ? null : _finish,
+          onPressed: s.hasPhotoErrors ? null : _controller.finish,
         ),
       ),
     );
@@ -541,7 +401,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
 
   // ---------------------------------------------------------------- sent
 
-  Widget _buildSent(BuildContext context) {
+  Widget _buildSent(BuildContext context, ReportIncidentState s) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -602,11 +462,11 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_sentTitle, style: GatesTypography.headingSmall),
-                  if (_sentCategory != null) ...[
+                  Text(s.sentTitle, style: GatesTypography.headingSmall),
+                  if (s.sentCategory != null) ...[
                     const SizedBox(height: GatesSpacing.space12),
                     Text(
-                      _sentCategory!,
+                      s.sentCategory!,
                       style: context.gatesText.labelSecondary,
                     ),
                   ],
@@ -626,7 +486,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                       ),
                       const SizedBox(width: GatesSpacing.space12),
                       Text(
-                        '$_uploadedCount / $_maxPhotos',
+                        '${s.uploadedCount} / $maxIncidentPhotos',
                         style: context.gatesText.labelSecondary,
                       ),
                     ],
@@ -672,379 +532,6 @@ class _FixedAction extends StatelessWidget {
             0,
           ),
           child: child,
-        ),
-      ),
-    );
-  }
-}
-
-/// "Fotografías" block: header with `n / 10`, the thumbnails and the
-/// "Agregar fotografías" card.
-class _PhotosSection extends StatelessWidget {
-  const _PhotosSection({
-    required this.photos,
-    this.onAdd,
-    this.onRemove,
-    this.onRetry,
-    this.showAdd = true,
-    this.removableStatuses,
-  });
-
-  final List<_Photo> photos;
-  final VoidCallback? onAdd;
-  final ValueChanged<_Photo>? onRemove;
-  final ValueChanged<_Photo>? onRetry;
-  final bool showAdd;
-
-  /// When set, only photos in these statuses show the delete button.
-  final Set<_PhotoStatus>? removableStatuses;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              context.l10n.incidentsReportPhotosOptional,
-              style: GatesTypography.label,
-            ),
-            Text(
-              '${photos.length} / $_maxPhotos',
-              style: context.gatesText.caption.copyWith(height: 16 / 12),
-            ),
-          ],
-        ),
-        const SizedBox(height: GatesSpacing.space8),
-        if (photos.isNotEmpty)
-          Wrap(
-            spacing: GatesSpacing.space12,
-            runSpacing: GatesSpacing.space12,
-            children: [
-              for (final photo in photos)
-                _PhotoTile(
-                  photo: photo,
-                  canRemove:
-                      onRemove != null &&
-                      (removableStatuses?.contains(photo.status) ?? true),
-                  onRemove: () => onRemove?.call(photo),
-                  onRetry: () => onRetry?.call(photo),
-                ),
-            ],
-          ),
-        if (showAdd && photos.length < _maxPhotos) ...[
-          if (photos.isNotEmpty) const SizedBox(height: GatesSpacing.space12),
-          _AddPhotosCard(
-            title: photos.isEmpty
-                ? context.l10n.incidentsReportAddPhotos
-                : context.l10n.incidentsReportAddMorePhotos,
-            onTap: onAdd,
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _AddPhotosCard extends StatelessWidget {
-  const _AddPhotosCard({required this.title, required this.onTap});
-
-  final String title;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: context.palette.bgSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(GatesRadius.radius16),
-        side: BorderSide(color: context.palette.borderDefault),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(GatesSpacing.space16),
-          child: Row(
-            children: [
-              Icon(
-                Icons.photo_camera_outlined,
-                size: 24,
-                color: context.palette.textPrimary,
-              ),
-              const SizedBox(width: GatesSpacing.space12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GatesTypography.label.copyWith(
-                        color: context.palette.textBrand,
-                      ),
-                    ),
-                    const SizedBox(height: GatesSpacing.space4),
-                    Text(
-                      context.l10n.incidentsReportUpToPhotos(_maxPhotos),
-                      style: context.gatesText.caption.copyWith(
-                        height: 16 / 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Figma "Incidencias / Fotografía" (node `461:974`): 104×100 thumbnail with
-/// a delete button and, while uploading or after a failure, a status pill.
-class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({
-    required this.photo,
-    required this.canRemove,
-    required this.onRemove,
-    required this.onRetry,
-  });
-
-  final _Photo photo;
-  final bool canRemove;
-  final VoidCallback onRemove;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final status = photo.status;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 104,
-        height: 100,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            photo.file != null
-                ? Image.file(photo.file!, fit: BoxFit.cover)
-                : Image.network(photo.url!, fit: BoxFit.cover),
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  canRemove && status != _PhotoStatus.uploading
-                      ? Semantics(
-                          button: true,
-                          label: context.l10n.incidentsReportRemovePhoto,
-                          excludeSemantics: true,
-                          onTap: onRemove,
-                          child: GestureDetector(
-                            onTap: onRemove,
-                            behavior: HitTestBehavior.opaque,
-                            // 44pt touch target around the 28pt chip.
-                            child: SizedBox(
-                              width: 44,
-                              height: 44,
-                              child: Align(
-                                alignment: Alignment.topRight,
-                                child: Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: context.palette.bgSurface,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 20,
-                                    color: context.palette.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                      : const SizedBox(height: 44),
-                  if (status == _PhotoStatus.uploading)
-                    _StatusPill(
-                      label: context.l10n.incidentsReportUploading,
-                      background: context.palette.bgSurface,
-                      foreground: context.palette.textBrand,
-                    ),
-                  if (status == _PhotoStatus.error)
-                    Semantics(
-                      button: true,
-                      label: context.l10n.incidentsReportRetryUploadPhoto,
-                      excludeSemantics: true,
-                      onTap: onRetry,
-                      child: GestureDetector(
-                        onTap: onRetry,
-                        child: _StatusPill(
-                          label: context.l10n.incidentsReportRetry,
-                          background: context.palette.statusErrorBg,
-                          foreground: context.palette.statusError,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({
-    required this.label,
-    required this.background,
-    required this.foreground,
-  });
-
-  final String label;
-  final Color background;
-  final Color foreground;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(GatesSpacing.space4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(GatesRadius.radius8),
-      ),
-      child: Text(
-        label,
-        style: context.gatesText.caption.copyWith(
-          color: foreground,
-          height: 16 / 12,
-        ),
-      ),
-    );
-  }
-}
-
-/// Figma "Fotografías / Bottom sheet" (node `473:2395`): a floating white
-/// sheet with the two sources, plus a separate "Cancelar" pill below it.
-class _PhotoSourceSheet extends StatelessWidget {
-  const _PhotoSourceSheet({required this.onPick, required this.onCancel});
-
-  final ValueChanged<ImageSource> onPick;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(GatesSpacing.space24),
-              decoration: BoxDecoration(
-                color: context.palette.bgSurface,
-                borderRadius: BorderRadius.circular(GatesRadius.radius24),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          context.l10n.incidentsReportAddPhotos,
-                          style: GatesTypography.headingSmall,
-                        ),
-                      ),
-                      InkResponse(
-                        onTap: onCancel,
-                        child: Icon(
-                          Icons.close,
-                          size: 20,
-                          color: context.palette.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: GatesSpacing.space16),
-                  Text(
-                    context.l10n.incidentsReportPhotoSourceBody,
-                    style: GatesTypography.body.copyWith(
-                      color: context.palette.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: GatesSpacing.space16),
-                  _SheetAction(
-                    label: context.l10n.incidentsReportTakePhoto,
-                    onTap: () => onPick(ImageSource.camera),
-                  ),
-                  const SizedBox(height: GatesSpacing.space8),
-                  _SheetAction(
-                    label: context.l10n.incidentsReportChooseGallery,
-                    onTap: () => onPick(ImageSource.gallery),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: GatesSpacing.space12),
-            _SheetAction(
-              label: context.l10n.incidentsReportCancel,
-              onTap: onCancel,
-              background: context.palette.bgSurface,
-              height: 52,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SheetAction extends StatelessWidget {
-  const _SheetAction({
-    required this.label,
-    required this.onTap,
-    this.background,
-    this.height = 56,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final Color? background;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: background ?? context.palette.bgSubtle,
-      borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: double.infinity,
-          height: height,
-          child: Center(
-            child: Text(
-              label,
-              style: GatesTypography.label.copyWith(
-                color: context.palette.textBrand,
-              ),
-            ),
-          ),
         ),
       ),
     );

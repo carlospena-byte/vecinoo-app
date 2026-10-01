@@ -864,5 +864,8 @@
   "visitsDetailsNotesHint": "Agrega una indicación",
   "visitsDetailsChange": "Cambiar visita",
   "visitsDetailsNameHint": "Escribe el nombre",
-  "visitsDetailsUseName": "Usar este nombre"
+  "visitsDetailsUseName": "Usar este nombre",
+  "commonErrorNetwork": "Sin conexión. Revisa tu internet e intenta de nuevo.",
+  "commonErrorSession": "Tu sesión expiró o no tienes permiso. Inicia sesión de nuevo.",
+  "commonErrorServer": "Algo salió mal de nuestro lado. Intenta de nuevo en un momento."
 }

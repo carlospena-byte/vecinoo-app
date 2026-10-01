@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
-import '../data/incidents_repository.dart';
+import '../data/supabase_incidents_repository.dart';
 import '../domain/incident.dart';
+import '../domain/incidents_repository.dart';
 
 final incidentsRepositoryProvider = Provider<IncidentsRepository>((ref) {
-  return IncidentsRepository(ref.watch(supabaseClientProvider));
+  return SupabaseIncidentsRepository(ref.watch(supabaseClientProvider));
 });
 
 final incidentsListProvider = FutureProvider.family<List<Incident>, String>(

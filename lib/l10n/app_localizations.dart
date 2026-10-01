@@ -3237,6 +3237,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Usar este nombre'**
   String get visitsDetailsUseName;
+
+  /// No description provided for @commonErrorNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión. Revisa tu internet e intenta de nuevo.'**
+  String get commonErrorNetwork;
+
+  /// No description provided for @commonErrorSession.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu sesión expiró o no tienes permiso. Inicia sesión de nuevo.'**
+  String get commonErrorSession;
+
+  /// No description provided for @commonErrorServer.
+  ///
+  /// In es, this message translates to:
+  /// **'Algo salió mal de nuestro lado. Intenta de nuevo en un momento.'**
+  String get commonErrorServer;
 }
 
 class _AppLocalizationsDelegate

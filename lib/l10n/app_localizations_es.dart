@@ -1763,4 +1763,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get visitsDetailsUseName => 'Usar este nombre';
+
+  @override
+  String get commonErrorNetwork =>
+      'Sin conexión. Revisa tu internet e intenta de nuevo.';
+
+  @override
+  String get commonErrorSession =>
+      'Tu sesión expiró o no tienes permiso. Inicia sesión de nuevo.';
+
+  @override
+  String get commonErrorServer =>
+      'Algo salió mal de nuestro lado. Intenta de nuevo en un momento.';
 }
