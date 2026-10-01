@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/error/failure.dart';
+import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../auth/presentation/auth_controller.dart';
-import '../../auth/presentation/register_screen.dart' show pendingInvitationCodePrefsKey;
+import '../../auth/presentation/register_screen.dart'
+    show pendingInvitationCodePrefsKey;
 import 'session_controller.dart';
+import '../../../l10n/l10n.dart';
 
 /// Shown when the resident has signed in but no admin has linked them to
 /// a unit yet (see `unit_members` in gates-admin). Also where an
@@ -54,11 +59,23 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
       _errorText = null;
     });
     try {
-      await ref.read(sessionRepositoryProvider).acceptInvitation(code.trim());
-      ref.invalidate(myMembershipsProvider);
-    } catch (e) {
+      final accepted = await ref
+          .read(sessionRepositoryProvider)
+          .acceptInvitation(code.trim());
+      if (accepted) {
+        ref.invalidate(myMembershipsProvider);
+      } else if (mounted) {
+        setState(() => _errorText = context.l10n.authInvitationInvalid);
+      }
+    } catch (error) {
       if (!mounted) return;
-      setState(() => _errorText = 'Código inválido, ya usado o expirado.');
+      final l10n = context.l10n;
+      setState(
+        () => _errorText = withFailureDetail(
+          failureDetail(l10n, Failure.from(error)),
+          l10n.authInvitationInvalid,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isRedeeming = false);
     }
@@ -67,7 +84,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GatesColors.bgSubtle,
+      backgroundColor: context.palette.bgSubtle,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -78,46 +95,67 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: IconButton(
-                  tooltip: 'Cerrar sesión',
-                  icon: const Icon(Icons.logout, color: GatesColors.textSecondary),
-                  onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                  tooltip: context.l10n.commonLogout,
+                  icon: Icon(
+                    Icons.logout,
+                    color: context.palette.textSecondary,
+                  ),
+                  onPressed: () => signOutReportingErrors(context, ref),
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('gates', style: GatesTypography.headingMedium.copyWith(color: GatesColors.textBrand)),
+                  Text(
+                    'gates',
+                    style: GatesTypography.headingMedium.copyWith(
+                      color: context.palette.textBrand,
+                    ),
+                  ),
                   const SizedBox(height: GatesSpacing.space4),
-                  Text('PARA RESIDENTES', style: GatesTypography.caption),
+                  Text(
+                    context.l10n.commonForResidents,
+                    style: context.gatesText.caption,
+                  ),
                 ],
               ),
               const SizedBox(height: 32),
-              Text('Cuenta pendiente', style: GatesTypography.headingLarge),
+              Text(
+                context.l10n.sessionPendingTitle,
+                style: GatesTypography.headingLarge,
+              ),
               const SizedBox(height: 12),
               Text(
-                'Todavía no tienes una unidad vinculada. Pide al administrador que te '
-                'vincule o ingresa un código de invitación.',
-                style: GatesTypography.body.copyWith(color: GatesColors.textSecondary),
+                context.l10n.sessionPendingBody,
+                style: GatesTypography.body.copyWith(
+                  color: context.palette.textSecondary,
+                ),
               ),
               const SizedBox(height: 32),
               GatesTextField(
-                label: 'Código de invitación',
+                label: context.l10n.authInvitationCode,
                 controller: _codeController,
-                textCapitalization: TextCapitalization.characters,
-                helperText: '8 caracteres alfanuméricos.',
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
+                helperText: context.l10n.sessionCodeDigitsHelper,
                 errorText: _errorText,
                 enabled: !_isRedeeming,
               ),
               const SizedBox(height: 16),
               GatesButton(
-                label: 'Usar código',
-                onPressed: _isRedeeming ? null : () => _redeem(_codeController.text),
+                label: context.l10n.sessionUseCode,
+                onPressed: _isRedeeming
+                    ? null
+                    : () => _redeem(_codeController.text),
                 loading: _isRedeeming,
               ),
               const SizedBox(height: 12),
               GatesButton(
-                label: 'Ya me vincularon, reintentar',
+                label: context.l10n.sessionAlreadyLinkedRetry,
                 style: GatesButtonStyle.secondary,
                 onPressed: () => ref.invalidate(myMembershipsProvider),
               ),

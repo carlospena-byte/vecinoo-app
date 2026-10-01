@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/presentation/auth_controller.dart';
 import 'session_controller.dart';
+import '../../../l10n/l10n.dart';
 
 /// Shown when the resident belongs to more than one unit/residential and
 /// no prior selection is saved.
@@ -15,7 +16,7 @@ class UnitSelectorScreen extends ConsumerWidget {
     final memberships = ref.watch(myMembershipsProvider).value ?? [];
 
     return Scaffold(
-      backgroundColor: GatesColors.bgSubtle,
+      backgroundColor: context.palette.bgSubtle,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -25,26 +26,42 @@ class UnitSelectorScreen extends ConsumerWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: IconButton(
-                  tooltip: 'Cerrar sesión',
-                  icon: const Icon(Icons.logout, color: GatesColors.textSecondary),
-                  onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                  tooltip: context.l10n.commonLogout,
+                  icon: Icon(
+                    Icons.logout,
+                    color: context.palette.textSecondary,
+                  ),
+                  onPressed: () => signOutReportingErrors(context, ref),
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('gates', style: GatesTypography.headingMedium.copyWith(color: GatesColors.textBrand)),
+                  Text(
+                    'gates',
+                    style: GatesTypography.headingMedium.copyWith(
+                      color: context.palette.textBrand,
+                    ),
+                  ),
                   const SizedBox(height: GatesSpacing.space4),
-                  Text('PARA RESIDENTES', style: GatesTypography.caption),
+                  Text(
+                    context.l10n.commonForResidents,
+                    style: context.gatesText.caption,
+                  ),
                 ],
               ),
               const SizedBox(height: 32),
-              Text('Selecciona tu unidad', style: GatesTypography.headingLarge),
+              Text(
+                context.l10n.sessionSelectUnitTitle,
+                style: GatesTypography.headingLarge,
+              ),
               const SizedBox(height: 12),
               Text(
-                'Elige la unidad que quieres consultar.',
-                style: GatesTypography.body.copyWith(color: GatesColors.textSecondary),
+                context.l10n.sessionSelectUnitBody,
+                style: GatesTypography.body.copyWith(
+                  color: context.palette.textSecondary,
+                ),
               ),
               const SizedBox(height: 32),
               Expanded(
@@ -54,8 +71,11 @@ class UnitSelectorScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final membership = memberships[index];
                     return _UnitTile(
-                      label: '${membership.unitName} · ${membership.residentialName}',
-                      onTap: () => ref.read(selectedMembershipProvider.notifier).select(membership),
+                      label:
+                          '${membership.unitName} · ${membership.residentialName}',
+                      onTap: () => ref
+                          .read(selectedMembershipProvider.notifier)
+                          .select(membership),
                     );
                   },
                 ),
@@ -81,8 +101,8 @@ class _UnitTile extends StatelessWidget {
     return Container(
       height: 80,
       decoration: BoxDecoration(
-        color: GatesColors.bgSurface,
-        border: Border.all(color: GatesColors.borderDefault),
+        color: context.palette.bgSurface,
+        border: Border.all(color: context.palette.borderDefault),
         borderRadius: BorderRadius.circular(GatesRadius.radiusFull),
       ),
       clipBehavior: Clip.antiAlias,
@@ -91,19 +111,27 @@ class _UnitTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: GatesSpacing.space16,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
                   child: Text(
                     label,
-                    style: GatesTypography.label.copyWith(color: GatesColors.textBrand),
+                    style: GatesTypography.label.copyWith(
+                      color: context.palette.textBrand,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(width: GatesSpacing.space8),
-                const Icon(Icons.arrow_forward, size: 16, color: GatesColors.textBrand),
+                Icon(
+                  Icons.arrow_forward,
+                  size: 16,
+                  color: context.palette.textBrand,
+                ),
               ],
             ),
           ),

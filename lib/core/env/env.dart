@@ -17,10 +17,19 @@ class Env {
     // The iOS Simulator shares the host's loopback directly, so it needs
     // no remapping.
     if (Platform.isAndroid) {
-      return url.replaceFirst('127.0.0.1', '10.0.2.2').replaceFirst('localhost', '10.0.2.2');
+      return url
+          .replaceFirst('127.0.0.1', '10.0.2.2')
+          .replaceFirst('localhost', '10.0.2.2');
     }
     return url;
   }
 
-  static String get supabasePublishableKey => dotenv.get('SUPABASE_PUBLISHABLE_KEY');
+  static String get supabasePublishableKey =>
+      dotenv.get('SUPABASE_PUBLISHABLE_KEY');
+
+  /// Base URL of the gates-admin web app, which serves the FastLane
+  /// self-registration page at `#fastlane/<code>` — same link scheme the
+  /// send-visit-notification Edge Function builds server-side.
+  static String get publicAppUrl =>
+      dotenv.maybeGet('PUBLIC_APP_URL') ?? 'https://admin.vecinoo.app/';
 }

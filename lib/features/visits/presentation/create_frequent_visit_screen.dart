@@ -1,37 +1,65 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
-import '../../session/presentation/session_controller.dart';
+import '../../../core/error/failure_messages.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/gates_button.dart';
+import '../../../core/widgets/gates_sheet.dart';
+import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
+import '../../home/home_shell.dart';
 import '../domain/visit.dart';
-import 'visits_controller.dart';
+import 'create_frequent_visit_controller.dart';
+import 'frequent_visit_form_steps.dart';
 
-const _notesMaxLength = 120;
-const _dayLabels = {'mon': 'Lun', 'tue': 'Mar', 'wed': 'Mié', 'thu': 'Jue', 'fri': 'Vie', 'sat': 'Sáb', 'sun': 'Dom'};
-
+/// Acceso frecuente flow — Figma "09 · Visitas / Acceso frecuente"
+/// (node 116:185). Two steps in one screen: R01 "Datos de la visita" (name,
+/// type, phone, ID document, vehicle) and R02/R03 "Días y horario" (frequency,
+/// schedule or custom blocks, notes, arrival alert). The back arrow steps back
+/// to R01 before leaving the flow.
 class CreateFrequentVisitScreen extends ConsumerStatefulWidget {
-  const CreateFrequentVisitScreen({super.key});
+  const CreateFrequentVisitScreen({super.key, this.editing});
+
+  /// When set, the form is prefilled from this frequent visit and saving
+  /// updates it instead of creating a new one.
+  final Visit? editing;
 
   @override
-  ConsumerState<CreateFrequentVisitScreen> createState() => _CreateFrequentVisitScreenState();
+  ConsumerState<CreateFrequentVisitScreen> createState() =>
+      _CreateFrequentVisitScreenState();
 }
 
-class _CreateFrequentVisitScreenState extends ConsumerState<CreateFrequentVisitScreen> {
+class _CreateFrequentVisitScreenState
+    extends ConsumerState<CreateFrequentVisitScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _plateController = TextEditingController();
   final _notesController = TextEditingController();
+  StreamSubscription<CreateFrequentVisitEvent>? _events;
 
-  VisitorRole _role = VisitorRole.familiar;
-  Recurrence _recurrence = Recurrence.daily;
-  ScheduleType _scheduleType = ScheduleType.allDay;
-  TimeOfDay _scheduleStart = const TimeOfDay(hour: 6, minute: 0);
-  TimeOfDay _scheduleEnd = const TimeOfDay(hour: 20, minute: 0);
-  final Set<String> _selectedDays = {};
-  bool _isSubmitting = false;
+  CreateFrequentVisitController get _controller =>
+      ref.read(createFrequentVisitControllerProvider(widget.editing).notifier);
+
+  @override
+  void initState() {
+    super.initState();
+    _events = _controller.events.listen(_onEvent);
+    final visit = widget.editing;
+    if (visit == null) return;
+    _nameController.text = visit.name ?? '';
+    _phoneController.text = splitFrequentPhone(visit.phone).local;
+    _plateController.text = visit.plate ?? '';
+    _notesController.text = visit.notes ?? '';
+  }
 
   @override
   void dispose() {
+    _events?.cancel();
     _nameController.dispose();
     _phoneController.dispose();
     _plateController.dispose();
@@ -39,167 +67,178 @@ class _CreateFrequentVisitScreenState extends ConsumerState<CreateFrequentVisitS
     super.dispose();
   }
 
-  String _formatTime(TimeOfDay time) =>
-      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
-
-  Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    if (_recurrence == Recurrence.custom && _selectedDays.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona al menos un día')),
-      );
-      return;
-    }
-    final membership = ref.read(selectedMembershipProvider).value;
-    if (membership == null) return;
-
-    setState(() => _isSubmitting = true);
-    try {
-      await ref.read(visitsRepositoryProvider).createFrequentVisit(
-            residentialId: membership.residentialId,
-            unitId: membership.unitId,
-            name: _nameController.text.trim(),
-            phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-            plate: _plateController.text.trim().isEmpty ? null : _plateController.text.trim(),
-            visitorRole: _role,
-            recurrence: _recurrence,
-            recurrenceDays: _recurrence == Recurrence.custom ? _selectedDays.toList() : null,
-            scheduleType: _scheduleType,
-            scheduleStart: _scheduleType == ScheduleType.custom ? _formatTime(_scheduleStart) : null,
-            scheduleEnd: _scheduleType == ScheduleType.custom ? _formatTime(_scheduleEnd) : null,
-            notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-          );
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Visita frecuente autorizada')),
-      );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo autorizar. Intenta de nuevo.')),
+  void _onEvent(CreateFrequentVisitEvent event) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (event) {
+      case FrequentVisitInvalid(:final issue):
+        showGatesToast(
+          context,
+          type: GatesToastType.warning,
+          title: l10n.visitsFrequentMissingData,
+          message: switch (issue) {
+            FrequentVisitIssue.eachBlockNeedsDay =>
+              l10n.visitsFrequentSelectDayEachBlock,
+            FrequentVisitIssue.startBeforeEnd =>
+              l10n.visitsFrequentStartBeforeEnd,
+          },
         );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      case FrequentVisitSaved(:final updated):
+        if (updated) {
+          showGatesToast(
+            context,
+            type: GatesToastType.success,
+            title: l10n.visitsFrequentUpdatedToast,
+          );
+          context.pop();
+        } else {
+          showGatesToast(
+            context,
+            type: GatesToastType.success,
+            title: l10n.visitsFrequentAuthorizedToast,
+          );
+          context.go('/', extra: const HomeTabRequest(HomeShell.visitsTab));
+        }
+      case FrequentVisitSaveFailed(:final failure):
+        final detail = failureDetail(l10n, failure);
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: widget.editing != null
+              ? l10n.visitsSaveError
+              : l10n.visitsFrequentAuthorizeError,
+          message: detail == null
+              ? l10n.visitsTryAgain
+              : '$detail ${l10n.visitsTryAgain}',
+        );
     }
   }
 
+  Future<void> _pickDocument() async {
+    final source = await showGatesSheet<ImageSource>(
+      context,
+      (sheetContext) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space24)
+            .copyWith(bottom: GatesSpacing.space24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GatesSheetHeader(title: context.l10n.visitsFrequentIdDocument),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(
+                context.l10n.visitsFrequentTakePhoto,
+                style: GatesTypography.body,
+              ),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(
+                context.l10n.visitsFrequentPickGallery,
+                style: GatesTypography.body,
+              ),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 70,
+    );
+    if (picked == null || !mounted) return;
+    await _controller.setDocument(picked);
+  }
+
+  void _continue() =>
+      _controller.next(formValid: _formKey.currentState?.validate() ?? false);
+
+  void _submit() => _controller.submit(
+    name: _nameController.text,
+    phoneDigits: _phoneController.text,
+    plate: _plateController.text,
+    notes: _notesController.text,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Visita frecuente')),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre de la visita'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+    final state = ref.watch(
+      createFrequentVisitControllerProvider(widget.editing),
+    );
+    final controller = _controller;
+    final isFirstStep = state.step == 0;
+    final isEditing = widget.editing != null;
+    return PopScope(
+      canPop: isFirstStep || state.isSubmitting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) controller.backToFirstStep();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(
+            isFirstStep
+                ? context.l10n.visitsFrequentAccess
+                : context.l10n.visitsFrequentDaysAndHours,
+          ),
+        ),
+        body: SafeArea(
+          top: false,
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                GatesSpacing.space24,
+                GatesSpacing.space8,
+                GatesSpacing.space24,
+                GatesSpacing.space24,
               ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<VisitorRole>(
-                initialValue: _role,
-                decoration: const InputDecoration(labelText: 'Tipo'),
-                items: VisitorRole.values
-                    .map((r) => DropdownMenuItem(value: r, child: Text(visitorRoleLabel(r))))
-                    .toList(),
-                onChanged: (v) => setState(() => _role = v ?? VisitorRole.familiar),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Teléfono (opcional)'),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _plateController,
-                decoration: const InputDecoration(labelText: 'Placa (opcional)'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<Recurrence>(
-                initialValue: _recurrence,
-                decoration: const InputDecoration(labelText: 'Frecuenta'),
-                items: Recurrence.values
-                    .map((r) => DropdownMenuItem(value: r, child: Text(recurrenceLabel(r))))
-                    .toList(),
-                onChanged: (v) => setState(() => _recurrence = v ?? Recurrence.daily),
-              ),
-              if (_recurrence == Recurrence.custom) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: _dayLabels.entries.map((entry) {
-                    final selected = _selectedDays.contains(entry.key);
-                    return FilterChip(
-                      label: Text(entry.value),
-                      selected: selected,
-                      onSelected: (v) => setState(() {
-                        if (v) {
-                          _selectedDays.add(entry.key);
-                        } else {
-                          _selectedDays.remove(entry.key);
-                        }
-                      }),
-                    );
-                  }).toList(),
+              children: [
+                Text(
+                  isFirstStep
+                      ? context.l10n.visitsFrequentStep1
+                      : context.l10n.visitsFrequentStep2,
+                  style: context.gatesText.caption,
                 ),
+                const SizedBox(height: GatesSpacing.space16),
+                if (isFirstStep)
+                  FrequentDataStep(
+                    state: state,
+                    controller: controller,
+                    nameController: _nameController,
+                    phoneController: _phoneController,
+                    plateController: _plateController,
+                    onPickDocument: _pickDocument,
+                  )
+                else
+                  FrequentScheduleStep(
+                    state: state,
+                    controller: controller,
+                    notesController: _notesController,
+                  ),
               ],
-              const SizedBox(height: 12),
-              DropdownButtonFormField<ScheduleType>(
-                initialValue: _scheduleType,
-                decoration: const InputDecoration(labelText: 'Horario'),
-                items: const [
-                  DropdownMenuItem(value: ScheduleType.allDay, child: Text('Todo el día')),
-                  DropdownMenuItem(value: ScheduleType.custom, child: Text('Personalizado')),
-                ],
-                onChanged: (v) => setState(() => _scheduleType = v ?? ScheduleType.allDay),
-              ),
-              if (_scheduleType == ScheduleType.custom) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          final picked = await showTimePicker(context: context, initialTime: _scheduleStart);
-                          if (picked != null) setState(() => _scheduleStart = picked);
-                        },
-                        child: Text('Desde ${_scheduleStart.format(context)}'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          final picked = await showTimePicker(context: context, initialTime: _scheduleEnd);
-                          if (picked != null) setState(() => _scheduleEnd = picked);
-                        },
-                        child: Text('Hasta ${_scheduleEnd.format(context)}'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(labelText: 'Notas para la portería'),
-                maxLength: _notesMaxLength,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 8),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Autorizar visita'),
-              ),
-            ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.all(GatesSpacing.space24),
+          child: GatesButton(
+            label: isFirstStep
+                ? context.l10n.visitsContinue
+                : (isEditing
+                      ? context.l10n.visitsSaveChanges
+                      : context.l10n.visitsFrequentAuthorize),
+            loading: state.isSubmitting,
+            onPressed: state.isSubmitting
+                ? null
+                : (isFirstStep ? _continue : _submit),
           ),
         ),
       ),

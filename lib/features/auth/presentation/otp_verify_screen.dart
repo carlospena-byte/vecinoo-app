@@ -1,28 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
-import '../../../core/widgets/gates_text_field.dart';
+import '../../../core/widgets/keyboard_safe_column.dart';
+import '../../../core/widgets/otp_code_field.dart';
+import '../../../core/widgets/vecinoo_brand.dart';
+import '../../../core/error/failure_messages.dart';
 import 'auth_controller.dart';
+import 'otp_verify_controller.dart';
+import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
 
-enum OtpChannel { email, phone }
+export 'otp_verify_controller.dart'
+    show OtpChannel, OtpVerifyArgs, RegistrationContext;
 
-/// Passed as `extra` when pushing `/verify-otp` — which identifier the
-/// code was sent to, and whether it's an email or SMS code.
-class OtpVerifyArgs {
-  const OtpVerifyArgs({required this.identifier, required this.channel});
-
-  final String identifier;
-  final OtpChannel channel;
-}
-
-/// Verifies the 6-digit code Supabase Auth sent to an email or phone —
-/// the only way residents create or access their account now that
-/// there's no password. GoRouter's auth redirect takes over once the
-/// session is set.
+/// "02 / Verifica tu código" screen from Figma (file
+/// `Bla1GPfXA7JkuZcYpVi2DS`, node `13:8`): verifies the 6-digit code
+/// Supabase Auth sent to an email or phone — the only way residents
+/// create or access their account now that there's no password.
+/// GoRouter's auth redirect takes over once the session is set.
 class OtpVerifyScreen extends ConsumerStatefulWidget {
   const OtpVerifyScreen({super.key, required this.args});
 
@@ -33,144 +33,168 @@ class OtpVerifyScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
 
-  bool _isSubmitting = false;
-  bool _isResending = false;
-  String? _errorText;
+  StreamSubscription<OtpEvent>? _events;
+
+  OtpVerifyController get _controller =>
+      ref.read(otpVerifyControllerProvider(widget.args).notifier);
 
   bool get _isEmail => widget.args.channel == OtpChannel.email;
 
+  String _introText(BuildContext context) =>
+      _isEmail ? context.l10n.authOtpIntroEmail : context.l10n.authOtpIntroSms;
+
+  @override
+  void initState() {
+    super.initState();
+    _events = _controller.events.listen(_onEvent);
+  }
+
   @override
   void dispose() {
+    _events?.cancel();
     _codeController.dispose();
     super.dispose();
   }
 
-  Future<void> _verify() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() {
-      _isSubmitting = true;
-      _errorText = null;
-    });
-    try {
-      final authRepository = ref.read(authRepositoryProvider);
-      final token = _codeController.text.trim();
-      if (_isEmail) {
-        await authRepository.verifyEmailOtp(email: widget.args.identifier, token: token);
-      } else {
-        await authRepository.verifyPhoneOtp(phone: widget.args.identifier, token: token);
-      }
-      // GoRouter's auth redirect takes over once the session is set.
-    } catch (e) {
-      debugPrint('OTP verify failed: $e');
-      setState(() => _errorText = 'Código incorrecto o expirado.');
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+  void _onEvent(OtpEvent event) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (event) {
+      case ShowBiometricSetup():
+        context.push('/setup-biometrics');
+      case ResendSucceeded():
+        showGatesToast(
+          context,
+          type: GatesToastType.success,
+          title: l10n.authOtpResentTitle,
+          message: l10n.authOtpResentMessage,
+        );
+      case ResendFailed(:final failure):
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.authOtpResendFailedTitle,
+          message: withFailureDetail(
+            failure == null ? null : failureDetail(l10n, failure),
+            l10n.authOtpResendFailedMessage,
+          ),
+        );
     }
   }
 
-  Future<void> _resend() async {
-    setState(() => _isResending = true);
-    try {
-      final authRepository = ref.read(authRepositoryProvider);
-      if (_isEmail) {
-        await authRepository.sendEmailOtp(widget.args.identifier);
-      } else {
-        await authRepository.sendPhoneOtp(widget.args.identifier);
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Código reenviado')),
-        );
-      }
-    } catch (_) {
-      // Ignore — rate limiting is expected on rapid taps.
-    } finally {
-      if (mounted) setState(() => _isResending = false);
-    }
+  String? _errorText(OtpVerifyError? error) {
+    final l10n = context.l10n;
+    return switch (error) {
+      null => null,
+      OtpIncomplete() => l10n.authEnterDigits(6),
+      OtpInvalidCode() => l10n.authOtpWrongOrExpired,
+      OtpVerifyFailed(:final failure) => withFailureDetail(
+        failureDetail(l10n, failure),
+        l10n.authOtpWrongOrExpired,
+      ),
+    };
   }
+
+  void _verify() => _controller.verify(_codeController.text);
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(otpVerifyControllerProvider(widget.args));
+    final cooldownRemaining = state.cooldownRemaining;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          const _AmbientGlow(),
           SafeArea(
-            child: Padding(
+            child: KeyboardSafeColumn(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: GatesSpacing.space12),
-                        alignment: Alignment.centerLeft,
-                      ),
-                      onPressed: () => context.pop(),
-                      child: Text(
-                        'Volver',
-                        style: GatesTypography.label.copyWith(color: GatesColors.textBrand),
-                      ),
+              children: [
+                const VecinooWordmark(),
+                const VecinooMark(),
+                if (widget.args.registration != null) ...[
+                  Text(
+                    context.l10n.authInvitationValidated,
+                    style: context.gatesText.caption.copyWith(
+                      color: context.palette.textBrand,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _BrandBlock(),
-                  const SizedBox(height: 24),
-                  Text('Verifica tu código', style: GatesTypography.headingLarge),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Enviamos un código de 6 dígitos a ${widget.args.identifier}',
-                    style: GatesTypography.body.copyWith(color: GatesColors.textSecondary),
+                ],
+                Text(
+                  _isEmail
+                      ? context.l10n.authCheckEmail
+                      : context.l10n.authCheckPhone,
+                  style: GatesTypography.headingLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _introText(context),
+                  style: GatesTypography.body.copyWith(
+                    color: context.palette.textPrimary,
                   ),
-                  const SizedBox(height: 24),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        GatesTextField(
-                          label: 'Código de verificación',
-                          controller: _codeController,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-                          autofillHints: const [AutofillHints.oneTimeCode],
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(6),
-                          ],
-                          validator: (v) => (v == null || v.length != 6) ? 'Ingresa los 6 dígitos' : null,
-                        ),
-                        if (_errorText != null) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            _errorText!,
-                            style: GatesTypography.caption.copyWith(color: GatesColors.statusError),
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        GatesButton(
-                          label: 'Verificar',
-                          onPressed: _isSubmitting ? null : _verify,
-                          loading: _isSubmitting,
-                        ),
-                        Center(
-                          child: TextButton(
-                            onPressed: _isResending ? null : _resend,
-                            child: Text(
-                              _isResending ? 'Enviando...' : 'Reenviar código',
-                              style: GatesTypography.label.copyWith(color: GatesColors.textBrand),
-                            ),
-                          ),
-                        ),
-                      ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.args.identifier,
+                  style: GatesTypography.label.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: context.palette.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                OtpCodeField(
+                  controller: _codeController,
+                  label: context.l10n.authVerificationCode,
+                  errorText: _errorText(state.error),
+                  autofillHints: const [AutofillHints.oneTimeCode],
+                  onCompleted: (_) => _verify(),
+                ),
+                const SizedBox(height: 16),
+                GatesButton(
+                  label: context.l10n.authVerifyAndSignIn,
+                  onPressed: state.isSubmitting ? null : _verify,
+                  loading: state.isSubmitting,
+                ),
+                Center(
+                  child: TextButton(
+                    onPressed: (state.isResending || cooldownRemaining > 0)
+                        ? null
+                        : _controller.resend,
+                    child: Text(
+                      state.isResending
+                          ? context.l10n.authSending
+                          : cooldownRemaining > 0
+                          ? context.l10n.authResendIn(cooldownRemaining)
+                          : context.l10n.authResend,
+                      style: GatesTypography.label.copyWith(
+                        color: cooldownRemaining > 0
+                            ? context.palette.textSecondary
+                            : context.palette.textBrand,
+                        decoration: cooldownRemaining > 0
+                            ? TextDecoration.none
+                            : TextDecoration.underline,
+                        decorationColor: context.palette.textBrand,
+                      ),
                     ),
                   ),
+                ),
+                if (widget.args.registration != null) ...[
+                  const SizedBox(height: 20),
+                  _CommunityContext(registration: widget.args.registration!),
                 ],
+              ],
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 24, top: 10),
+                child: _BackButton(onTap: () => context.pop()),
               ),
             ),
           ),
@@ -180,49 +204,66 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   }
 }
 
-/// "gates" wordmark + small-caps subtitle, matching the block on the login
-/// screen.
-class _BrandBlock extends StatelessWidget {
-  const _BrandBlock();
+/// "Contexto / Residencial": which community, unit and resident the
+/// account being activated belongs to, at the foot of the screen.
+class _CommunityContext extends StatelessWidget {
+  const _CommunityContext({required this.registration});
+
+  final RegistrationContext registration;
 
   @override
   Widget build(BuildContext context) {
+    final name = registration.fullName;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('gates', style: GatesTypography.headingMedium.copyWith(color: GatesColors.textBrand)),
+        Text(
+          context.l10n.authCommunityAccess,
+          style: context.gatesText.caption,
+        ),
         const SizedBox(height: 4),
         Text(
-          'PARA RESIDENTES',
-          style: GatesTypography.caption.copyWith(letterSpacing: 0.6),
+          '${registration.unitName} · ${registration.residentialName}',
+          style: GatesTypography.label.copyWith(
+            fontWeight: FontWeight.w400,
+            color: context.palette.textPrimary,
+          ),
         ),
+        if (name != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            context.l10n.authResidentName(name),
+            style: context.gatesText.caption,
+          ),
+        ],
       ],
     );
   }
 }
 
-/// Subtle warm radial glow behind the auth screens' content, matching the
-/// Figma "Ambient / warm glow" decoration. Purely cosmetic.
-class _AmbientGlow extends StatelessWidget {
-  const _AmbientGlow();
+/// "Control / Volver": circular back button overlaid on the top-right
+/// corner of the OTP screen.
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: -80,
-      top: 60,
-      child: IgnorePointer(
-        child: Container(
-          width: 420,
-          height: 360,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                GatesColors.bgAccent.withValues(alpha: 0.55),
-                GatesColors.bgAccent.withValues(alpha: 0.0),
-              ],
-            ),
+    return Material(
+      color: context.palette.bgSurface,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(
+            Icons.arrow_back,
+            semanticLabel: context.l10n.commonBack,
+            size: 20,
+            color: context.palette.textPrimary,
           ),
         ),
       ),

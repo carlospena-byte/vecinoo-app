@@ -1,173 +1,537 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../session/presentation/session_controller.dart';
+import '../../../core/error/failure_messages.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/gates_button.dart';
+import '../../../core/widgets/gates_select_field.dart';
+import '../../../core/widgets/gates_sheet.dart';
+import '../../../core/widgets/gates_text_field.dart';
+import '../../../core/widgets/gates_toast.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/incident.dart';
+import '../../session/presentation/session_controller.dart';
+import 'incident_edit_args.dart';
+import 'incident_rich_editor.dart';
 import 'incidents_controller.dart';
+import 'photo_picker.dart';
+import 'report_incident_controller.dart';
+import 'report_incident_photos.dart';
 
+/// "15 · Incidencias / Crear reporte" — Figma nodes I01/I03 (form), I04
+/// (photo source sheet), I06 (photo upload error), I07 (sending) and I08
+/// (sent). One screen renders all of them from [ReportPhase]; the flow
+/// itself lives in [ReportIncidentController].
 class ReportIncidentScreen extends ConsumerStatefulWidget {
-  const ReportIncidentScreen({super.key});
+  const ReportIncidentScreen({super.key, this.editing});
+
+  /// When set, the form is prefilled from this incident and saving updates
+  /// it instead of creating a new one (Figma I14).
+  final IncidentEditArgs? editing;
 
   @override
-  ConsumerState<ReportIncidentScreen> createState() => _ReportIncidentScreenState();
+  ConsumerState<ReportIncidentScreen> createState() =>
+      _ReportIncidentScreenState();
 }
 
 class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _descriptionController = RichTextController();
+  StreamSubscription<ReportEvent>? _events;
 
-  String? _incidentTypeId;
-  IncidentPriority _priority = IncidentPriority.medium;
-  final List<File> _photos = [];
-  bool _isSubmitting = false;
+  bool get _isEditing => widget.editing != null;
+
+  ReportIncidentController get _controller =>
+      ref.read(reportIncidentControllerProvider(widget.editing).notifier);
+
+  @override
+  void initState() {
+    super.initState();
+    final editing = widget.editing;
+    if (editing != null) {
+      _titleController.text = editing.incident.title;
+      _descriptionController.loadHtml(editing.incident.description);
+    }
+    _controller.markLoadedDraft(
+      title: _titleController.text,
+      description: _descriptionController.text,
+    );
+    _events = _controller.events.listen(_onEvent);
+    _titleController.addListener(_syncDraft);
+    _descriptionController.addListener(_syncDraft);
+  }
 
   @override
   void dispose() {
+    _events?.cancel();
     _titleController.dispose();
     _descriptionController.dispose();
-    _locationController.dispose();
     super.dispose();
   }
 
-  Future<void> _addPhoto() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-    if (picked == null) return;
-    setState(() => _photos.add(File(picked.path)));
-  }
+  void _syncDraft() => _controller.updateDraft(
+    title: _titleController.text,
+    description: _descriptionController.text,
+  );
 
-  Future<void> _pickFromGallery() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-    if (picked == null) return;
-    setState(() => _photos.add(File(picked.path)));
-  }
+  /// Leaving with unsaved edits asks for confirmation (edit mode only).
+  bool _confirmsExit(ReportIncidentState s) =>
+      _isEditing && s.phase == ReportPhase.form && s.isDirty;
 
-  Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    final membership = ref.read(selectedMembershipProvider).value;
-    if (membership == null) return;
-
-    setState(() => _isSubmitting = true);
-    try {
-      await ref.read(incidentsRepositoryProvider).reportIncident(
-            residentialId: membership.residentialId,
-            unitId: membership.unitId,
-            title: _titleController.text.trim(),
-            description: _descriptionController.text.trim().isEmpty
-                ? null
-                : _descriptionController.text.trim(),
-            incidentTypeId: _incidentTypeId,
-            location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
-            priority: _priority,
-            photos: _photos,
-          );
-      ref.invalidate(incidentsListProvider(membership.residentialId));
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Incidencia reportada')),
-      );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo reportar. Intenta de nuevo.')),
+  void _onEvent(ReportEvent event) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (event) {
+      case PhotoLimitReached(:final added):
+        showGatesToast(
+          context,
+          type: GatesToastType.info,
+          title: l10n.incidentsReportMaxPhotos(maxIncidentPhotos),
+          message: l10n.incidentsReportAddedFirst(added),
         );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      case PhotosOpenFailed():
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.incidentsReportPhotosOpenFailed,
+          message: l10n.incidentsReportPhotosPermissions,
+        );
+      case SaveFailed(:final failure):
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.incidentsReportSaveFailed,
+          message: _withDetail(
+            failureDetail(l10n, failure),
+            l10n.incidentsReportSaveFailedBody,
+          ),
+        );
+      case SendFailed(:final failure):
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.incidentsReportSendFailed,
+          message: _withDetail(
+            failureDetail(l10n, failure),
+            l10n.incidentsReportSendFailedBody,
+          ),
+        );
+      case EditSaved():
+        context.pop();
+        showGatesToast(
+          context,
+          type: GatesToastType.success,
+          title: l10n.incidentsReportChangesSaved,
+        );
     }
   }
 
+  String _withDetail(String? detail, String fallback) =>
+      detail == null ? fallback : '$detail $fallback';
+
+  Future<void> _pickPhotos() async {
+    if (ref
+            .read(reportIncidentControllerProvider(widget.editing))
+            .photos
+            .length >=
+        maxIncidentPhotos) {
+      return;
+    }
+    final source = await _showPhotoSourceSheet();
+    if (source == null || !mounted) return;
+    await _controller.addPhotos(source);
+  }
+
+  Future<PhotoSource?> _showPhotoSourceSheet() {
+    return showModalBottomSheet<PhotoSource>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: context.palette.scrim,
+      builder: (sheetContext) => PhotoSourceSheet(
+        onPick: (source) => Navigator.of(sheetContext).pop(source),
+        onCancel: () => Navigator.of(sheetContext).pop(),
+      ),
+    );
+  }
+
+  Future<void> _submit() => _controller.submit(
+    title: _titleController.text,
+    descriptionHtml: _descriptionController.toHtml(),
+  );
+
+  Future<void> _confirmDiscard() async {
+    final discard = await showGatesSheet<bool>(
+      context,
+      (sheetContext) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space24)
+            .copyWith(bottom: GatesSpacing.space24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GatesSheetHeader(title: context.l10n.incidentsReportDiscardTitle),
+            const SizedBox(height: GatesSpacing.space8),
+            Text(
+              context.l10n.incidentsReportDiscardBody,
+              style: GatesTypography.body,
+            ),
+            const SizedBox(height: GatesSpacing.space24),
+            GatesButton(
+              label: context.l10n.incidentsReportDiscardAction,
+              style: GatesButtonStyle.destructive,
+              onPressed: () => Navigator.of(sheetContext).pop(true),
+            ),
+            const SizedBox(height: GatesSpacing.space8),
+            GatesButton(
+              label: context.l10n.incidentsReportKeepEditing,
+              style: GatesButtonStyle.secondary,
+              onPressed: () => Navigator.of(sheetContext).pop(false),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (discard == true && mounted) context.pop();
+  }
+
+  void _goHome() => context.go('/');
+
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(reportIncidentControllerProvider(widget.editing));
+    return PopScope(
+      canPop: s.phase != ReportPhase.sending && !_confirmsExit(s),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _confirmsExit(s)) _confirmDiscard();
+      },
+      child: switch (s.phase) {
+        ReportPhase.form => _buildForm(context, s),
+        ReportPhase.sending => _buildSending(context, s),
+        ReportPhase.photoError => _buildPhotoError(context, s),
+        ReportPhase.sent => _buildSent(context, s),
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------- form
+
+  Widget _buildForm(BuildContext context, ReportIncidentState s) {
     final membership = ref.watch(selectedMembershipProvider).value;
-    final incidentTypesAsync = membership == null
-        ? const AsyncValue<List<IncidentType>>.data([])
-        : ref.watch(incidentTypesProvider(membership.residentialId));
+    final types = membership == null
+        ? const <IncidentType>[]
+        : ref.watch(incidentTypesProvider(membership.residentialId)).value ??
+              const <IncidentType>[];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reportar incidencia')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: Text(
+          _isEditing
+              ? context.l10n.incidentsReportEditTitle
+              : context.l10n.incidentsReportAction,
+          style: _appBarTitle,
+        ),
+      ),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Título'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            GatesSpacing.space24,
+            0,
+            GatesSpacing.space24,
+            GatesSpacing.space24,
+          ),
+          children: [
+            Text(
+              context.l10n.incidentsReportIntro,
+              style: context.gatesText.labelSecondary,
+            ),
+            const SizedBox(height: GatesSpacing.space16),
+            GatesSelectField<String>(
+              label: context.l10n.incidentsReportCategoryLabel,
+              placeholder: context.l10n.incidentsReportCategoryPlaceholder,
+              value: s.incidentTypeId ?? '',
+              options: {for (final t in types) t.id: t.name},
+              onChanged: _controller.selectType,
+            ),
+            const SizedBox(height: GatesSpacing.space16),
+            GatesTextField(
+              controller: _titleController,
+              label: context.l10n.incidentsReportTitleLabel,
+              hintText: context.l10n.incidentsReportTitleHint,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: GatesSpacing.space16),
+            IncidentRichEditor(controller: _descriptionController),
+            const SizedBox(height: GatesSpacing.space16),
+            PhotosSection(
+              photos: s.photos,
+              onAdd: _pickPhotos,
+              onRemove: (photo) => _controller.removePhoto(photo.id),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _FixedAction(
+        child: ListenableBuilder(
+          listenable: _titleController,
+          builder: (context, _) => GatesButton(
+            label: _isEditing
+                ? context.l10n.incidentsReportSaveChanges
+                : context.l10n.incidentsReportAction,
+            onPressed: _titleController.text.trim().isEmpty ? null : _submit,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------- sending
+
+  Widget _buildSending(BuildContext context, ReportIncidentState s) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        title: Text(context.l10n.incidentsReportAction, style: _appBarTitle),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
+        children: [
+          Text(
+            _isEditing
+                ? context.l10n.incidentsReportSavingChanges
+                : context.l10n.incidentsReportSending,
+            style: GatesTypography.headingMedium,
+          ),
+          const SizedBox(height: GatesSpacing.space16),
+          Text(
+            context.l10n.incidentsReportWaitMessage,
+            style: context.gatesText.labelSecondary,
+          ),
+          const SizedBox(height: GatesSpacing.space16),
+          PhotosSection(photos: s.photos, showAdd: false),
+        ],
+      ),
+      bottomNavigationBar: _FixedAction(
+        child: GatesButton(
+          label: context.l10n.incidentsReportSendingButton,
+          onPressed: null,
+        ),
+      ),
+    );
+  }
+
+  // --------------------------------------------------------- photo error
+
+  Widget _buildPhotoError(BuildContext context, ReportIncidentState s) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        title: Text(context.l10n.incidentsDetailPhotos, style: _appBarTitle),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
+        children: [
+          if (s.hasPhotoErrors) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(GatesSpacing.space16),
+              decoration: BoxDecoration(
+                color: context.palette.statusErrorBg,
+                borderRadius: BorderRadius.circular(GatesRadius.radius16),
               ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _incidentTypeId,
-                decoration: const InputDecoration(labelText: 'Categoría'),
-                items: (incidentTypesAsync.value ?? [])
-                    .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
-                    .toList(),
-                onChanged: (v) => setState(() => _incidentTypeId = v),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<IncidentPriority>(
-                initialValue: _priority,
-                decoration: const InputDecoration(labelText: 'Prioridad'),
-                items: IncidentPriority.values
-                    .map((p) => DropdownMenuItem(value: p, child: Text(priorityLabel(p))))
-                    .toList(),
-                onChanged: (v) => setState(() => _priority = v ?? IncidentPriority.medium),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Ubicación (opcional)', hintText: 'Ej. Torre A, Piso 2'),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descripción'),
-                maxLines: 4,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final photo in _photos)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(photo, width: 72, height: 72, fit: BoxFit.cover),
+                  Text(
+                    context.l10n.incidentsReportPhotoErrorTitle,
+                    style: GatesTypography.label.copyWith(
+                      color: context.palette.statusError,
                     ),
-                  OutlinedButton.icon(
-                    onPressed: _addPhoto,
-                    icon: const Icon(Icons.photo_camera_outlined),
-                    label: const Text('Cámara'),
                   ),
-                  OutlinedButton.icon(
-                    onPressed: _pickFromGallery,
-                    icon: const Icon(Icons.photo_library_outlined),
-                    label: const Text('Galería'),
+                  const SizedBox(height: GatesSpacing.space8),
+                  Text(
+                    context.l10n.incidentsReportPhotoErrorBody,
+                    style: context.gatesText.labelSecondary.copyWith(
+                      color: context.palette.textPrimary,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Enviar reporte'),
-              ),
-            ],
+            ),
+            const SizedBox(height: GatesSpacing.space16),
+          ],
+          PhotosSection(
+            photos: s.photos,
+            onAdd: _pickPhotos,
+            onRemove: (photo) => _controller.removePhoto(photo.id),
+            onRetry: (_) => _controller.uploadPending(),
+            removableStatuses: const {PhotoStatus.error},
           ),
+          if (s.hasPhotoErrors) ...[
+            const SizedBox(height: GatesSpacing.space16),
+            GatesButton(
+              label: context.l10n.incidentsReportRetryPhoto,
+              style: GatesButtonStyle.secondary,
+              onPressed: _controller.uploadPending,
+            ),
+          ],
+        ],
+      ),
+      bottomNavigationBar: _FixedAction(
+        child: GatesButton(
+          label: context.l10n.incidentsReportDone,
+          onPressed: s.hasPhotoErrors ? null : _controller.finish,
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------- sent
+
+  Widget _buildSent(BuildContext context, ReportIncidentState s) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _goHome();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leading: BackButton(onPressed: _goHome),
+          title: Text(
+            context.l10n.incidentsReportSentTitle,
+            style: _appBarTitle,
+          ),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: context.palette.statusSuccessBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    size: 24,
+                    color: context.palette.textBrand,
+                  ),
+                ),
+                const SizedBox(width: GatesSpacing.space16),
+                Expanded(
+                  child: Text(
+                    context.l10n.incidentsReportSentHeadline,
+                    style: GatesTypography.headingMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: GatesSpacing.space16),
+            Text(
+              context.l10n.incidentsReportSentBody,
+              style: GatesTypography.body.copyWith(
+                color: context.palette.textSecondary,
+              ),
+            ),
+            const SizedBox(height: GatesSpacing.space16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: context.palette.bgSurface,
+                borderRadius: BorderRadius.circular(GatesRadius.radius16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s.sentTitle, style: GatesTypography.headingSmall),
+                  if (s.sentCategory != null) ...[
+                    const SizedBox(height: GatesSpacing.space12),
+                    Text(
+                      s.sentCategory!,
+                      style: context.gatesText.labelSecondary,
+                    ),
+                  ],
+                  const SizedBox(height: GatesSpacing.space12),
+                  Text(
+                    context.l10n.incidentsReportReceived,
+                    style: GatesTypography.label.copyWith(
+                      color: context.palette.statusSuccess,
+                    ),
+                  ),
+                  const SizedBox(height: GatesSpacing.space12),
+                  Row(
+                    children: [
+                      Text(
+                        context.l10n.incidentsDetailPhotos,
+                        style: context.gatesText.labelSecondary,
+                      ),
+                      const SizedBox(width: GatesSpacing.space12),
+                      Text(
+                        '${s.uploadedCount} / $maxIncidentPhotos',
+                        style: context.gatesText.labelSecondary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: _FixedAction(
+          child: GatesButton(
+            label: context.l10n.incidentsReportBackHome,
+            onPressed: _goHome,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// AppBar title in the Figma AppBar: Heading/Small (20 / semibold).
+final _appBarTitle = GatesTypography.headingSmall;
+
+/// Figma "Acción fija": white bar pinned above the system inset holding the
+/// primary button.
+class _FixedAction extends StatelessWidget {
+  const _FixedAction({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: context.palette.bgSurface,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: GatesSpacing.space24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            GatesSpacing.space24,
+            GatesSpacing.space12,
+            GatesSpacing.space24,
+            0,
+          ),
+          child: child,
         ),
       ),
     );

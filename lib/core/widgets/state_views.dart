@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
+
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key});
 
@@ -38,7 +41,7 @@ class ErrorView extends StatelessWidget {
               const SizedBox(height: 16),
               OutlinedButton(
                 onPressed: onRetry,
-                child: const Text('Reintentar'),
+                child: Text(context.l10n.commonRetry),
               ),
             ],
           ],
@@ -66,18 +69,13 @@ class EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 40,
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            Icon(icon, size: 40, color: context.palette.textSecondary),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.palette.textSecondary),
             ),
           ],
         ),

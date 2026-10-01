@@ -1,0 +1,4 @@
+tags:
+  # Needs the local Supabase stack (`supabase start` in gates-admin); each
+  # test skips itself when it is not reachable.
+  integration:

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../firebase_options.dart';
 
@@ -20,7 +22,9 @@ const _androidChannel = AndroidNotificationChannel(
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (!Firebase.apps.isNotEmpty) {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
   debugPrint('[push] background message: ${message.messageId}');
 }
@@ -39,11 +43,32 @@ class PushNotificationService {
   static final _localNotifications = FlutterLocalNotificationsPlugin();
 
   /// The current device's FCM token, once [initialize] has completed.
-  /// Send this to the backend so it knows where to deliver pushes for
-  /// this device (there is no `device_tokens` table yet — add one,
-  /// plus an edge function that calls the FCM HTTP v1 API, to actually
-  /// send notifications from the server).
+  /// Synced to the `device_tokens` table (see [syncTokenWithBackend]) so
+  /// the `send-push-notification` edge function knows where to deliver a
+  /// push for this device.
   static String? deviceToken;
+
+  /// Upserts [deviceToken] into `device_tokens` for the current session,
+  /// keyed by the token itself (a device re-registering, or its token
+  /// landing on a different logged-in user, both just update the row).
+  /// A no-op until both a token and a session exist — called after
+  /// [initialize] and on every auth state change, since those two can
+  /// resolve in either order.
+  static Future<void> syncTokenWithBackend(SupabaseClient client) async {
+    final token = deviceToken;
+    final userId = client.auth.currentUser?.id;
+    if (token == null || userId == null) return;
+
+    try {
+      await client.from('device_tokens').upsert({
+        'user_id': userId,
+        'token': token,
+        'platform': Platform.isIOS ? 'ios' : 'android',
+      }, onConflict: 'token');
+    } catch (error) {
+      debugPrint('[push] failed to sync token with backend: $error');
+    }
+  }
 
   static Future<void> initialize({
     void Function(RemoteMessage message)? onForegroundMessage,
@@ -58,7 +83,9 @@ class PushNotificationService {
     }
 
     try {
-      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       final settings = await _messaging.requestPermission();
@@ -77,7 +104,11 @@ class PushNotificationService {
 
       deviceToken = await _messaging.getToken();
       debugPrint('[push] device token: $deviceToken');
-      _messaging.onTokenRefresh.listen((token) => deviceToken = token);
+      unawaited(syncTokenWithBackend(Supabase.instance.client));
+      _messaging.onTokenRefresh.listen((token) {
+        deviceToken = token;
+        syncTokenWithBackend(Supabase.instance.client);
+      });
 
       await _initLocalNotifications();
 
@@ -106,7 +137,7 @@ class PushNotificationService {
 
   static Future<void> _initLocalNotifications() async {
     await _localNotifications.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         // Permissions were already requested above via _messaging.requestPermission();
         // asking again here would show a second, redundant system prompt.
@@ -118,7 +149,9 @@ class PushNotificationService {
       ),
     );
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_androidChannel);
   }
 
@@ -126,10 +159,10 @@ class PushNotificationService {
     final notification = message.notification;
     if (notification == null) return;
     _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      NotificationDetails(
+      id: notification.hashCode,
+      title: notification.title,
+      body: notification.body,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           _androidChannel.id,
           _androidChannel.name,
@@ -147,6 +180,8 @@ class PushNotificationService {
       if (await _messaging.getAPNSToken() != null) return;
       await Future.delayed(const Duration(milliseconds: 500));
     }
-    debugPrint('[push] APNS token never arrived after 5s; getToken() will likely fail');
+    debugPrint(
+      '[push] APNS token never arrived after 5s; getToken() will likely fail',
+    );
   }
 }
