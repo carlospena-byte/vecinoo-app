@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../theme/app_theme.dart';
 import 'gates_sheet.dart';
@@ -71,7 +72,7 @@ class GatesSelectField<T> extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.keyboard_arrow_down,
+                TablerIcons.chevronDown,
                 size: 20,
                 color: context.palette.textPrimary,
               ),
@@ -107,7 +108,7 @@ Future<T?> showGatesOptionSheet<T>(
               contentPadding: EdgeInsets.zero,
               title: Text(entry.value, style: GatesTypography.body),
               trailing: entry.key == selected
-                  ? Icon(Icons.check, color: context.palette.textBrand)
+                  ? Icon(TablerIcons.check, color: context.palette.textBrand)
                   : null,
               onTap: () => Navigator.of(sheetContext).pop(entry.key),
             ),

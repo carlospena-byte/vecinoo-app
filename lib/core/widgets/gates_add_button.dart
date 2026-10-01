@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../theme/app_theme.dart';
 
@@ -33,7 +34,7 @@ class GatesAddButton extends StatelessWidget {
             width: 44,
             height: 44,
             child: Icon(
-              Icons.add,
+              TablerIcons.plus,
               color: context.palette.textOnBrand,
               size: 24,
             ),

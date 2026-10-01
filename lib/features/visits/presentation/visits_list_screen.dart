@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -248,7 +249,7 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
                       message: hidden > 0 && !_showFrequent
                           ? '${_emptyMessage(context.l10n, _tab)}\n${context.l10n.visitsListHiddenFrequent(hidden)}'
                           : _emptyMessage(context.l10n, _tab),
-                      icon: Icons.person_add_alt_outlined,
+                      icon: TablerIcons.userPlus,
                     );
                   }
 
@@ -409,7 +410,7 @@ class _AccessChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            frequent ? Icons.repeat : Icons.calendar_today_outlined,
+            frequent ? TablerIcons.repeat : TablerIcons.calendar,
             size: 14,
             color: foreground,
           ),

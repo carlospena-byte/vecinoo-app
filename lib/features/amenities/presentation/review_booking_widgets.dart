@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -114,7 +115,7 @@ class ReviewAmenityThumbnail extends ConsumerWidget {
                 color: context.palette.bgSubtle,
                 alignment: Alignment.center,
                 child: Icon(
-                  Icons.deck_outlined,
+                  TablerIcons.buildingCommunity,
                   color: context.palette.textSecondary,
                 ),
               ),

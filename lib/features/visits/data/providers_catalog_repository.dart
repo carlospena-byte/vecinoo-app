@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/error/failure.dart';
 import '../domain/provider_catalog_item.dart';
 import '../domain/visit.dart';
 
@@ -13,7 +14,7 @@ class ProvidersCatalogRepository {
   Future<List<ProviderCatalogItem>> fetchCatalog({
     required String residentialId,
     required ProviderKind kind,
-  }) async {
+  }) => guardFailure(() async {
     final rows = await _client
         .from('providers')
         .select()
@@ -24,5 +25,5 @@ class ProvidersCatalogRepository {
     return (rows as List)
         .map((row) => ProviderCatalogItem.fromMap(row as Map<String, dynamic>))
         .toList();
-  }
+  });
 }

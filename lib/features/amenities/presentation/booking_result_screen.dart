@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -109,7 +110,7 @@ class _BookingResultScreenState extends ConsumerState<BookingResultScreen> {
                                   color: context.palette.bgSubtle,
                                   alignment: Alignment.center,
                                   child: Icon(
-                                    Icons.deck_outlined,
+                                    TablerIcons.buildingCommunity,
                                     color: context.palette.textSecondary,
                                   ),
                                 ),
@@ -221,7 +222,7 @@ class _StatusBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            confirmed ? Icons.check_circle_outline : Icons.info_outline,
+            confirmed ? TablerIcons.circleCheck : TablerIcons.infoCircle,
             size: 20,
             color: context.palette.textBrand,
           ),
@@ -252,7 +253,7 @@ class _StatusBanner extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(GatesSpacing.space4),
               child: Icon(
-                Icons.close,
+                TablerIcons.x,
                 size: 20,
                 color: context.palette.textSecondary,
               ),

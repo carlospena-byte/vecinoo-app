@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -109,6 +110,9 @@ class IncidentDetailScreen extends ConsumerWidget {
   /// (same as cancelling an invitation). The report stays in the history as
   /// "Cancelada".
   Future<void> _confirmCancel(BuildContext context, WidgetRef ref) async {
+    // Read before the sheet opens: the sheet keeps rebuilding while it
+    // animates out, by which time [context] may already be popped.
+    final l10n = context.l10n;
     final confirmed = await showGatesSheet<bool>(
       context,
       (sheetContext) => Padding(
@@ -118,17 +122,14 @@ class IncidentDetailScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GatesSheetHeader(title: context.l10n.incidentsCancelAction),
+            GatesSheetHeader(title: l10n.incidentsCancelAction),
             const SizedBox(height: GatesSpacing.space8),
-            Text(
-              context.l10n.incidentsCancelSheetBody,
-              style: GatesTypography.body,
-            ),
+            Text(l10n.incidentsCancelSheetBody, style: GatesTypography.body),
             const SizedBox(height: GatesSpacing.space24),
             SizedBox(
               width: double.infinity,
               child: GatesButton(
-                label: context.l10n.incidentsCancelConfirm,
+                label: l10n.incidentsCancelConfirm,
                 style: GatesButtonStyle.destructive,
                 onPressed: () => Navigator.of(sheetContext).pop(true),
               ),
@@ -317,7 +318,7 @@ class _AttachmentThumb extends StatelessWidget {
               height: 100,
               color: context.palette.bgSubtle,
               child: Icon(
-                Icons.broken_image_outlined,
+                TablerIcons.photoOff,
                 color: context.palette.textSecondary,
               ),
             ),

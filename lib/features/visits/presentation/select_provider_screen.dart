@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -85,7 +86,7 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                     child: IconButton(
                       tooltip: context.l10n.visitsBack,
                       padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.arrow_back, size: 24),
+                      icon: const Icon(TablerIcons.arrowLeft, size: 24),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),

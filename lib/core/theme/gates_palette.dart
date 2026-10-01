@@ -65,8 +65,6 @@ class GatesPalette extends ThemeExtension<GatesPalette> {
     required this.glowStrong,
     required this.glowSoft,
     required this.glowOpacity,
-    required this.navGlass,
-    required this.navGlassBorder,
     required this.bgOnBrandAction,
     required this.textOnBrandAction,
     required this.tonePending,
@@ -138,8 +136,6 @@ class GatesPalette extends ThemeExtension<GatesPalette> {
   final Color glowStrong;
   final Color glowSoft;
   final double glowOpacity;
-  final Color navGlass;
-  final Color navGlassBorder;
 
   /// Secondary action sitting on a [bgBrand] card (hero "Reservas" card).
   final Color bgOnBrandAction;
@@ -190,8 +186,6 @@ class GatesPalette extends ThemeExtension<GatesPalette> {
     glowStrong: Color(0xFFF8D68F),
     glowSoft: Color(0xFFF8E0A6),
     glowOpacity: 0.5,
-    navGlass: Color(0x9EFFFFFF),
-    navGlassBorder: Color(0xB3FFFFFF),
     bgOnBrandAction: Color(0xFFDDE8D6),
     textOnBrandAction: Color(0xFF344F40),
     tonePending: GatesTone(
@@ -259,8 +253,6 @@ class GatesPalette extends ThemeExtension<GatesPalette> {
     glowStrong: Color(0xFFF8D68F),
     glowSoft: Color(0xFFF8E0A6),
     glowOpacity: 0.1,
-    navGlass: Color(0xB31E2A22),
-    navGlassBorder: Color(0xFF3C4C3E),
     bgOnBrandAction: Color(0xFF344F40),
     textOnBrandAction: Color(0xFFF0F3E9),
     tonePending: GatesTone(
@@ -335,8 +327,6 @@ class GatesPalette extends ThemeExtension<GatesPalette> {
       glowStrong: c(glowStrong, other.glowStrong),
       glowSoft: c(glowSoft, other.glowSoft),
       glowOpacity: glowOpacity + (other.glowOpacity - glowOpacity) * t,
-      navGlass: c(navGlass, other.navGlass),
-      navGlassBorder: c(navGlassBorder, other.navGlassBorder),
       bgOnBrandAction: c(bgOnBrandAction, other.bgOnBrandAction),
       textOnBrandAction: c(textOnBrandAction, other.textOnBrandAction),
       tonePending: GatesTone.lerp(tonePending, other.tonePending, t),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../theme/app_theme.dart';
 import '../../l10n/l10n.dart';
@@ -36,7 +37,7 @@ class GatesSheetHeader extends StatelessWidget {
         Text(title, style: GatesTypography.headingSmall),
         IconButton(
           tooltip: context.l10n.commonClose,
-          icon: const Icon(Icons.close),
+          icon: const Icon(TablerIcons.x),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ],

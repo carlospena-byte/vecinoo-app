@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,7 +41,7 @@ class CreateVisitTypeScreen extends ConsumerWidget {
                     child: IconButton(
                       tooltip: context.l10n.visitsBack,
                       padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.arrow_back, size: 24),
+                      icon: const Icon(TablerIcons.arrowLeft, size: 24),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
@@ -65,21 +66,21 @@ class CreateVisitTypeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: GatesSpacing.space12),
               _ActionRow(
-                icon: Icons.person_outline,
+                icon: TablerIcons.user,
                 title: context.l10n.visitsNewTypeGuest,
                 subtitle: context.l10n.visitsNewTypeGuestSubtitle,
                 onTap: () => context.push('/visits/new/fastlane'),
               ),
               const SizedBox(height: GatesSpacing.space12),
               _ActionRow(
-                icon: Icons.inventory_2_outlined,
+                icon: TablerIcons.package,
                 title: context.l10n.visitsDeliveryOrProvider,
                 subtitle: context.l10n.visitsNewTypeDeliverySubtitle,
                 onTap: () => context.push('/visits/new/delivery'),
               ),
               const SizedBox(height: GatesSpacing.space12),
               _ActionRow(
-                icon: Icons.repeat,
+                icon: TablerIcons.repeat,
                 title: context.l10n.visitsFrequentAccess,
                 subtitle: context.l10n.visitsNewTypeFrequentSubtitle,
                 onTap: () => context.push('/visits/new/frequent'),
@@ -151,7 +152,7 @@ class _ActionRow extends StatelessWidget {
               ),
             ),
             Icon(
-              Icons.chevron_right,
+              TablerIcons.chevronRight,
               size: 16,
               color: context.palette.textSecondary,
             ),

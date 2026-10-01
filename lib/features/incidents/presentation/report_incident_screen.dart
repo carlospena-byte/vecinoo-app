@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -165,6 +166,9 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
   );
 
   Future<void> _confirmDiscard() async {
+    // Read before the sheet opens: it keeps rebuilding while it animates out,
+    // by which time [context] may already be popped.
+    final l10n = context.l10n;
     final discard = await showGatesSheet<bool>(
       context,
       (sheetContext) => Padding(
@@ -174,21 +178,18 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GatesSheetHeader(title: context.l10n.incidentsReportDiscardTitle),
+            GatesSheetHeader(title: l10n.incidentsReportDiscardTitle),
             const SizedBox(height: GatesSpacing.space8),
-            Text(
-              context.l10n.incidentsReportDiscardBody,
-              style: GatesTypography.body,
-            ),
+            Text(l10n.incidentsReportDiscardBody, style: GatesTypography.body),
             const SizedBox(height: GatesSpacing.space24),
             GatesButton(
-              label: context.l10n.incidentsReportDiscardAction,
+              label: l10n.incidentsReportDiscardAction,
               style: GatesButtonStyle.destructive,
               onPressed: () => Navigator.of(sheetContext).pop(true),
             ),
             const SizedBox(height: GatesSpacing.space8),
             GatesButton(
-              label: context.l10n.incidentsReportKeepEditing,
+              label: l10n.incidentsReportKeepEditing,
               style: GatesButtonStyle.secondary,
               onPressed: () => Navigator.of(sheetContext).pop(false),
             ),
@@ -430,7 +431,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.check,
+                    TablerIcons.check,
                     size: 24,
                     color: context.palette.textBrand,
                   ),

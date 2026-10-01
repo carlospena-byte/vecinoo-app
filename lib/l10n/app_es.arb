@@ -349,11 +349,103 @@
   "sessionSelectUnitTitle": "Selecciona tu unidad",
   "sessionSelectUnitBody": "Elige la unidad que quieres consultar.",
   "profileLoadFailed": "No se pudo cargar tu perfil.",
-  "profileChangeUnit": "Cambiar unidad",
+  "profileChangeUnit": "Cambiar de unidad activa",
   "profileAppearance": "Apariencia",
   "profileThemeLight": "Claro",
   "profileThemeDark": "Oscuro",
   "profileThemeSystem": "Sistema",
+  "profileEditName": "Editar nombre",
+  "profileFirstName": "Nombre",
+  "profileLastName": "Apellido",
+  "profileFieldRequired": "Campo obligatorio",
+  "profileSave": "Guardar",
+  "profileSaved": "Perfil actualizado",
+  "profileSaveFailed": "No se pudo guardar tu perfil.",
+  "profileChangePhoto": "Cambiar foto",
+  "profilePhotoCamera": "Tomar foto",
+  "profilePhotoGallery": "Elegir de la galería",
+  "profilePhotoUpdated": "Foto actualizada",
+  "profilePhotoFailed": "No se pudo subir tu foto.",
+  "profileSectionAccount": "Cuenta",
+  "profileSectionResidence": "Mi residencia",
+  "profileSectionSecurity": "Seguridad",
+  "profileUnitManagedNote": "Tu unidad la gestiona la administración. Si algo no es correcto, contáctala.",
+  "profileEmailLabel": "Correo",
+  "profileChangeEmail": "Cambiar correo",
+  "profileEmailChangeBody": "Te enviaremos un código al nuevo correo. Tu correo solo cambia cuando lo confirmes.",
+  "profileNewEmail": "Nuevo correo",
+  "profileEmailInvalid": "Escribe un correo válido",
+  "profileEmailSame": "Ese ya es tu correo actual",
+  "profileEmailSendCode": "Enviar código",
+  "profileEmailCodeSentTo": "Enviamos un código de 6 dígitos a {email}.",
+  "@profileEmailCodeSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileEmailCodeLabel": "Código de 6 dígitos",
+  "profileEmailConfirm": "Confirmar correo",
+  "profileEmailInvalidCode": "El código es incorrecto o ya venció.",
+  "profileEmailResend": "Reenviar código",
+  "profileEmailResendIn": "Reenviar en {seconds} s",
+  "@profileEmailResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "profileEmailUseOther": "Usar otro correo",
+  "profileEmailRateLimited": "Espera un momento antes de pedir otro código.",
+  "profileEmailChanged": "Correo actualizado",
+  "profileEmailChangeFailed": "No se pudo cambiar tu correo.",
+  "profileBiometricTitle": "Desbloqueo biométrico",
+  "profileBiometricDescription": "Usa tu rostro o huella para abrir la app.",
+  "profileBiometricReason": "Confirma tu identidad para activar el desbloqueo biométrico",
+  "profileBiometricUnavailable": "Este dispositivo no tiene biometría configurada.",
+  "profileBiometricCancelled": "No se activó el desbloqueo biométrico.",
+  "profileVersion": "Versión",
+  "profileVersionValue": "V {version}",
+  "@profileVersionValue": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeleteAccount": "Eliminar mi cuenta",
+  "profileDeleteTitle": "¿Eliminar tu cuenta?",
+  "profileDeleteBody": "Enviaremos la solicitud y, pasado un mes calendario, tu cuenta y todos tus datos se borrarán de forma permanente. Mientras tanto puedes cancelarla cuando quieras.",
+  "profileDeleteConfirm": "Solicitar eliminación",
+  "profileDeleteRequested": "Solicitud enviada",
+  "profileDeleteRequestedBody": "Tu cuenta se eliminará el {date}.",
+  "@profileDeleteRequestedBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeleteFailed": "No se pudo enviar la solicitud.",
+  "profileDeletePendingTitle": "Eliminación programada",
+  "profileDeletePendingBody": "Tu cuenta y tus datos se borrarán el {date}.",
+  "@profileDeletePendingBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeleteCancel": "Cancelar solicitud",
+  "profileDeleteCancelled": "Solicitud cancelada",
+  "profileDeleteCancelFailed": "No se pudo cancelar la solicitud.",
+  "profileLogoutConfirmTitle": "¿Cerrar sesión?",
+  "lockTitle": "Vecinoo está bloqueado",
+  "lockBody": "Desbloquea con tu rostro o huella para continuar.",
+  "lockUnlock": "Desbloquear",
+  "lockReason": "Desbloquea para entrar a la app",
   "homeNavHome": "Inicio",
   "homeIncidents": "Incidencias",
   "homeReservations": "Reservas",

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -39,7 +40,7 @@ class AmenitiesListScreen extends ConsumerWidget {
           if (amenities.isEmpty) {
             return EmptyView(
               message: context.l10n.amenitiesListEmpty,
-              icon: Icons.pool_outlined,
+              icon: TablerIcons.pool,
             );
           }
           return RefreshIndicator(
@@ -147,7 +148,7 @@ class _BookingStatusBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            requiresBooking ? Icons.calendar_today_outlined : Icons.check,
+            requiresBooking ? TablerIcons.calendar : TablerIcons.check,
             size: 16,
             color: foreground,
           ),

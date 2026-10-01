@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/l10n.dart';
@@ -100,7 +101,7 @@ class AddPhotosCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                Icons.photo_camera_outlined,
+                TablerIcons.camera,
                 size: 24,
                 color: context.palette.textPrimary,
               ),
@@ -192,7 +193,7 @@ class PhotoTile extends StatelessWidget {
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
-                                    Icons.close,
+                                    TablerIcons.x,
                                     size: 20,
                                     color: context.palette.textPrimary,
                                   ),
@@ -308,7 +309,7 @@ class PhotoSourceSheet extends StatelessWidget {
                       InkResponse(
                         onTap: onCancel,
                         child: Icon(
-                          Icons.close,
+                          TablerIcons.x,
                           size: 20,
                           color: context.palette.textSecondary,
                         ),

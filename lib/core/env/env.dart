@@ -16,13 +16,14 @@ class Env {
     // surface as a generic error with no hint it's a networking issue.
     // The iOS Simulator shares the host's loopback directly, so it needs
     // no remapping.
-    if (Platform.isAndroid) {
-      return url
-          .replaceFirst('127.0.0.1', '10.0.2.2')
-          .replaceFirst('localhost', '10.0.2.2');
-    }
-    return url;
+    return Platform.isAndroid ? androidEmulatorUrl(url) : url;
   }
+
+  /// Rewrites a loopback host to the Android emulator's alias for the
+  /// host machine (see [supabaseUrl]).
+  static String androidEmulatorUrl(String url) => url
+      .replaceFirst('127.0.0.1', '10.0.2.2')
+      .replaceFirst('localhost', '10.0.2.2');
 
   static String get supabasePublishableKey =>
       dotenv.get('SUPABASE_PUBLISHABLE_KEY');

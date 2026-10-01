@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -133,7 +134,7 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                   if (filtered.isEmpty) {
                     return EmptyView(
                       message: _emptyMessage(context.l10n, _tab),
-                      icon: Icons.report_gmailerrorred_outlined,
+                      icon: TablerIcons.flagExclamation,
                     );
                   }
                   return RefreshIndicator(

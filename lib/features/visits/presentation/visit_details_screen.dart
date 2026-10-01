@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/failure_messages.dart';
@@ -170,7 +171,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                     child: IconButton(
                       tooltip: l10n.visitsBack,
                       padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.arrow_back, size: 24),
+                      icon: const Icon(TablerIcons.arrowLeft, size: 24),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
@@ -201,7 +202,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                         (_nameController.text.trim().isEmpty
                             ? l10n.visitsCatalogOther
                             : _nameController.text.trim()),
-                    icon: Icons.expand_more,
+                    icon: TablerIcons.chevronDown,
                     iconColor: context.palette.textSecondary,
                     onTap: _changeProvider,
                   ),
@@ -209,7 +210,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                   GatesTapField(
                     label: l10n.visitsFastlaneVisitDate,
                     value: formatVisitDate(l10n, state.visitDate),
-                    icon: Icons.calendar_today_outlined,
+                    icon: TablerIcons.calendar,
                     helper: l10n.visitsDetailsDateHelper,
                     onTap: _pickDate,
                   ),
@@ -220,7 +221,7 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
                       value: state.arrivalTime == null
                           ? l10n.visitsDetailsPickTime
                           : formatClockText(state.arrivalTime!),
-                      icon: Icons.access_time,
+                      icon: TablerIcons.clock,
                       onTap: _pickArrivalTime,
                     ),
                   ],

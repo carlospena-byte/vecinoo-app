@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/failure.dart';
@@ -60,17 +61,17 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     if (profile.email != null)
                       ListTile(
-                        leading: const Icon(Icons.email_outlined),
+                        leading: const Icon(TablerIcons.mail),
                         title: Text(profile.email!),
                       ),
                     if (profile.phone != null)
                       ListTile(
-                        leading: const Icon(Icons.phone_outlined),
+                        leading: const Icon(TablerIcons.phone),
                         title: Text(profile.phone!),
                       ),
                     if (membership != null)
                       ListTile(
-                        leading: const Icon(Icons.apartment_outlined),
+                        leading: const Icon(TablerIcons.building),
                         title: Text(membership.unitName),
                         subtitle: Text(membership.residentialName),
                       ),
@@ -82,7 +83,7 @@ class ProfileScreen extends ConsumerWidget {
                 OutlinedButton.icon(
                   onPressed: () =>
                       ref.read(selectedMembershipProvider.notifier).clear(),
-                  icon: const Icon(Icons.swap_horiz),
+                  icon: const Icon(TablerIcons.arrowsHorizontal),
                   label: Text(context.l10n.profileChangeUnit),
                 ),
               ],
@@ -114,7 +115,7 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               FilledButton.tonalIcon(
                 onPressed: () => signOutReportingErrors(context, ref),
-                icon: const Icon(Icons.logout),
+                icon: const Icon(TablerIcons.logout),
                 label: Text(context.l10n.commonLogout),
               ),
             ],

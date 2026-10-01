@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -176,7 +177,7 @@ class _BackButton extends StatelessWidget {
           width: 40,
           height: 40,
           child: Icon(
-            Icons.arrow_back,
+            TablerIcons.arrowLeft,
             semanticLabel: context.l10n.commonBack,
             size: 20,
             color: context.palette.textPrimary,

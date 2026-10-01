@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../theme/app_theme.dart';
 import '../../l10n/l10n.dart';
@@ -27,7 +28,7 @@ class ErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.error_outline,
+              TablerIcons.alertCircle,
               color: Theme.of(context).colorScheme.error,
               size: 40,
             ),
@@ -55,7 +56,7 @@ class EmptyView extends StatelessWidget {
   const EmptyView({
     super.key,
     required this.message,
-    this.icon = Icons.inbox_outlined,
+    this.icon = TablerIcons.inbox,
   });
 
   final String message;

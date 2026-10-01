@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -127,7 +128,7 @@ class _CreateFrequentVisitScreenState
             GatesSheetHeader(title: context.l10n.visitsFrequentIdDocument),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.photo_camera_outlined),
+              leading: const Icon(TablerIcons.camera),
               title: Text(
                 context.l10n.visitsFrequentTakePhoto,
                 style: GatesTypography.body,
@@ -136,7 +137,7 @@ class _CreateFrequentVisitScreenState
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(TablerIcons.photo),
               title: Text(
                 context.l10n.visitsFrequentPickGallery,
                 style: GatesTypography.body,

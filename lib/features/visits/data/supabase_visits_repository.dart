@@ -152,8 +152,8 @@ class SupabaseVisitsRepository implements VisitsRepository {
         notes: notes,
       ),
       // Open-ended: active until the resident cancels it.
-      'valid_from': DateTime.now().toIso8601String(),
-      'valid_until': DateTime(2099, 12, 31).toIso8601String(),
+      'valid_from': DateTime.now().toUtc().toIso8601String(),
+      'valid_until': DateTime(2099, 12, 31).toUtc().toIso8601String(),
     });
   });
 
@@ -238,8 +238,8 @@ class SupabaseVisitsRepository implements VisitsRepository {
       'visit_type': 'delivery',
       'provider_kind': providerKind.name,
       'notes': notes,
-      'valid_from': dayStart.toIso8601String(),
-      'valid_until': dayEnd.toIso8601String(),
+      'valid_from': dayStart.toUtc().toIso8601String(),
+      'valid_until': dayEnd.toUtc().toIso8601String(),
     });
   });
 

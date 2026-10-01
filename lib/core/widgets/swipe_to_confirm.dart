@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../theme/app_theme.dart';
 import '../../l10n/l10n.dart';
@@ -195,7 +196,7 @@ class _SwipeToConfirmState extends State<SwipeToConfirm> {
                               ),
                             )
                           : Icon(
-                              Icons.chevron_right_rounded,
+                              TablerIcons.chevronRight,
                               color: context.palette.textOnBrand,
                             ),
                     ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -199,7 +200,7 @@ class _CreateFastlaneVisitScreenState
                 label: context.l10n.visitsFastlaneVisitDate,
                 value: formatVisitDate(context.l10n, state.visitDate),
                 helper: context.l10n.visitsFastlaneDateHelper,
-                icon: Icons.calendar_month_outlined,
+                icon: TablerIcons.calendarMonth,
                 onTap: _pickVisitDate,
               ),
               const SizedBox(height: GatesSpacing.space16),

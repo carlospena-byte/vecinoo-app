@@ -1303,7 +1303,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileChangeUnit.
   ///
   /// In es, this message translates to:
-  /// **'Cambiar unidad'**
+  /// **'Cambiar de unidad activa'**
   String get profileChangeUnit;
 
   /// No description provided for @profileAppearance.
@@ -1329,6 +1329,348 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sistema'**
   String get profileThemeSystem;
+
+  /// No description provided for @profileEditName.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar nombre'**
+  String get profileEditName;
+
+  /// No description provided for @profileFirstName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get profileFirstName;
+
+  /// No description provided for @profileLastName.
+  ///
+  /// In es, this message translates to:
+  /// **'Apellido'**
+  String get profileLastName;
+
+  /// No description provided for @profileFieldRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Campo obligatorio'**
+  String get profileFieldRequired;
+
+  /// No description provided for @profileSave.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get profileSave;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Perfil actualizado'**
+  String get profileSaved;
+
+  /// No description provided for @profileSaveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar tu perfil.'**
+  String get profileSaveFailed;
+
+  /// No description provided for @profileChangePhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar foto'**
+  String get profileChangePhoto;
+
+  /// No description provided for @profilePhotoCamera.
+  ///
+  /// In es, this message translates to:
+  /// **'Tomar foto'**
+  String get profilePhotoCamera;
+
+  /// No description provided for @profilePhotoGallery.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir de la galería'**
+  String get profilePhotoGallery;
+
+  /// No description provided for @profilePhotoUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto actualizada'**
+  String get profilePhotoUpdated;
+
+  /// No description provided for @profilePhotoFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo subir tu foto.'**
+  String get profilePhotoFailed;
+
+  /// No description provided for @profileSectionAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta'**
+  String get profileSectionAccount;
+
+  /// No description provided for @profileSectionResidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi residencia'**
+  String get profileSectionResidence;
+
+  /// No description provided for @profileSectionSecurity.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguridad'**
+  String get profileSectionSecurity;
+
+  /// No description provided for @profileUnitManagedNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu unidad la gestiona la administración. Si algo no es correcto, contáctala.'**
+  String get profileUnitManagedNote;
+
+  /// No description provided for @profileEmailLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo'**
+  String get profileEmailLabel;
+
+  /// No description provided for @profileChangeEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar correo'**
+  String get profileChangeEmail;
+
+  /// No description provided for @profileEmailChangeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Te enviaremos un código al nuevo correo. Tu correo solo cambia cuando lo confirmes.'**
+  String get profileEmailChangeBody;
+
+  /// No description provided for @profileNewEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo correo'**
+  String get profileNewEmail;
+
+  /// No description provided for @profileEmailInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe un correo válido'**
+  String get profileEmailInvalid;
+
+  /// No description provided for @profileEmailSame.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese ya es tu correo actual'**
+  String get profileEmailSame;
+
+  /// No description provided for @profileEmailSendCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar código'**
+  String get profileEmailSendCode;
+
+  /// No description provided for @profileEmailCodeSentTo.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviamos un código de 6 dígitos a {email}.'**
+  String profileEmailCodeSentTo(String email);
+
+  /// No description provided for @profileEmailCodeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Código de 6 dígitos'**
+  String get profileEmailCodeLabel;
+
+  /// No description provided for @profileEmailConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar correo'**
+  String get profileEmailConfirm;
+
+  /// No description provided for @profileEmailInvalidCode.
+  ///
+  /// In es, this message translates to:
+  /// **'El código es incorrecto o ya venció.'**
+  String get profileEmailInvalidCode;
+
+  /// No description provided for @profileEmailResend.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar código'**
+  String get profileEmailResend;
+
+  /// No description provided for @profileEmailResendIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar en {seconds} s'**
+  String profileEmailResendIn(String seconds);
+
+  /// No description provided for @profileEmailUseOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Usar otro correo'**
+  String get profileEmailUseOther;
+
+  /// No description provided for @profileEmailRateLimited.
+  ///
+  /// In es, this message translates to:
+  /// **'Espera un momento antes de pedir otro código.'**
+  String get profileEmailRateLimited;
+
+  /// No description provided for @profileEmailChanged.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo actualizado'**
+  String get profileEmailChanged;
+
+  /// No description provided for @profileEmailChangeFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar tu correo.'**
+  String get profileEmailChangeFailed;
+
+  /// No description provided for @profileBiometricTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloqueo biométrico'**
+  String get profileBiometricTitle;
+
+  /// No description provided for @profileBiometricDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Usa tu rostro o huella para abrir la app.'**
+  String get profileBiometricDescription;
+
+  /// No description provided for @profileBiometricReason.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirma tu identidad para activar el desbloqueo biométrico'**
+  String get profileBiometricReason;
+
+  /// No description provided for @profileBiometricUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Este dispositivo no tiene biometría configurada.'**
+  String get profileBiometricUnavailable;
+
+  /// No description provided for @profileBiometricCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'No se activó el desbloqueo biométrico.'**
+  String get profileBiometricCancelled;
+
+  /// No description provided for @profileVersion.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión'**
+  String get profileVersion;
+
+  /// No description provided for @profileVersionValue.
+  ///
+  /// In es, this message translates to:
+  /// **'V {version}'**
+  String profileVersionValue(String version);
+
+  /// No description provided for @profileDeleteAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar mi cuenta'**
+  String get profileDeleteAccount;
+
+  /// No description provided for @profileDeleteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar tu cuenta?'**
+  String get profileDeleteTitle;
+
+  /// No description provided for @profileDeleteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviaremos la solicitud y, pasado un mes calendario, tu cuenta y todos tus datos se borrarán de forma permanente. Mientras tanto puedes cancelarla cuando quieras.'**
+  String get profileDeleteBody;
+
+  /// No description provided for @profileDeleteConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitar eliminación'**
+  String get profileDeleteConfirm;
+
+  /// No description provided for @profileDeleteRequested.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud enviada'**
+  String get profileDeleteRequested;
+
+  /// No description provided for @profileDeleteRequestedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta se eliminará el {date}.'**
+  String profileDeleteRequestedBody(String date);
+
+  /// No description provided for @profileDeleteFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar la solicitud.'**
+  String get profileDeleteFailed;
+
+  /// No description provided for @profileDeletePendingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminación programada'**
+  String get profileDeletePendingTitle;
+
+  /// No description provided for @profileDeletePendingBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta y tus datos se borrarán el {date}.'**
+  String profileDeletePendingBody(String date);
+
+  /// No description provided for @profileDeleteCancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar solicitud'**
+  String get profileDeleteCancel;
+
+  /// No description provided for @profileDeleteCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud cancelada'**
+  String get profileDeleteCancelled;
+
+  /// No description provided for @profileDeleteCancelFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cancelar la solicitud.'**
+  String get profileDeleteCancelFailed;
+
+  /// No description provided for @profileLogoutConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cerrar sesión?'**
+  String get profileLogoutConfirmTitle;
+
+  /// No description provided for @lockTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Vecinoo está bloqueado'**
+  String get lockTitle;
+
+  /// No description provided for @lockBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquea con tu rostro o huella para continuar.'**
+  String get lockBody;
+
+  /// No description provided for @lockUnlock.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear'**
+  String get lockUnlock;
+
+  /// No description provided for @lockReason.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquea para entrar a la app'**
+  String get lockReason;
 
   /// No description provided for @homeNavHome.
   ///

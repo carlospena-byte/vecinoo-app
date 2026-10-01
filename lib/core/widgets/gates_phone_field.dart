@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
@@ -145,7 +146,7 @@ class GatesPhoneField extends StatelessWidget {
                               style: GatesTypography.label,
                             ),
                             const SizedBox(width: GatesSpacing.space8),
-                            const Icon(Icons.keyboard_arrow_down, size: 16),
+                            const Icon(TablerIcons.chevronDown, size: 16),
                           ],
                         ),
                       ),

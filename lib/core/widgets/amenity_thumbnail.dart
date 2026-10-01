@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../theme/app_theme.dart';
 
@@ -26,7 +27,7 @@ class AmenityThumbnail extends StatelessWidget {
           color: context.palette.bgSubtle,
           borderRadius: radius,
         ),
-        child: Icon(Icons.image_outlined, color: context.palette.textSecondary),
+        child: Icon(TablerIcons.photo, color: context.palette.textSecondary),
       );
     }
     return ClipRRect(
@@ -40,10 +41,7 @@ class AmenityThumbnail extends StatelessWidget {
           width: size,
           height: size,
           color: context.palette.bgSubtle,
-          child: Icon(
-            Icons.image_outlined,
-            color: context.palette.textSecondary,
-          ),
+          child: Icon(TablerIcons.photo, color: context.palette.textSecondary),
         ),
       ),
     );

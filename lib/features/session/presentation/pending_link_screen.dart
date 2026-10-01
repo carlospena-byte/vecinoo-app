@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -97,7 +98,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                 child: IconButton(
                   tooltip: context.l10n.commonLogout,
                   icon: Icon(
-                    Icons.logout,
+                    TablerIcons.logout,
                     color: context.palette.textSecondary,
                   ),
                   onPressed: () => signOutReportingErrors(context, ref),

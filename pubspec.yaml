@@ -35,7 +35,6 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^2.0.0
   firebase_core: ^4.15.0
   firebase_messaging: ^16.7.0
   flutter_local_notifications: ^22.3.1
@@ -51,7 +50,9 @@ dependencies:
   url_launcher: ^6.3.1
   share_plus: ^13.3.0
   flutter_svg: ^2.3.0
-
+  tabler_icons_plus: ^3.48.0
+  local_auth: ^3.0.2
+  package_info_plus: ^10.2.1
 dependency_overrides:
   # flutter_html 3.0.0 calls the old top-level `matches(Element, String)`
   # function from package:html's internal query_selector.dart. That function

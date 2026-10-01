@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -136,7 +137,7 @@ class ProviderSheetState extends ConsumerState<ProviderSheet> {
                           title: Text(item.name, style: GatesTypography.body),
                           trailing: item.id == widget.selectedId
                               ? Icon(
-                                  Icons.check,
+                                  TablerIcons.check,
                                   color: context.palette.textBrand,
                                 )
                               : null,
@@ -149,14 +150,16 @@ class ProviderSheetState extends ConsumerState<ProviderSheet> {
                         leading: const SizedBox(
                           width: 40,
                           height: 40,
-                          child: Icon(Icons.edit_outlined),
+                          child: Icon(TablerIcons.pencil),
                         ),
                         title: Text(
                           context.l10n.visitsCatalogOther,
                           style: GatesTypography.body,
                         ),
                         trailing: Icon(
-                          _otherOpen ? Icons.expand_less : Icons.expand_more,
+                          _otherOpen
+                              ? TablerIcons.chevronUp
+                              : TablerIcons.chevronDown,
                           color: context.palette.textSecondary,
                         ),
                         onTap: () => setState(() => _otherOpen = !_otherOpen),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -58,6 +59,13 @@ class _AmenityDetailContentState extends ConsumerState<_AmenityDetailContent> {
   @override
   void initState() {
     super.initState();
+    // Keep the controller alive for as long as the screen is: without photos
+    // nothing else watches it, so it would auto-dispose (closing `events`)
+    // and the date picker's selection would never reach the review step.
+    ref.listenManual(
+      amenityDetailControllerProvider(details.amenity.id),
+      (_, _) {},
+    );
     _events = ref
         .read(amenityDetailControllerProvider(details.amenity.id).notifier)
         .events
@@ -99,7 +107,7 @@ class _AmenityDetailContentState extends ConsumerState<_AmenityDetailContent> {
                   child: IconButton(
                     tooltip: context.l10n.amenitiesBack,
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.arrow_back, size: 20),
+                    icon: const Icon(TablerIcons.arrowLeft, size: 20),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -198,8 +206,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
     final urlsAsync = ref.watch(amenityGalleryUrlsProvider(widget.amenityId));
     return urlsAsync.when(
       loading: () => const SizedBox(height: 260, child: LoadingView()),
-      error: (e, _) =>
-          const _GalleryPlaceholder(icon: Icons.broken_image_outlined),
+      error: (e, _) => const _GalleryPlaceholder(icon: TablerIcons.photoOff),
       data: (photoUrls) {
         if (photoUrls.isEmpty) return const _GalleryPlaceholder();
 
@@ -283,7 +290,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
 }
 
 class _GalleryPlaceholder extends StatelessWidget {
-  const _GalleryPlaceholder({this.icon = Icons.deck_outlined});
+  const _GalleryPlaceholder({this.icon = TablerIcons.buildingCommunity});
 
   final IconData icon;
 

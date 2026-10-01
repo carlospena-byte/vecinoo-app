@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -75,12 +76,12 @@ class GatesCalendar extends StatelessWidget {
           titleTextStyle: GatesTypography.label,
           titleTextFormatter: (date, locale) => _monthTitle(date),
           leftChevronIcon: Icon(
-            Icons.chevron_left,
+            TablerIcons.chevronLeft,
             size: 20,
             color: context.palette.textPrimary,
           ),
           rightChevronIcon: Icon(
-            Icons.chevron_right,
+            TablerIcons.chevronRight,
             size: 20,
             color: context.palette.textPrimary,
           ),
@@ -212,7 +213,7 @@ class _GatesDatePickerSheetState extends State<_GatesDatePickerSheet> {
                   Text(widget.title, style: GatesTypography.headingMedium),
                   IconButton(
                     tooltip: context.l10n.commonClose,
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(TablerIcons.x),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],

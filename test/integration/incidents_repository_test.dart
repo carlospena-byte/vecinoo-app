@@ -4,6 +4,7 @@ library;
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gates_app/core/error/failure.dart';
 import 'package:gates_app/features/incidents/data/supabase_incidents_repository.dart';
 import 'package:gates_app/features/incidents/domain/incident.dart';
 
@@ -74,6 +75,50 @@ void main() {
 
       await repository.deleteAttachment(attachments.single);
       expect(await repository.fetchAttachments(id), isEmpty);
+    },
+    skip: localSupabaseSkipReason,
+    tags: 'integration',
+  );
+
+  test(
+    'incident types are the active ones of the residential, by name',
+    () async {
+      final types = await repository.fetchIncidentTypes(resident.residentialId);
+
+      expect(types, isNotEmpty);
+      final names = types.map((t) => t.name).toList();
+      expect(names, [...names]..sort());
+    },
+    skip: localSupabaseSkipReason,
+    tags: 'integration',
+  );
+
+  test(
+    'unknown incidents and an unsigned client surface typed failures',
+    () async {
+      await expectLater(
+        repository.fetchIncident('00000000-0000-0000-0000-000000000000'),
+        throwsA(isA<Failure>()),
+      );
+
+      final anon = SupabaseIncidentsRepository(newAnonClient());
+      await expectLater(
+        anon.createIncident(
+          residentialId: resident.residentialId,
+          unitId: resident.unitId,
+          title: 'Test: sin sesión',
+        ),
+        throwsA(isA<AuthFailure>()),
+      );
+      await expectLater(
+        anon.uploadPhoto(
+          residentialId: resident.residentialId,
+          incidentId: 'x',
+          bytes: Uint8List(1),
+          extension: 'png',
+        ),
+        throwsA(isA<AuthFailure>()),
+      );
     },
     skip: localSupabaseSkipReason,
     tags: 'integration',

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -141,7 +142,7 @@ class _BookingDateTimeSheetState extends ConsumerState<BookingDateTimeSheet> {
                   ),
                   IconButton(
                     tooltip: context.l10n.amenitiesClose,
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(TablerIcons.x),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -322,7 +323,7 @@ class _TimeField extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.access_time, color: context.palette.textBrand, size: 20),
+            Icon(TablerIcons.clock, color: context.palette.textBrand, size: 20),
           ],
         ),
       ),

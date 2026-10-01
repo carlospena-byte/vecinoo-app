@@ -694,7 +694,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileLoadFailed => 'No se pudo cargar tu perfil.';
 
   @override
-  String get profileChangeUnit => 'Cambiar unidad';
+  String get profileChangeUnit => 'Cambiar de unidad activa';
 
   @override
   String get profileAppearance => 'Apariencia';
@@ -707,6 +707,195 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profileThemeSystem => 'Sistema';
+
+  @override
+  String get profileEditName => 'Editar nombre';
+
+  @override
+  String get profileFirstName => 'Nombre';
+
+  @override
+  String get profileLastName => 'Apellido';
+
+  @override
+  String get profileFieldRequired => 'Campo obligatorio';
+
+  @override
+  String get profileSave => 'Guardar';
+
+  @override
+  String get profileSaved => 'Perfil actualizado';
+
+  @override
+  String get profileSaveFailed => 'No se pudo guardar tu perfil.';
+
+  @override
+  String get profileChangePhoto => 'Cambiar foto';
+
+  @override
+  String get profilePhotoCamera => 'Tomar foto';
+
+  @override
+  String get profilePhotoGallery => 'Elegir de la galería';
+
+  @override
+  String get profilePhotoUpdated => 'Foto actualizada';
+
+  @override
+  String get profilePhotoFailed => 'No se pudo subir tu foto.';
+
+  @override
+  String get profileSectionAccount => 'Cuenta';
+
+  @override
+  String get profileSectionResidence => 'Mi residencia';
+
+  @override
+  String get profileSectionSecurity => 'Seguridad';
+
+  @override
+  String get profileUnitManagedNote =>
+      'Tu unidad la gestiona la administración. Si algo no es correcto, contáctala.';
+
+  @override
+  String get profileEmailLabel => 'Correo';
+
+  @override
+  String get profileChangeEmail => 'Cambiar correo';
+
+  @override
+  String get profileEmailChangeBody =>
+      'Te enviaremos un código al nuevo correo. Tu correo solo cambia cuando lo confirmes.';
+
+  @override
+  String get profileNewEmail => 'Nuevo correo';
+
+  @override
+  String get profileEmailInvalid => 'Escribe un correo válido';
+
+  @override
+  String get profileEmailSame => 'Ese ya es tu correo actual';
+
+  @override
+  String get profileEmailSendCode => 'Enviar código';
+
+  @override
+  String profileEmailCodeSentTo(String email) {
+    return 'Enviamos un código de 6 dígitos a $email.';
+  }
+
+  @override
+  String get profileEmailCodeLabel => 'Código de 6 dígitos';
+
+  @override
+  String get profileEmailConfirm => 'Confirmar correo';
+
+  @override
+  String get profileEmailInvalidCode => 'El código es incorrecto o ya venció.';
+
+  @override
+  String get profileEmailResend => 'Reenviar código';
+
+  @override
+  String profileEmailResendIn(String seconds) {
+    return 'Reenviar en $seconds s';
+  }
+
+  @override
+  String get profileEmailUseOther => 'Usar otro correo';
+
+  @override
+  String get profileEmailRateLimited =>
+      'Espera un momento antes de pedir otro código.';
+
+  @override
+  String get profileEmailChanged => 'Correo actualizado';
+
+  @override
+  String get profileEmailChangeFailed => 'No se pudo cambiar tu correo.';
+
+  @override
+  String get profileBiometricTitle => 'Desbloqueo biométrico';
+
+  @override
+  String get profileBiometricDescription =>
+      'Usa tu rostro o huella para abrir la app.';
+
+  @override
+  String get profileBiometricReason =>
+      'Confirma tu identidad para activar el desbloqueo biométrico';
+
+  @override
+  String get profileBiometricUnavailable =>
+      'Este dispositivo no tiene biometría configurada.';
+
+  @override
+  String get profileBiometricCancelled =>
+      'No se activó el desbloqueo biométrico.';
+
+  @override
+  String get profileVersion => 'Versión';
+
+  @override
+  String profileVersionValue(String version) {
+    return 'V $version';
+  }
+
+  @override
+  String get profileDeleteAccount => 'Eliminar mi cuenta';
+
+  @override
+  String get profileDeleteTitle => '¿Eliminar tu cuenta?';
+
+  @override
+  String get profileDeleteBody =>
+      'Enviaremos la solicitud y, pasado un mes calendario, tu cuenta y todos tus datos se borrarán de forma permanente. Mientras tanto puedes cancelarla cuando quieras.';
+
+  @override
+  String get profileDeleteConfirm => 'Solicitar eliminación';
+
+  @override
+  String get profileDeleteRequested => 'Solicitud enviada';
+
+  @override
+  String profileDeleteRequestedBody(String date) {
+    return 'Tu cuenta se eliminará el $date.';
+  }
+
+  @override
+  String get profileDeleteFailed => 'No se pudo enviar la solicitud.';
+
+  @override
+  String get profileDeletePendingTitle => 'Eliminación programada';
+
+  @override
+  String profileDeletePendingBody(String date) {
+    return 'Tu cuenta y tus datos se borrarán el $date.';
+  }
+
+  @override
+  String get profileDeleteCancel => 'Cancelar solicitud';
+
+  @override
+  String get profileDeleteCancelled => 'Solicitud cancelada';
+
+  @override
+  String get profileDeleteCancelFailed => 'No se pudo cancelar la solicitud.';
+
+  @override
+  String get profileLogoutConfirmTitle => '¿Cerrar sesión?';
+
+  @override
+  String get lockTitle => 'Vecinoo está bloqueado';
+
+  @override
+  String get lockBody => 'Desbloquea con tu rostro o huella para continuar.';
+
+  @override
+  String get lockUnlock => 'Desbloquear';
+
+  @override
+  String get lockReason => 'Desbloquea para entrar a la app';
 
   @override
   String get homeNavHome => 'Inicio';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -118,7 +119,7 @@ class BookingsListScreen extends ConsumerWidget {
                     return EmptyView(
                       key: const ValueKey('body-empty'),
                       message: _emptyMessage(context, tab),
-                      icon: Icons.event_busy_outlined,
+                      icon: TablerIcons.calendarOff,
                     );
                   }
                   return RefreshIndicator(

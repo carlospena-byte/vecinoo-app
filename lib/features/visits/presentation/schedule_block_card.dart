@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_time_picker.dart';
@@ -78,7 +79,7 @@ class ScheduleBlockCard extends StatelessWidget {
                       width: 44,
                       height: 32,
                       child: Icon(
-                        Icons.close,
+                        TablerIcons.x,
                         size: 20,
                         color: context.palette.textSecondary,
                         semanticLabel: context.l10n.visitsScheduleBlockRemove,
@@ -244,7 +245,11 @@ class _TimeField extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.schedule, size: 20, color: context.palette.textBrand),
+              Icon(
+                TablerIcons.clock,
+                size: 20,
+                color: context.palette.textBrand,
+              ),
             ],
           ),
         ),

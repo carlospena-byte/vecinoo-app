@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -28,7 +29,7 @@ class UnitSelectorScreen extends ConsumerWidget {
                 child: IconButton(
                   tooltip: context.l10n.commonLogout,
                   icon: Icon(
-                    Icons.logout,
+                    TablerIcons.logout,
                     color: context.palette.textSecondary,
                   ),
                   onPressed: () => signOutReportingErrors(context, ref),
@@ -128,7 +129,7 @@ class _UnitTile extends StatelessWidget {
                 ),
                 const SizedBox(width: GatesSpacing.space8),
                 Icon(
-                  Icons.arrow_forward,
+                  TablerIcons.arrowRight,
                   size: 16,
                   color: context.palette.textBrand,
                 ),

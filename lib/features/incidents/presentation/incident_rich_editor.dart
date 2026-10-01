@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_sheet.dart';
@@ -399,7 +400,7 @@ class IncidentRichEditor extends StatelessWidget {
                   onTap: controller.toggleBullet,
                   semanticLabel: context.l10n.incidentsEditorList,
                   child: Icon(
-                    Icons.format_list_bulleted,
+                    TablerIcons.list,
                     size: 20,
                     color: context.palette.textPrimary,
                   ),
@@ -410,7 +411,7 @@ class IncidentRichEditor extends StatelessWidget {
                   onTap: () => _addLink(context),
                   semanticLabel: context.l10n.incidentsEditorLink,
                   child: Icon(
-                    Icons.link,
+                    TablerIcons.link,
                     size: 20,
                     color: context.palette.textPrimary,
                   ),

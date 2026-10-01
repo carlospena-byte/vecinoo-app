@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -181,7 +182,7 @@ class _BookingDetailSheetBodyState
                   child: IconButton(
                     tooltip: context.l10n.amenitiesClose,
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.close, size: 20),
+                    icon: const Icon(TablerIcons.x, size: 20),
                     onPressed: cancelling
                         ? null
                         : () => Navigator.of(context).pop(),

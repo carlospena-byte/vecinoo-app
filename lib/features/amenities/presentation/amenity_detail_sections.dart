@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
 
@@ -162,7 +163,7 @@ class _AllServicesSheet extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: context.l10n.amenitiesClose,
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(TablerIcons.x),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
