@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,10 +9,10 @@ import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_text_field.dart';
 import '../../../core/widgets/keyboard_safe_column.dart';
 import '../../../core/widgets/vecinoo_brand.dart';
-import '../../session/data/session_repository.dart';
-import '../../session/presentation/session_controller.dart';
+import '../../../core/error/failure_messages.dart';
 import 'auth_controller.dart';
-import 'otp_verify_screen.dart';
+import 'login_controller.dart';
+import 'otp_verify_controller.dart';
 import '../../../l10n/l10n.dart';
 
 /// "01 · Acceso administrado" screen from Figma (file
@@ -27,61 +29,63 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
 
-  bool _isSubmitting = false;
-  String? _errorText;
+  StreamSubscription<LoginEvent>? _events;
+
+  @override
+  void initState() {
+    super.initState();
+    _events = ref
+        .read(loginControllerProvider.notifier)
+        .events
+        .listen(_onEvent);
+  }
 
   @override
   void dispose() {
+    _events?.cancel();
     _emailController.dispose();
     super.dispose();
   }
 
-  Future<void> _submitEmail() async {
+  void _onEvent(LoginEvent event) {
+    if (!mounted) return;
+    switch (event) {
+      case LoginCodeSent(:final email):
+        context.push(
+          '/verify-otp',
+          extra: OtpVerifyArgs(identifier: email, channel: OtpChannel.email),
+        );
+    }
+  }
+
+  void _submitEmail() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() {
-      _isSubmitting = true;
-      _errorText = null;
-    });
-    final email = _emailController.text.trim();
-    try {
-      final status = await ref
-          .read(sessionRepositoryProvider)
-          .checkEmailLoginStatus(email);
-      if (status == EmailLoginStatus.invited) {
-        // An admin already invited this email but it hasn't been linked to
-        // a unit yet — sending a sign-in code here would just create a
-        // disconnected account instead of the "Valida tu código" flow that
-        // actually activates it.
-        setState(() => _errorText = context.l10n.authInvitationPending);
-        return;
-      }
-      if (status == EmailLoginStatus.unknown) {
-        // No auth account/profile matches this email, or it exists but no
-        // admin has invited it yet — sending an OTP here would silently
-        // create a disconnected account instead of surfacing the real
-        // problem.
-        setState(() => _errorText = context.l10n.authEmailUnknown);
-        return;
-      }
-      await ref.read(authRepositoryProvider).sendEmailOtp(email);
-      if (!mounted) return;
-      context.push(
-        '/verify-otp',
-        extra: OtpVerifyArgs(identifier: email, channel: OtpChannel.email),
-      );
-    } catch (e) {
+    ref
+        .read(loginControllerProvider.notifier)
+        .submit(_emailController.text.trim());
+  }
+
+  String? _errorText(LoginError? error) {
+    final l10n = context.l10n;
+    return switch (error) {
+      null => null,
+      InvitationPending() => l10n.authInvitationPending,
+      EmailUnknown() => l10n.authEmailUnknown,
       // Anything here is usually a connectivity problem (e.g. the Android
       // emulator can't reach the configured SUPABASE_URL) rather than a bad
-      // identifier — keep the real exception in the console.
-      debugPrint('Send OTP failed: $e');
-      setState(() => _errorText = context.l10n.authSendCodeFailed);
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+      // identifier.
+      SendCodeFailed(:final failure) => withFailureDetail(
+        failure == null ? null : failureDetail(l10n, failure),
+        l10n.authSendCodeFailed,
+      ),
+    };
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(loginControllerProvider);
+    final errorText = _errorText(state.error);
+    final isSubmitting = state.isSubmitting;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -120,10 +124,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? context.l10n.authEmailInvalid
                             : null,
                       ),
-                      if (_errorText != null) ...[
+                      if (errorText != null) ...[
                         const SizedBox(height: 12),
                         Text(
-                          _errorText!,
+                          errorText,
                           style: context.gatesText.caption.copyWith(
                             color: context.palette.statusError,
                           ),
@@ -132,15 +136,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 24),
                       GatesButton(
                         label: context.l10n.commonContinue,
-                        onPressed: _isSubmitting ? null : _submitEmail,
-                        loading: _isSubmitting,
+                        onPressed: isSubmitting ? null : _submitEmail,
+                        loading: isSubmitting,
                       ),
                     ],
                   ),
                 ),
                 Center(
                   child: TextButton(
-                    onPressed: _isSubmitting
+                    onPressed: isSubmitting
                         ? null
                         : () => context.push('/register'),
                     child: Text(

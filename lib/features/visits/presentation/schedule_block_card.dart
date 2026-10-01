@@ -6,22 +6,6 @@ import '../../../l10n/l10n.dart';
 import 'frequent_visit_formatters.dart';
 import '../domain/visit.dart';
 
-/// Mutable state of one "Bloque de horario" while the form is being filled.
-class ScheduleBlockDraft {
-  ScheduleBlockDraft({
-    Set<String>? days,
-    this.start = const TimeOfDay(hour: 8, minute: 0),
-    this.end = const TimeOfDay(hour: 22, minute: 0),
-  }) : days = days ?? {};
-
-  final Set<String> days;
-  TimeOfDay start;
-  TimeOfDay end;
-
-  ScheduleBlock toBlock() =>
-      ScheduleBlock(days: {...days}, start: start, end: end);
-}
-
 String _dayInitial(AppLocalizations l10n, String day) => switch (day) {
   'mon' => l10n.visitsWeekdayInitialMon,
   'tue' => l10n.visitsWeekdayInitialTue,
@@ -39,16 +23,20 @@ class ScheduleBlockCard extends StatelessWidget {
   const ScheduleBlockCard({
     super.key,
     required this.index,
-    required this.draft,
+    required this.block,
     required this.takenDays,
-    required this.onChanged,
+    required this.onToggleDay,
+    required this.onStartChanged,
+    required this.onEndChanged,
     this.onRemove,
   });
 
   final int index;
-  final ScheduleBlockDraft draft;
+  final ScheduleBlock block;
   final Set<String> takenDays;
-  final VoidCallback onChanged;
+  final ValueChanged<String> onToggleDay;
+  final ValueChanged<TimeOfDay> onStartChanged;
+  final ValueChanged<TimeOfDay> onEndChanged;
 
   /// Null when this is the only block (it can't be removed).
   final VoidCallback? onRemove;
@@ -56,15 +44,10 @@ class ScheduleBlockCard extends StatelessWidget {
   Future<void> _pickTime(BuildContext context, {required bool isStart}) async {
     final picked = await showGatesTimePicker(
       context,
-      initialTime: isStart ? draft.start : draft.end,
+      initialTime: isStart ? block.start : block.end,
     );
     if (picked == null) return;
-    if (isStart) {
-      draft.start = picked;
-    } else {
-      draft.end = picked;
-    }
-    onChanged();
+    (isStart ? onStartChanged : onEndChanged)(picked);
   }
 
   @override
@@ -113,12 +96,9 @@ class ScheduleBlockCard extends StatelessWidget {
                 _DayPill(
                   label: _dayInitial(context.l10n, day),
                   semanticLabel: weekdayShortLabel(context.l10n, day),
-                  selected: draft.days.contains(day),
+                  selected: block.days.contains(day),
                   enabled: !takenDays.contains(day),
-                  onTap: () {
-                    if (!draft.days.remove(day)) draft.days.add(day);
-                    onChanged();
-                  },
+                  onTap: () => onToggleDay(day),
                 ),
             ],
           ),
@@ -128,7 +108,7 @@ class ScheduleBlockCard extends StatelessWidget {
               Expanded(
                 child: _TimeField(
                   label: context.l10n.visitsScheduleFrom,
-                  value: formatClockField(draft.start),
+                  value: formatClockField(block.start),
                   onTap: () => _pickTime(context, isStart: true),
                 ),
               ),
@@ -136,7 +116,7 @@ class ScheduleBlockCard extends StatelessWidget {
               Expanded(
                 child: _TimeField(
                   label: context.l10n.visitsScheduleTo,
-                  value: formatClockField(draft.end),
+                  value: formatClockField(block.end),
                   onTap: () => _pickTime(context, isStart: false),
                 ),
               ),

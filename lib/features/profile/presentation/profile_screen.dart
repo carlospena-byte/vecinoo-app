@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/error/failure.dart';
+import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_mode_controller.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
@@ -24,7 +26,10 @@ class ProfileScreen extends ConsumerWidget {
       body: profileAsync.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(
-          message: context.l10n.profileLoadFailed,
+          message: withFailureDetail(
+            failureDetail(context.l10n, Failure.from(e)),
+            context.l10n.profileLoadFailed,
+          ),
           onRetry: () => ref.invalidate(myProfileProvider),
         ),
         data: (profile) {
@@ -108,7 +113,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               FilledButton.tonalIcon(
-                onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                onPressed: () => signOutReportingErrors(context, ref),
                 icon: const Icon(Icons.logout),
                 label: Text(context.l10n.commonLogout),
               ),

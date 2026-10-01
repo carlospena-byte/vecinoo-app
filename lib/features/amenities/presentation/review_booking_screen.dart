@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,26 +7,17 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
+import '../../../core/error/failure_messages.dart';
 import '../../../l10n/l10n.dart';
-import '../../session/presentation/session_controller.dart';
-import '../data/amenities_repository.dart';
 import '../domain/amenity.dart';
-import '../domain/amenity_details.dart';
-import 'amenities_controller.dart';
 import 'amenity_bottom_sheets.dart';
 import 'amenity_formatters.dart';
 import 'booking_date_time_sheet.dart';
 import 'booking_result_screen.dart';
+import 'review_booking_controller.dart';
+import 'review_booking_widgets.dart';
 
-/// Arguments for `/amenities/:id/review` — the amenity's full details (for
-/// the blackouts list and cost/terms sheets) plus the day/time the resident
-/// just picked in [BookingDateTimeSheet].
-class ReviewBookingArgs {
-  const ReviewBookingArgs({required this.details, required this.selection});
-
-  final AmenityDetails details;
-  final BookingSelection selection;
-}
+export 'review_booking_controller.dart' show ReviewBookingArgs;
 
 final _dateFormat = DateFormat('EEE, d MMM y', 'es');
 final _timeFormat = DateFormat('HH:mm');
@@ -44,116 +37,85 @@ class ReviewBookingScreen extends ConsumerStatefulWidget {
 }
 
 class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
-  late BookingSelection _selection;
-  String? _notes;
-  bool _isSubmitting = false;
-  ({String title, String message})? _error;
+  StreamSubscription<BookingCreated>? _events;
 
   Amenity get _amenity => widget.args.details.amenity;
+
+  ReviewBookingController get _controller =>
+      ref.read(reviewBookingControllerProvider(widget.args).notifier);
 
   @override
   void initState() {
     super.initState();
-    _selection = widget.args.selection;
+    _events = _controller.events.listen((event) {
+      if (!mounted) return;
+      context.pushReplacement(
+        '/amenities/${_amenity.id}/result',
+        extra: BookingResultArgs(amenity: _amenity, booking: event.booking),
+      );
+    });
   }
 
-  Future<void> _changeDateTime() async {
+  @override
+  void dispose() {
+    _events?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _changeDateTime(BookingSelection current) async {
     final result = await showBookingDateTimeSheet(
       context,
       amenity: _amenity,
       blackouts: widget.args.details.blackouts,
-      initial: _selection,
+      initial: current,
       primaryLabel: context.l10n.amenitiesSave,
     );
-    if (result != null && mounted) {
-      setState(() {
-        _selection = result;
-        _error = null;
-      });
-    }
+    if (result != null && mounted) _controller.changeSelection(result);
   }
 
-  Future<void> _editNotes() async {
-    final result = await showEditNotesSheet(context, initialNotes: _notes);
-    if (result != null && mounted) {
-      setState(() => _notes = result.isEmpty ? null : result);
-    }
+  Future<void> _editNotes(String? current) async {
+    final result = await showEditNotesSheet(context, initialNotes: current);
+    if (result != null && mounted) _controller.setNotes(result);
   }
 
-  Future<void> _confirm() async {
+  ({String title, String message}) _errorCopy(ReviewBookingError error) {
     final l10n = context.l10n;
-    final now = DateTime.now();
-    if (_selection.startDateTime.isBefore(now)) {
-      setState(
-        () => _error = (
-          title: l10n.amenitiesErrorPastDateTitle,
-          message: l10n.amenitiesErrorPastDateMessage,
+    return switch (error.kind) {
+      ReviewBookingErrorKind.pastDate => (
+        title: l10n.amenitiesErrorPastDateTitle,
+        message: l10n.amenitiesErrorPastDateMessage,
+      ),
+      ReviewBookingErrorKind.endNotAfterStart => (
+        title: l10n.amenitiesErrorScheduleTitle,
+        message: l10n.amenitiesEndAfterStartError,
+      ),
+      ReviewBookingErrorKind.conflict => (
+        title: l10n.amenitiesErrorConflictTitle,
+        message: l10n.amenitiesErrorConflictMessage,
+      ),
+      ReviewBookingErrorKind.blackout => (
+        title: l10n.amenitiesErrorBlackoutTitle,
+        message: l10n.amenitiesErrorBlackoutMessage,
+      ),
+      ReviewBookingErrorKind.submit => (
+        title: l10n.amenitiesErrorSubmitTitle,
+        message: _withDetail(
+          error.failure == null ? null : failureDetail(l10n, error.failure!),
+          l10n.amenitiesErrorSubmitMessage,
         ),
-      );
-      return;
-    }
-    if (!_selection.endDateTime.isAfter(_selection.startDateTime)) {
-      setState(
-        () => _error = (
-          title: l10n.amenitiesErrorScheduleTitle,
-          message: l10n.amenitiesEndAfterStartError,
-        ),
-      );
-      return;
-    }
-
-    final membership = ref.read(selectedMembershipProvider).value;
-    if (membership == null) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _error = null;
-    });
-    try {
-      final booking = await ref
-          .read(amenitiesRepositoryProvider)
-          .createBooking(
-            amenityId: _amenity.id,
-            residentialId: membership.residentialId,
-            unitId: membership.unitId,
-            startTime: _selection.startDateTime,
-            endTime: _selection.endDateTime,
-            notes: _notes,
-          );
-      ref.invalidate(myBookingsProvider);
-      if (!mounted) return;
-      context.pushReplacement(
-        '/amenities/${_amenity.id}/result',
-        extra: BookingResultArgs(amenity: _amenity, booking: booking),
-      );
-    } on BookingConflictException {
-      setState(
-        () => _error = (
-          title: l10n.amenitiesErrorConflictTitle,
-          message: l10n.amenitiesErrorConflictMessage,
-        ),
-      );
-    } on AmenityBlackoutException {
-      setState(
-        () => _error = (
-          title: l10n.amenitiesErrorBlackoutTitle,
-          message: l10n.amenitiesErrorBlackoutMessage,
-        ),
-      );
-    } catch (_) {
-      setState(
-        () => _error = (
-          title: l10n.amenitiesErrorSubmitTitle,
-          message: l10n.amenitiesErrorSubmitMessage,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+      ),
+    };
   }
+
+  String _withDetail(String? detail, String fallback) =>
+      detail == null ? fallback : '$detail $fallback';
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(reviewBookingControllerProvider(widget.args));
+    final selection = state.selection;
+    final error = state.error;
+    final notes = state.notes;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -168,16 +130,16 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(GatesSpacing.space24),
                 children: [
-                  if (_error != null) ...[
-                    _ErrorBanner(
-                      title: _error!.title,
-                      message: _error!.message,
+                  if (error != null) ...[
+                    ReviewErrorBanner(
+                      title: _errorCopy(error).title,
+                      message: _errorCopy(error).message,
                     ),
                     const SizedBox(height: GatesSpacing.space16),
                   ],
                   Row(
                     children: [
-                      _AmenityThumbnail(amenityId: _amenity.id),
+                      ReviewAmenityThumbnail(amenityId: _amenity.id),
                       const SizedBox(width: GatesSpacing.space16),
                       Expanded(
                         child: Column(
@@ -199,38 +161,38 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
                       ),
                     ],
                   ),
-                  const _Divider(),
-                  _ReviewRow(
+                  const ReviewDivider(),
+                  ReviewRow(
                     label: context.l10n.amenitiesDate,
-                    value: _capitalize(_dateFormat.format(_selection.day)),
+                    value: _capitalize(_dateFormat.format(selection.day)),
                     actionLabel: context.l10n.amenitiesChange,
-                    onTap: _changeDateTime,
+                    onTap: () => _changeDateTime(selection),
                   ),
-                  const _Divider(),
-                  _ReviewRow(
+                  const ReviewDivider(),
+                  ReviewRow(
                     label: context.l10n.amenitiesSchedule,
                     value:
-                        '${_timeFormat.format(_selection.startDateTime)}–'
-                        '${_timeFormat.format(_selection.endDateTime)} · '
-                        '${amenityDurationLabel(context.l10n, _selection.endDateTime.difference(_selection.startDateTime).inMinutes)}',
+                        '${_timeFormat.format(selection.startDateTime)}–'
+                        '${_timeFormat.format(selection.endDateTime)} · '
+                        '${amenityDurationLabel(context.l10n, selection.endDateTime.difference(selection.startDateTime).inMinutes)}',
                     actionLabel: context.l10n.amenitiesChange,
-                    onTap: _changeDateTime,
+                    onTap: () => _changeDateTime(selection),
                   ),
-                  const _Divider(),
-                  _ReviewRow(
+                  const ReviewDivider(),
+                  ReviewRow(
                     label: context.l10n.amenitiesCostHeading,
                     value: _amenity.requiresPayment && _amenity.price != null
                         ? '\$${_amenity.price!.toStringAsFixed(2)}'
                         : context.l10n.amenitiesNoCost,
                   ),
-                  const _Divider(),
-                  _ReviewRow(
+                  const ReviewDivider(),
+                  ReviewRow(
                     label: context.l10n.amenitiesNotesOptional,
-                    value: _notes ?? context.l10n.amenitiesNoNotes,
+                    value: notes ?? context.l10n.amenitiesNoNotes,
                     actionLabel: context.l10n.amenitiesEdit,
-                    onTap: _editNotes,
+                    onTap: () => _editNotes(notes),
                   ),
-                  const _Divider(),
+                  const ReviewDivider(),
                   Text(
                     context.l10n.amenitiesCancelFutureHint,
                     style: context.gatesText.caption,
@@ -259,8 +221,8 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
                 width: double.infinity,
                 child: GatesButton(
                   label: context.l10n.amenitiesConfirmBooking,
-                  loading: _isSubmitting,
-                  onPressed: _isSubmitting ? null : _confirm,
+                  loading: state.isSubmitting,
+                  onPressed: state.isSubmitting ? null : _controller.confirm,
                 ),
               ),
             ),
@@ -272,118 +234,4 @@ class _ReviewBookingScreenState extends ConsumerState<ReviewBookingScreen> {
 
   String _capitalize(String value) =>
       value.isEmpty ? value : value[0].toUpperCase() + value.substring(1);
-}
-
-class _ReviewRow extends StatelessWidget {
-  const _ReviewRow({
-    required this.label,
-    required this.value,
-    this.actionLabel,
-    this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final String? actionLabel;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: GatesTypography.label),
-              const SizedBox(height: 4),
-              Text(value, style: GatesTypography.body),
-            ],
-          ),
-        ),
-        if (actionLabel != null)
-          TextButton(onPressed: onTap, child: Text(actionLabel!)),
-      ],
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  const _Divider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: GatesSpacing.space16),
-      child: Divider(height: 1, color: context.palette.borderSubtle),
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.title, required this.message});
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(GatesSpacing.space16),
-      decoration: BoxDecoration(
-        color: context.palette.statusErrorBg,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GatesTypography.label.copyWith(
-              color: context.palette.statusError,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            message,
-            style: context.gatesText.caption.copyWith(
-              color: context.palette.statusError,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AmenityThumbnail extends ConsumerWidget {
-  const _AmenityThumbnail({required this.amenityId});
-
-  final String amenityId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final urlsAsync = ref.watch(amenityImageUrlsProvider(amenityId));
-    final url = urlsAsync.value?.values.firstOrNull;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 80,
-        height: 80,
-        child: url != null
-            ? Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true)
-            : Container(
-                color: context.palette.bgSubtle,
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.deck_outlined,
-                  color: context.palette.textSecondary,
-                ),
-              ),
-      ),
-    );
-  }
 }

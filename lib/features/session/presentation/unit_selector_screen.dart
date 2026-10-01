@@ -31,7 +31,7 @@ class UnitSelectorScreen extends ConsumerWidget {
                     Icons.logout,
                     color: context.palette.textSecondary,
                   ),
-                  onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                  onPressed: () => signOutReportingErrors(context, ref),
                 ),
               ),
               Column(

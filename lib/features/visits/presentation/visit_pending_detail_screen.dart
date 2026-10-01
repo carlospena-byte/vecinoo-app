@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'visit_cancel_service.dart';
+import 'visit_failure_text.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_sheet.dart';
@@ -135,23 +137,28 @@ class _VisitPendingDetailScreenState
     if (confirmed != true || !mounted) return;
 
     setState(() => _isCancelling = true);
-    try {
-      await ref.read(visitsRepositoryProvider).cancelVisit(visit.id);
-      if (!mounted) return;
+    final failure = await ref
+        .read(visitCancelServiceProvider)
+        .cancelVisit(visit.id);
+    if (!mounted) return;
+    if (failure == null) {
       context.pop();
       showGatesToast(
         context,
         type: GatesToastType.success,
         title: context.l10n.visitsPendingCancelledToast,
       );
-    } catch (_) {
-      if (!mounted) return;
+    } else {
       setState(() => _isCancelling = false);
       showGatesToast(
         context,
         type: GatesToastType.error,
         title: context.l10n.visitsPendingCancelError,
-        message: context.l10n.visitsTryAgain,
+        message: withFailureDetail(
+          context.l10n,
+          failure,
+          context.l10n.visitsTryAgain,
+        ),
       );
     }
   }

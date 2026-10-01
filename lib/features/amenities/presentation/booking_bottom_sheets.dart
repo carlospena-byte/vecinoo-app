@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/swipe_to_confirm.dart';
 import '../domain/amenity_booking.dart';
 import '../../../l10n/l10n.dart';
-import 'amenities_controller.dart';
+import 'cancel_booking_controller.dart';
 import 'amenity_formatters.dart';
 import '../../../core/widgets/gates_toast.dart';
 
@@ -82,7 +85,6 @@ String _capitalize(String value) =>
 /// "Bottom sheet / Detalle de reserva" — Figma "R04 · Detalle de reserva".
 Future<void> showBookingDetailSheet(
   BuildContext context,
-  WidgetRef ref,
   AmenityBooking booking,
 ) {
   return showGatesSheet(
@@ -108,38 +110,49 @@ class _BookingDetailSheetBody extends ConsumerStatefulWidget {
 class _BookingDetailSheetBodyState
     extends ConsumerState<_BookingDetailSheetBody> {
   final _reasonController = TextEditingController();
-  bool _cancelling = false;
+  StreamSubscription<CancelBookingEvent>? _events;
+
+  CancelBookingController get _controller =>
+      ref.read(cancelBookingControllerProvider(widget.booking.id).notifier);
+
+  @override
+  void initState() {
+    super.initState();
+    _events = _controller.events.listen(_onEvent);
+  }
 
   @override
   void dispose() {
+    _events?.cancel();
     _reasonController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleConfirmCancel() async {
-    setState(() => _cancelling = true);
-    try {
-      await ref
-          .read(amenitiesRepositoryProvider)
-          .cancelBooking(widget.booking.id, reason: _reasonController.text);
-      ref.invalidate(myBookingsProvider);
-      if (mounted) Navigator.of(context).pop();
-    } catch (_) {
-      if (mounted) {
-        setState(() => _cancelling = false);
+  void _onEvent(CancelBookingEvent event) {
+    if (!mounted) return;
+    switch (event) {
+      case BookingCancelled():
+        Navigator.of(context).pop();
+      case CancelBookingFailed(:final failure):
+        final l10n = context.l10n;
+        final detail = failureDetail(l10n, failure);
         showGatesToast(
           context,
           type: GatesToastType.error,
-          title: context.l10n.amenitiesCancelFailedTitle,
-          message: context.l10n.amenitiesTryAgain,
+          title: l10n.amenitiesCancelFailedTitle,
+          message: detail == null
+              ? l10n.amenitiesTryAgain
+              : '$detail ${l10n.amenitiesTryAgain}',
         );
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
+    final cancelling = ref
+        .watch(cancelBookingControllerProvider(booking.id))
+        .isCancelling;
     final pill = _statusPillSpec(context, booking);
 
     return SafeArea(
@@ -169,7 +182,7 @@ class _BookingDetailSheetBodyState
                     tooltip: context.l10n.amenitiesClose,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close, size: 20),
-                    onPressed: _cancelling
+                    onPressed: cancelling
                         ? null
                         : () => Navigator.of(context).pop(),
                   ),
@@ -208,7 +221,7 @@ class _BookingDetailSheetBodyState
               TextField(
                 controller: _reasonController,
                 maxLines: 3,
-                enabled: !_cancelling,
+                enabled: !cancelling,
                 decoration: InputDecoration(
                   labelText: context.l10n.amenitiesReasonOptional,
                   hintText: context.l10n.amenitiesReasonHint,
@@ -218,8 +231,9 @@ class _BookingDetailSheetBodyState
               const SizedBox(height: GatesSpacing.space16),
               SwipeToConfirm(
                 label: context.l10n.amenitiesSwipeToCancel,
-                loading: _cancelling,
-                onConfirmed: _handleConfirmCancel,
+                loading: cancelling,
+                onConfirmed: () =>
+                    _controller.cancel(reason: _reasonController.text),
               ),
             ],
           ],

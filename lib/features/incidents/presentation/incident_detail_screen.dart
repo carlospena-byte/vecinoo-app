@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/error/failure.dart';
+import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_sheet.dart';
@@ -15,6 +16,7 @@ import '../../session/presentation/session_controller.dart';
 import '../../../core/widgets/state_views.dart';
 import '../domain/incident.dart';
 import '../../../l10n/l10n.dart';
+import '../../auth/presentation/auth_controller.dart';
 import 'incident_edit_args.dart';
 import 'incidents_controller.dart';
 import 'incidents_list_screen.dart' show IncidentStatusBadge;
@@ -33,7 +35,7 @@ class IncidentDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final incidentAsync = ref.watch(incidentDetailProvider(incidentId));
     final attachments = ref.watch(incidentAttachmentsProvider(incidentId));
-    final userId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
+    final userId = ref.watch(currentUserProvider)?.id;
 
     return incidentAsync.when(
       loading: () => _shell(context, const LoadingView()),
@@ -151,13 +153,16 @@ class IncidentDetailScreen extends ConsumerWidget {
         type: GatesToastType.success,
         title: context.l10n.incidentsCancelledToast,
       );
-    } catch (_) {
+    } catch (error) {
       if (!context.mounted) return;
+      final detail = failureDetail(context.l10n, Failure.from(error));
       showGatesToast(
         context,
         type: GatesToastType.error,
         title: context.l10n.incidentsCancelFailedTitle,
-        message: context.l10n.incidentsTryAgain,
+        message: detail == null
+            ? context.l10n.incidentsTryAgain
+            : '$detail ${context.l10n.incidentsTryAgain}',
       );
     }
   }

@@ -100,7 +100,7 @@ class HomeScreen extends ConsumerWidget {
                         onViewVisits: () => onNavigateToTab(_visitsTabIndex),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: _IncidentsSummaryCard(
                         residentialId: membership.residentialId,

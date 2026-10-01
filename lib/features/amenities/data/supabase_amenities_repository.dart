@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/error/failure.dart';
+import '../domain/amenities_repository.dart';
 import '../domain/amenity.dart';
 import '../domain/amenity_blackout.dart';
 import '../domain/amenity_booking.dart';
@@ -14,28 +16,19 @@ const _amenityImagesBucket = 'amenity-images';
 /// `createSignedUrl(path, 60 * 60)`.
 const _signedUrlTtlSeconds = 60 * 60;
 
-/// Thrown when a booking insert is rejected by the DB's
-/// `amenity_bookings_no_overlap` exclusion constraint (Postgres code
-/// 23P01) — i.e. someone else booked that slot first.
-class BookingConflictException implements Exception {
-  const BookingConflictException();
-}
-
-/// Thrown when a booking insert is rejected by the DB's
-/// `amenity_bookings_reject_blackout` trigger (Postgres code `AM001`) — the
-/// requested dates fall inside an `amenity_blackouts` range.
-class AmenityBlackoutException implements Exception {
-  const AmenityBlackoutException();
-}
-
-class AmenitiesRepository {
-  AmenitiesRepository(this._client);
+/// Supabase-backed [AmenitiesRepository]; every call surfaces `Failure`s.
+class SupabaseAmenitiesRepository implements AmenitiesRepository {
+  SupabaseAmenitiesRepository(this._client);
 
   final SupabaseClient _client;
 
   /// The list screen's amenities, each paired with its primary photo
   /// (`amenity_images.is_primary`) resolved to a signed URL in one batch.
-  Future<List<AmenityCard>> fetchAmenities(String residentialId) async {
+  @override
+  Future<List<AmenityCard>> fetchAmenities(String residentialId) =>
+      guardFailure(() => _fetchAmenities(residentialId));
+
+  Future<List<AmenityCard>> _fetchAmenities(String residentialId) async {
     final rows = await _client
         .from('amenities')
         .select('*, amenity_images(*)')
@@ -55,7 +48,7 @@ class AmenitiesRepository {
         primaryPathByAmenityId[row['id'] as String] = images.first.storagePath;
       }
     }
-    final signedUrls = await signImageUrls(
+    final signedUrls = await _signImageUrls(
       primaryPathByAmenityId.values.toList(),
     );
 
@@ -72,21 +65,27 @@ class AmenitiesRepository {
   /// The amenity plus its gallery, services, booking limits and blackouts —
   /// everything the extended detail screen needs, in one round trip. Mirrors
   /// gates-admin's `WITH_DETAILS_SELECT`.
-  Future<AmenityDetails> fetchAmenityDetails(String amenityId) async {
-    final row = await _client
-        .from('amenities')
-        .select(
-          '*, amenity_images(*), amenity_services(*, services(*)), '
-          'amenity_booking_limits(*), amenity_blackouts(*)',
-        )
-        .eq('id', amenityId)
-        .single();
-    return AmenityDetails.fromMap(row);
-  }
+  @override
+  Future<AmenityDetails> fetchAmenityDetails(String amenityId) =>
+      guardFailure(() async {
+        final row = await _client
+            .from('amenities')
+            .select(
+              '*, amenity_images(*), amenity_services(*, services(*)), '
+              'amenity_booking_limits(*), amenity_blackouts(*)',
+            )
+            .eq('id', amenityId)
+            .single();
+        return AmenityDetails.fromMap(row);
+      });
 
   /// Resolves storage paths from `amenity_images.storage_path` into
   /// short-lived signed URLs (the bucket is private), keyed by path.
-  Future<Map<String, String>> signImageUrls(List<String> storagePaths) async {
+  @override
+  Future<Map<String, String>> signImageUrls(List<String> storagePaths) =>
+      guardFailure(() => _signImageUrls(storagePaths));
+
+  Future<Map<String, String>> _signImageUrls(List<String> storagePaths) async {
     if (storagePaths.isEmpty) return const {};
     final results = await _client.storage
         .from(_amenityImagesBucket)
@@ -97,26 +96,30 @@ class AmenitiesRepository {
     };
   }
 
-  Future<List<AmenityBlackout>> fetchBlackouts(String amenityId) async {
-    final rows = await _client
-        .from('amenity_blackouts')
-        .select()
-        .eq('amenity_id', amenityId)
-        .order('start_date', ascending: true);
-    return (rows as List)
-        .map((row) => AmenityBlackout.fromMap(row as Map<String, dynamic>))
-        .toList();
-  }
+  @override
+  Future<List<AmenityBlackout>> fetchBlackouts(String amenityId) =>
+      guardFailure(() async {
+        final rows = await _client
+            .from('amenity_blackouts')
+            .select()
+            .eq('amenity_id', amenityId)
+            .order('start_date', ascending: true);
+        return (rows as List)
+            .map((row) => AmenityBlackout.fromMap(row as Map<String, dynamic>))
+            .toList();
+      });
 
   /// The current user's own bookings — RLS only exposes a resident's own
   /// rows (or an admin's), so this can't show what other residents booked.
   /// Each booking is paired with its amenity's primary photo, resolved to a
   /// signed URL in one batch (mirrors [fetchAmenities]).
-  Future<List<AmenityBooking>> fetchMyBookings() async {
+  @override
+  Future<List<AmenityBooking>> fetchMyBookings() =>
+      guardFailure(_fetchMyBookings);
+
+  Future<List<AmenityBooking>> _fetchMyBookings() async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw StateError('fetchMyBookings called with no signed-in user');
-    }
+    if (userId == null) throw const AuthFailure();
     final rows = await _client
         .from('amenity_bookings')
         .select('*, amenities(name, amenity_images(*))')
@@ -136,7 +139,7 @@ class AmenitiesRepository {
         primaryPathByBookingId[row['id'] as String] = images.first.storagePath;
       }
     }
-    final signedUrls = await signImageUrls(
+    final signedUrls = await _signImageUrls(
       primaryPathByBookingId.values.toSet().toList(),
     );
 
@@ -153,6 +156,7 @@ class AmenitiesRepository {
   /// `status`, which is never assumed to be `confirmed` just because the
   /// insert succeeded (it defaults to `pending`; nothing here auto-confirms
   /// it).
+  @override
   Future<AmenityBooking> createBooking({
     required String amenityId,
     required String residentialId,
@@ -161,45 +165,48 @@ class AmenitiesRepository {
     required DateTime endTime,
     String? notes,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw StateError('createBooking called with no signed-in user');
-    }
     try {
-      final row = await _client
-          .from('amenity_bookings')
-          .insert({
-            'amenity_id': amenityId,
-            'residential_id': residentialId,
-            'unit_id': unitId,
-            'user_id': userId,
-            'start_time': startTime.toUtc().toIso8601String(),
-            'end_time': endTime.toUtc().toIso8601String(),
-            'notes': notes,
-          })
-          .select('*, amenities(name)')
-          .single();
-      return AmenityBooking.fromMap(row);
-    } on PostgrestException catch (e) {
-      if (e.code == '23P01') {
-        throw const BookingConflictException();
-      }
-      if (e.code == 'AM001') {
-        throw const AmenityBlackoutException();
+      return await guardFailure(() async {
+        final userId = _client.auth.currentUser?.id;
+        if (userId == null) throw const AuthFailure();
+        final row = await _client
+            .from('amenity_bookings')
+            .insert({
+              'amenity_id': amenityId,
+              'residential_id': residentialId,
+              'unit_id': unitId,
+              'user_id': userId,
+              'start_time': startTime.toUtc().toIso8601String(),
+              'end_time': endTime.toUtc().toIso8601String(),
+              'notes': notes,
+            })
+            .select('*, amenities(name)')
+            .single();
+        return AmenityBooking.fromMap(row);
+      });
+    } on Failure catch (failure) {
+      // Domain-specific rejections (see the interface) beat the generic
+      // ServerFailure the guard produced.
+      final cause = failure.cause;
+      if (cause is PostgrestException) {
+        if (cause.code == '23P01') throw const BookingConflictException();
+        if (cause.code == 'AM001') throw const AmenityBlackoutException();
       }
       rethrow;
     }
   }
 
-  Future<void> cancelBooking(String bookingId, {String? reason}) async {
-    await _client
-        .from('amenity_bookings')
-        .update({
-          'status': 'cancelled',
-          'rejection_reason': reason?.trim().isNotEmpty == true
-              ? reason!.trim()
-              : null,
-        })
-        .eq('id', bookingId);
-  }
+  @override
+  Future<void> cancelBooking(String bookingId, {String? reason}) =>
+      guardFailure(() async {
+        await _client
+            .from('amenity_bookings')
+            .update({
+              'status': 'cancelled',
+              'rejection_reason': reason?.trim().isNotEmpty == true
+                  ? reason!.trim()
+                  : null,
+            })
+            .eq('id', bookingId);
+      });
 }

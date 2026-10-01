@@ -3,13 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
 import '../../auth/presentation/auth_controller.dart';
-import '../data/session_repository.dart';
+import '../data/supabase_session_repository.dart';
 import '../domain/membership.dart';
+import '../domain/session_repository.dart';
 
 const _selectedUnitPrefsKey = 'selected_unit_id';
 
 final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
-  return SessionRepository(ref.watch(supabaseClientProvider));
+  return SupabaseSessionRepository(ref.watch(supabaseClientProvider));
 });
 
 /// Refresh with `ref.invalidate(myMembershipsProvider)` after the admin

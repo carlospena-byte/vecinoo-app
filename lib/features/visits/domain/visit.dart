@@ -179,6 +179,16 @@ class ScheduleBlock {
   final TimeOfDay start;
   final TimeOfDay end;
 
+  ScheduleBlock copyWith({
+    Set<String>? days,
+    TimeOfDay? start,
+    TimeOfDay? end,
+  }) => ScheduleBlock(
+    days: days ?? this.days,
+    start: start ?? this.start,
+    end: end ?? this.end,
+  );
+
   Map<String, dynamic> toMap() => {
     'days': [
       for (final day in weekdayKeys)

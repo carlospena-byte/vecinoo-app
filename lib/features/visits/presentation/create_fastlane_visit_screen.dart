@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,14 +10,15 @@ import '../../../core/widgets/gates_calendar.dart';
 import '../../../core/widgets/gates_text_area.dart';
 import '../../../core/widgets/gates_tap_field.dart';
 import '../../../core/widgets/gates_text_field.dart';
+import '../../../core/widgets/gates_toast.dart';
 import '../../../core/widgets/gates_time_picker.dart';
 import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
 import '../domain/visit.dart';
+import 'create_fastlane_visit_controller.dart';
 import 'frequent_visit_formatters.dart';
 import 'visit_date_formatters.dart';
-import 'visits_controller.dart';
-import '../../../core/widgets/gates_toast.dart';
+import 'visit_failure_text.dart';
 
 const _notesMaxLength = 120;
 
@@ -42,11 +45,12 @@ class _CreateFastlaneVisitScreenState
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
 
-  DateTime _visitDate = DateTime.now();
-  TimeOfDay _arrivalTime = TimeOfDay.now();
-  bool _isSubmitting = false;
+  StreamSubscription<CreateFastlaneVisitEvent>? _events;
 
   bool get _isEditing => widget.editing != null;
+
+  CreateFastlaneVisitController get _controller =>
+      ref.read(createFastlaneVisitControllerProvider(widget.editing).notifier);
 
   @override
   void initState() {
@@ -55,16 +59,50 @@ class _CreateFastlaneVisitScreenState
     if (editing != null) {
       _nameController.text = editing.name ?? '';
       _notesController.text = editing.notes ?? '';
-      _visitDate = editing.validFrom;
-      _arrivalTime = TimeOfDay.fromDateTime(editing.validFrom);
     }
+    _events = _controller.events.listen(_onEvent);
   }
 
   @override
   void dispose() {
+    _events?.cancel();
     _nameController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _onEvent(CreateFastlaneVisitEvent event) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (event) {
+      case FastlaneUpdated():
+        context.pop();
+        showGatesToast(
+          context,
+          type: GatesToastType.success,
+          title: l10n.visitsFastlaneUpdatedToast,
+        );
+      case FastlaneCreated(:final visit):
+        // Land on the shared F02 screen (share / copy / edit / cancel) with
+        // the visits list underneath, so its back arrow returns to the list.
+        final router = GoRouter.of(context);
+        router.go('/');
+        router.push('/visits/${visit.id}?created=1', extra: visit);
+      case FastlaneUpdateFailed(:final failure):
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.visitsSaveError,
+          message: withFailureDetail(l10n, failure, l10n.visitsTryAgain),
+        );
+      case FastlaneCreateFailed(:final failure):
+        showGatesToast(
+          context,
+          type: GatesToastType.error,
+          title: l10n.visitsFastlaneCreateError,
+          message: withFailureDetail(l10n, failure, l10n.visitsTryAgain),
+        );
+    }
   }
 
   Future<void> _pickVisitDate() async {
@@ -76,101 +114,39 @@ class _CreateFastlaneVisitScreenState
     final today = DateTime.utc(now.year, now.month, now.day);
     final picked = await showGatesDatePicker(
       context,
-      initialDate: _visitDate,
+      initialDate: ref
+          .read(createFastlaneVisitControllerProvider(widget.editing))
+          .visitDate,
       firstDate: today,
       lastDate: today.add(const Duration(days: 365)),
       title: context.l10n.visitsFastlaneVisitDate,
     );
-    if (picked != null) setState(() => _visitDate = picked);
+    if (picked != null) _controller.setVisitDate(picked);
   }
 
   Future<void> _pickArrivalTime() async {
     final picked = await showGatesTimePicker(
       context,
-      initialTime: _arrivalTime,
+      initialTime: ref
+          .read(createFastlaneVisitControllerProvider(widget.editing))
+          .arrivalTime,
     );
-    if (picked != null) setState(() => _arrivalTime = picked);
+    if (picked != null) _controller.setArrivalTime(picked);
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    final membership = ref.read(selectedMembershipProvider).value;
-    if (membership == null) return;
-
-    setState(() => _isSubmitting = true);
-    final editing = widget.editing;
-    if (editing != null) {
-      try {
-        await ref
-            .read(visitsRepositoryProvider)
-            .updateFastlaneVisit(
-              visitId: editing.id,
-              name: _nameController.text.trim(),
-              visitDate: _visitDate,
-              arrivalTime: _arrivalTime,
-              notes: _notesController.text.trim().isEmpty
-                  ? null
-                  : _notesController.text.trim(),
-            );
-        if (!mounted) return;
-        context.pop();
-        showGatesToast(
-          context,
-          type: GatesToastType.success,
-          title: context.l10n.visitsFastlaneUpdatedToast,
-        );
-      } catch (_) {
-        if (mounted) {
-          showGatesToast(
-            context,
-            type: GatesToastType.error,
-            title: context.l10n.visitsSaveError,
-            message: context.l10n.visitsTryAgain,
-          );
-          setState(() => _isSubmitting = false);
-        }
-      }
-      return;
-    }
-    try {
-      final result = await ref
-          .read(visitsRepositoryProvider)
-          .createFastlaneVisit(
-            residentialId: membership.residentialId,
-            unitId: membership.unitId,
-            name: _nameController.text.trim(),
-            visitDate: _visitDate,
-            arrivalTime: _arrivalTime,
-            notes: _notesController.text.trim().isEmpty
-                ? null
-                : _notesController.text.trim(),
-          );
-      if (!mounted) return;
-      // Land on the shared F02 screen (share / copy / edit / cancel) with the
-      // visits list underneath, so its back arrow returns to the list.
-      final router = GoRouter.of(context);
-      router.go('/');
-      router.push('/visits/${result.id}?created=1', extra: result);
-    } catch (_) {
-      if (mounted) {
-        showGatesToast(
-          context,
-          type: GatesToastType.error,
-          title: context.l10n.visitsFastlaneCreateError,
-          message: context.l10n.visitsTryAgain,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+    _controller.submit(
+      name: _nameController.text,
+      notes: _notesController.text,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return _buildForm(context);
-  }
-
-  Widget _buildForm(BuildContext context) {
+    final state = ref.watch(
+      createFastlaneVisitControllerProvider(widget.editing),
+    );
     final membership = ref.watch(selectedMembershipProvider).value;
 
     return Scaffold(
@@ -221,7 +197,7 @@ class _CreateFastlaneVisitScreenState
               const SizedBox(height: GatesSpacing.space16),
               GatesTapField(
                 label: context.l10n.visitsFastlaneVisitDate,
-                value: formatVisitDate(context.l10n, _visitDate),
+                value: formatVisitDate(context.l10n, state.visitDate),
                 helper: context.l10n.visitsFastlaneDateHelper,
                 icon: Icons.calendar_month_outlined,
                 onTap: _pickVisitDate,
@@ -229,7 +205,7 @@ class _CreateFastlaneVisitScreenState
               const SizedBox(height: GatesSpacing.space16),
               GatesTapField(
                 label: context.l10n.visitsFastlaneArrivalLabel,
-                value: formatClockText(_arrivalTime),
+                value: formatClockText(state.arrivalTime),
                 onTap: _pickArrivalTime,
               ),
               const SizedBox(height: GatesSpacing.space16),
@@ -248,8 +224,8 @@ class _CreateFastlaneVisitScreenState
           label: _isEditing
               ? context.l10n.visitsSaveChanges
               : context.l10n.visitsFastlaneCreate,
-          loading: _isSubmitting,
-          onPressed: _isSubmitting ? null : _submit,
+          loading: state.isSubmitting,
+          onPressed: state.isSubmitting ? null : _submit,
         ),
       ),
     );

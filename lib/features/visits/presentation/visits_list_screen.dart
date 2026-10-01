@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'visit_failure_text.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_add_button.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
@@ -211,7 +212,11 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
               child: visitsAsync.when(
                 loading: () => const LoadingView(),
                 error: (e, _) => ErrorView(
-                  message: context.l10n.visitsListLoadError,
+                  message: withErrorDetail(
+                    context.l10n,
+                    e,
+                    context.l10n.visitsListLoadError,
+                  ),
                   onRetry: () =>
                       ref.invalidate(visitsListProvider(membership.unitId)),
                 ),

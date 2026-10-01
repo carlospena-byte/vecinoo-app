@@ -3,58 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/keyboard_safe_column.dart';
 import '../../../core/widgets/otp_code_field.dart';
 import '../../../core/widgets/vecinoo_brand.dart';
-import '../../session/presentation/session_controller.dart';
+import '../../../core/error/failure_messages.dart';
 import 'auth_controller.dart';
+import 'otp_verify_controller.dart';
 import '../../../core/widgets/gates_toast.dart';
 import '../../../l10n/l10n.dart';
 
-enum OtpChannel { email, phone }
-
-/// Shown as a "you're joining X" summary on top of the OTP field when
-/// verification is the last step of accepting an invitation (as opposed
-/// to a regular sign-in), so the resident sees *why* a code just went
-/// out and what account they're about to create.
-class RegistrationContext {
-  const RegistrationContext({
-    required this.residentialName,
-    required this.unitName,
-    this.fullName,
-  });
-
-  final String residentialName;
-  final String unitName;
-  final String? fullName;
-}
-
-/// Passed as `extra` when pushing `/verify-otp` — which identifier the
-/// code was sent to, whether it's an email or SMS code, and (for a new
-/// resident accepting an invitation) which unit they're joining.
-class OtpVerifyArgs {
-  const OtpVerifyArgs({
-    required this.identifier,
-    required this.channel,
-    this.registration,
-  });
-
-  final String identifier;
-  final OtpChannel channel;
-  final RegistrationContext? registration;
-}
-
-/// SharedPreferences key: shows the biometric setup screen at most once,
-/// right after a resident's first successful OTP verification.
-const _biometricSetupSeenPrefsKey = 'biometric_setup_seen';
-
-/// Minimum wait before another code can be requested. A code has just
-/// been sent when this screen opens, so the countdown starts right away.
-const _resendCooldownSeconds = 60;
+export 'otp_verify_controller.dart'
+    show OtpChannel, OtpVerifyArgs, RegistrationContext;
 
 /// "02 / Verifica tu código" screen from Figma (file
 /// `Bla1GPfXA7JkuZcYpVi2DS`, node `13:8`): verifies the 6-digit code
@@ -73,11 +35,10 @@ class OtpVerifyScreen extends ConsumerStatefulWidget {
 class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   final _codeController = TextEditingController();
 
-  bool _isSubmitting = false;
-  bool _isResending = false;
-  Timer? _cooldownTimer;
-  int _cooldownRemaining = _resendCooldownSeconds;
-  String? _errorText;
+  StreamSubscription<OtpEvent>? _events;
+
+  OtpVerifyController get _controller =>
+      ref.read(otpVerifyControllerProvider(widget.args).notifier);
 
   bool get _isEmail => widget.args.channel == OtpChannel.email;
 
@@ -87,115 +48,61 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   @override
   void initState() {
     super.initState();
-    _startCooldown();
-  }
-
-  void _startCooldown() {
-    _cooldownTimer?.cancel();
-    setState(() => _cooldownRemaining = _resendCooldownSeconds);
-    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
-      setState(() => _cooldownRemaining--);
-      if (_cooldownRemaining <= 0) timer.cancel();
-    });
+    _events = _controller.events.listen(_onEvent);
   }
 
   @override
   void dispose() {
-    _cooldownTimer?.cancel();
+    _events?.cancel();
     _codeController.dispose();
     super.dispose();
   }
 
-  Future<void> _verify() async {
-    if (_codeController.text.length != 6) {
-      setState(() => _errorText = context.l10n.authEnterDigits(6));
-      return;
-    }
-    setState(() {
-      _isSubmitting = true;
-      _errorText = null;
-    });
-    try {
-      final authRepository = ref.read(authRepositoryProvider);
-      final token = _codeController.text.trim();
-      if (_isEmail) {
-        await authRepository.verifyEmailOtp(
-          email: widget.args.identifier,
-          token: token,
-        );
-      } else {
-        await authRepository.verifyPhoneOtp(
-          phone: widget.args.identifier,
-          token: token,
-        );
-      }
-      if (!mounted) return;
-      await _maybeShowBiometricSetup();
-      // Otherwise, GoRouter's auth redirect takes over once the session is set.
-    } catch (e) {
-      debugPrint('OTP verify failed: $e');
-      setState(() => _errorText = context.l10n.authOtpWrongOrExpired);
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
-  }
-
-  /// Offers to set up biometric sign-in once, right after a resident's
-  /// account is actually usable (unit linked) — never interrupting the
-  /// invitation-linking gate.
-  Future<void> _maybeShowBiometricSetup() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool(_biometricSetupSeenPrefsKey) ?? false) return;
-    try {
-      final memberships = await ref.read(myMembershipsProvider.future);
-      if (memberships.isEmpty) return;
-    } catch (_) {
-      return;
-    }
-    await prefs.setBool(_biometricSetupSeenPrefsKey, true);
+  void _onEvent(OtpEvent event) {
     if (!mounted) return;
-    context.push('/setup-biometrics');
-  }
-
-  Future<void> _resend() async {
-    if (_cooldownRemaining > 0 || _isResending) return;
-    setState(() => _isResending = true);
-    try {
-      final authRepository = ref.read(authRepositoryProvider);
-      if (_isEmail) {
-        await authRepository.sendEmailOtp(widget.args.identifier);
-      } else {
-        await authRepository.sendPhoneOtp(widget.args.identifier);
-      }
-      if (mounted) {
-        _startCooldown();
+    final l10n = context.l10n;
+    switch (event) {
+      case ShowBiometricSetup():
+        context.push('/setup-biometrics');
+      case ResendSucceeded():
         showGatesToast(
           context,
           type: GatesToastType.success,
-          title: context.l10n.authOtpResentTitle,
-          message: context.l10n.authOtpResentMessage,
+          title: l10n.authOtpResentTitle,
+          message: l10n.authOtpResentMessage,
         );
-      }
-    } catch (e) {
-      debugPrint('OTP resend failed: $e');
-      if (mounted) {
-        // The server rate-limits too; wait out a full cooldown before retrying.
-        _startCooldown();
+      case ResendFailed(:final failure):
         showGatesToast(
           context,
           type: GatesToastType.error,
-          title: context.l10n.authOtpResendFailedTitle,
-          message: context.l10n.authOtpResendFailedMessage,
+          title: l10n.authOtpResendFailedTitle,
+          message: withFailureDetail(
+            failure == null ? null : failureDetail(l10n, failure),
+            l10n.authOtpResendFailedMessage,
+          ),
         );
-      }
-    } finally {
-      if (mounted) setState(() => _isResending = false);
     }
   }
 
+  String? _errorText(OtpVerifyError? error) {
+    final l10n = context.l10n;
+    return switch (error) {
+      null => null,
+      OtpIncomplete() => l10n.authEnterDigits(6),
+      OtpInvalidCode() => l10n.authOtpWrongOrExpired,
+      OtpVerifyFailed(:final failure) => withFailureDetail(
+        failureDetail(l10n, failure),
+        l10n.authOtpWrongOrExpired,
+      ),
+    };
+  }
+
+  void _verify() => _controller.verify(_codeController.text);
+
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(otpVerifyControllerProvider(widget.args));
+    final cooldownRemaining = state.cooldownRemaining;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -242,32 +149,32 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 OtpCodeField(
                   controller: _codeController,
                   label: context.l10n.authVerificationCode,
-                  errorText: _errorText,
+                  errorText: _errorText(state.error),
                   autofillHints: const [AutofillHints.oneTimeCode],
                   onCompleted: (_) => _verify(),
                 ),
                 const SizedBox(height: 16),
                 GatesButton(
                   label: context.l10n.authVerifyAndSignIn,
-                  onPressed: _isSubmitting ? null : _verify,
-                  loading: _isSubmitting,
+                  onPressed: state.isSubmitting ? null : _verify,
+                  loading: state.isSubmitting,
                 ),
                 Center(
                   child: TextButton(
-                    onPressed: (_isResending || _cooldownRemaining > 0)
+                    onPressed: (state.isResending || cooldownRemaining > 0)
                         ? null
-                        : _resend,
+                        : _controller.resend,
                     child: Text(
-                      _isResending
+                      state.isResending
                           ? context.l10n.authSending
-                          : _cooldownRemaining > 0
-                          ? context.l10n.authResendIn(_cooldownRemaining)
+                          : cooldownRemaining > 0
+                          ? context.l10n.authResendIn(cooldownRemaining)
                           : context.l10n.authResend,
                       style: GatesTypography.label.copyWith(
-                        color: _cooldownRemaining > 0
+                        color: cooldownRemaining > 0
                             ? context.palette.textSecondary
                             : context.palette.textBrand,
-                        decoration: _cooldownRemaining > 0
+                        decoration: cooldownRemaining > 0
                             ? TextDecoration.none
                             : TextDecoration.underline,
                         decorationColor: context.palette.textBrand,

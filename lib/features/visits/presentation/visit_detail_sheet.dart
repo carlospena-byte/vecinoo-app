@@ -8,7 +8,8 @@ import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_toast.dart';
 import '../../../l10n/l10n.dart';
 import '../domain/visit.dart';
-import 'visits_controller.dart';
+import 'visit_cancel_service.dart';
+import 'visit_failure_text.dart';
 
 /// "Bottom sheet / Detalle de visita" — Figma node 118:286. Shows what the
 /// resident authorized (status, who, unit, validity, notes) and lets them
@@ -94,23 +95,28 @@ class _VisitDetailSheetState extends ConsumerState<_VisitDetailSheet> {
 
   Future<void> _cancel() async {
     setState(() => _isCancelling = true);
-    try {
-      await ref.read(visitsRepositoryProvider).cancelVisit(widget.visit.id);
-      if (!mounted) return;
+    final failure = await ref
+        .read(visitCancelServiceProvider)
+        .cancelVisit(widget.visit.id);
+    if (!mounted) return;
+    if (failure == null) {
       Navigator.of(context).pop();
       showGatesToast(
         context,
         type: GatesToastType.success,
         title: context.l10n.visitsDetailCancelledToast,
       );
-    } catch (_) {
-      if (!mounted) return;
+    } else {
       setState(() => _isCancelling = false);
       showGatesToast(
         context,
         type: GatesToastType.error,
         title: context.l10n.visitsDetailCancelError,
-        message: context.l10n.visitsTryAgain,
+        message: withFailureDetail(
+          context.l10n,
+          failure,
+          context.l10n.visitsTryAgain,
+        ),
       );
     }
   }

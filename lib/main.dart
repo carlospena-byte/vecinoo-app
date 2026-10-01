@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/env/env.dart';
+import 'core/error/provider_retry.dart';
 import 'l10n/l10n.dart';
 import 'core/notifications/push_notification_service.dart';
 import 'core/router/app_router.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
   final themeMode = await ThemeModeStorage.read();
   runApp(
     ProviderScope(
+      retry: providerRetry,
       overrides: [initialThemeModeProvider.overrideWithValue(themeMode)],
       child: const GatesApp(),
     ),

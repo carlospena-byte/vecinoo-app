@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
@@ -8,25 +11,10 @@ import '../../../l10n/l10n.dart';
 import '../domain/amenity.dart';
 import '../domain/amenity_blackout.dart';
 import 'amenity_formatters.dart';
+import 'booking_date_time_controller.dart';
+import 'booking_selection.dart';
 
-/// A day + time range picked in [BookingDateTimeSheet]. For a fixed-duration
-/// amenity, [end] is always [start] + `bookingDurationMinutes`.
-class BookingSelection {
-  const BookingSelection({
-    required this.day,
-    required this.start,
-    required this.end,
-  });
-
-  final DateTime day;
-  final TimeOfDay start;
-  final TimeOfDay end;
-
-  DateTime get startDateTime =>
-      DateTime(day.year, day.month, day.day, start.hour, start.minute);
-  DateTime get endDateTime =>
-      DateTime(day.year, day.month, day.day, end.hour, end.minute);
-}
+export 'booking_selection.dart';
 
 String _time(TimeOfDay t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
@@ -60,7 +48,7 @@ Future<BookingSelection?> showBookingDateTimeSheet(
   );
 }
 
-class BookingDateTimeSheet extends StatefulWidget {
+class BookingDateTimeSheet extends ConsumerStatefulWidget {
   const BookingDateTimeSheet({
     super.key,
     required this.amenity,
@@ -77,77 +65,56 @@ class BookingDateTimeSheet extends StatefulWidget {
   final String? primaryLabel;
 
   @override
-  State<BookingDateTimeSheet> createState() => _BookingDateTimeSheetState();
+  ConsumerState<BookingDateTimeSheet> createState() =>
+      _BookingDateTimeSheetState();
 }
 
-class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
-  late DateTime _selectedDay;
-  late DateTime _focusedDay;
-  late TimeOfDay _startTime;
-  TimeOfDay? _endTime;
-  String? _error;
+class _BookingDateTimeSheetState extends ConsumerState<BookingDateTimeSheet> {
+  StreamSubscription<BookingSelectionConfirmed>? _events;
+
+  BookingDateTimeArgs get _args => BookingDateTimeArgs(
+    amenity: widget.amenity,
+    blackouts: widget.blackouts,
+    initial: widget.initial,
+  );
+
+  BookingDateTimeController get _controller =>
+      ref.read(bookingDateTimeControllerProvider(_args).notifier);
 
   bool get _isFixedDuration => widget.amenity.bookingDurationMinutes != null;
 
   @override
   void initState() {
     super.initState();
-    final initial = widget.initial;
-    _selectedDay = initial?.day ?? DateTime.now();
-    _focusedDay = _selectedDay;
-    _startTime = initial?.start ?? const TimeOfDay(hour: 9, minute: 0);
-    _endTime = _isFixedDuration
-        ? null
-        : (initial?.end ?? const TimeOfDay(hour: 10, minute: 0));
-  }
-
-  TimeOfDay get _computedEndTime {
-    if (!_isFixedDuration) return _endTime!;
-    final minutes = widget.amenity.bookingDurationMinutes!;
-    final totalMinutes = _startTime.hour * 60 + _startTime.minute + minutes;
-    return TimeOfDay(
-      hour: (totalMinutes ~/ 60) % 24,
-      minute: totalMinutes % 60,
-    );
-  }
-
-  bool _isBlackedOut(DateTime day) =>
-      widget.blackouts.any((b) => b.covers(day));
-
-  Future<void> _pickTime({required bool isStart}) async {
-    final initial = isStart ? _startTime : _endTime ?? _startTime;
-    final picked = await showGatesTimePicker(context, initialTime: initial);
-    if (picked == null) return;
-    setState(() {
-      _error = null;
-      if (isStart) {
-        _startTime = picked;
-      } else {
-        _endTime = picked;
-      }
+    _events = _controller.events.listen((event) {
+      if (mounted) Navigator.of(context).pop(event.selection);
     });
   }
 
-  void _submit() {
-    if (!_isFixedDuration) {
-      final start = DateTime(2000, 1, 1, _startTime.hour, _startTime.minute);
-      final end = DateTime(2000, 1, 1, _endTime!.hour, _endTime!.minute);
-      if (!end.isAfter(start)) {
-        setState(() => _error = context.l10n.amenitiesEndAfterStartError);
-        return;
-      }
+  @override
+  void dispose() {
+    _events?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _pickTime({required bool isStart}) async {
+    final state = ref.read(bookingDateTimeControllerProvider(_args));
+    final initial = isStart ? state.start : state.end ?? state.start;
+    final picked = await showGatesTimePicker(context, initialTime: initial);
+    if (picked == null || !mounted) return;
+    if (isStart) {
+      _controller.setStart(picked);
+    } else {
+      _controller.setEnd(picked);
     }
-    Navigator.of(context).pop(
-      BookingSelection(
-        day: _selectedDay,
-        start: _startTime,
-        end: _computedEndTime,
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final args = _args;
+    final state = ref.watch(bookingDateTimeControllerProvider(args));
+    final controller = _controller;
+    final error = state.error;
     return SafeArea(
       top: false,
       child: Padding(
@@ -211,21 +178,12 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
               ],
               const SizedBox(height: GatesSpacing.space16),
               GatesCalendar(
-                selectedDay: _selectedDay,
-                focusedDay: _focusedDay,
+                selectedDay: state.selectedDay,
+                focusedDay: state.focusedDay,
                 firstDay: DateTime.now().subtract(const Duration(days: 1)),
                 lastDay: DateTime.now().add(const Duration(days: 180)),
-                onDaySelected: (selected, focused) {
-                  setState(() {
-                    _selectedDay = selected;
-                    _focusedDay = focused;
-                  });
-                },
-                enabledDayPredicate: (day) =>
-                    !day.isBefore(
-                      DateTime.now().subtract(const Duration(days: 1)),
-                    ) &&
-                    !_isBlackedOut(day),
+                onDaySelected: controller.selectDay,
+                enabledDayPredicate: controller.isDayEnabled,
               ),
               const SizedBox(height: GatesSpacing.space16),
               if (_isFixedDuration)
@@ -235,7 +193,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                     Expanded(
                       child: _TimeField(
                         label: context.l10n.amenitiesStart,
-                        value: _time(_startTime),
+                        value: _time(state.start),
                         onTap: () => _pickTime(isStart: true),
                       ),
                     ),
@@ -254,7 +212,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${_time(_computedEndTime)} · '
+                              '${_time(controller.computedEnd)} · '
                               '${amenityDurationLabel(context.l10n, widget.amenity.bookingDurationMinutes!)}',
                               style: GatesTypography.body,
                             ),
@@ -270,7 +228,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                     Expanded(
                       child: _TimeField(
                         label: context.l10n.amenitiesStart,
-                        value: _time(_startTime),
+                        value: _time(state.start),
                         onTap: () => _pickTime(isStart: true),
                       ),
                     ),
@@ -278,7 +236,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                     Expanded(
                       child: _TimeField(
                         label: context.l10n.amenitiesEnd,
-                        value: _time(_endTime!),
+                        value: _time(state.end!),
                         onTap: () => _pickTime(isStart: false),
                       ),
                     ),
@@ -296,10 +254,13 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                   style: context.gatesText.caption,
                 ),
               ],
-              if (_error != null) ...[
+              if (error != null) ...[
                 const SizedBox(height: GatesSpacing.space8),
                 Text(
-                  _error!,
+                  switch (error) {
+                    BookingDateTimeError.endBeforeStart =>
+                      context.l10n.amenitiesEndAfterStartError,
+                  },
                   style: context.gatesText.caption.copyWith(
                     color: context.palette.statusError,
                   ),
@@ -310,7 +271,7 @@ class _BookingDateTimeSheetState extends State<BookingDateTimeSheet> {
                 width: double.infinity,
                 child: GatesButton(
                   label: widget.primaryLabel ?? context.l10n.amenitiesContinue,
-                  onPressed: _submit,
+                  onPressed: controller.submit,
                 ),
               ),
             ],

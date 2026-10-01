@@ -56,6 +56,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final user = ref.read(currentUserProvider);
 
+      // A router refresh (any provider change) re-resolves the current
+      // location without its `extra`; a code screen with nothing to verify
+      // must never be built, so route away before the builder runs.
+      if (location == '/verify-otp' && state.extra is! OtpVerifyArgs) {
+        return user != null ? '/' : '/login';
+      }
+
       if (user == null) {
         return _authRoutes.contains(location) ? null : '/login';
       }

@@ -1,29 +1,17 @@
-import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../l10n/l10n.dart';
-import '../domain/amenity.dart';
 import '../domain/amenity_details.dart';
-import '../domain/service.dart';
 import 'amenities_controller.dart';
-import 'amenity_bottom_sheets.dart';
-import 'amenity_formatters.dart';
-import 'booking_date_time_sheet.dart';
-import 'review_booking_screen.dart';
-import 'service_icons.dart';
-
-final _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: r'$');
-
-TextStyle _bodySecondary(BuildContext context) =>
-    GatesTypography.body.copyWith(color: context.palette.textSecondary);
+import 'amenity_action_bar.dart';
+import 'amenity_detail_controller.dart';
+import 'amenity_detail_sections.dart';
 
 /// The amenity's extended detail screen — gallery, identity, services,
 /// description, schedule, booking rules and cost — with a fixed CTA that
@@ -52,13 +40,44 @@ class AmenityDetailScreen extends ConsumerWidget {
   }
 }
 
-class _AmenityDetailContent extends ConsumerWidget {
+class _AmenityDetailContent extends ConsumerStatefulWidget {
   const _AmenityDetailContent({required this.details});
 
   final AmenityDetails details;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AmenityDetailContent> createState() =>
+      _AmenityDetailContentState();
+}
+
+class _AmenityDetailContentState extends ConsumerState<_AmenityDetailContent> {
+  StreamSubscription<ReviewRequested>? _events;
+
+  AmenityDetails get details => widget.details;
+
+  @override
+  void initState() {
+    super.initState();
+    _events = ref
+        .read(amenityDetailControllerProvider(details.amenity.id).notifier)
+        .events
+        .listen((event) {
+          if (!mounted) return;
+          context.push(
+            '/amenities/${details.amenity.id}/review',
+            extra: event.args,
+          );
+        });
+  }
+
+  @override
+  void dispose() {
+    _events?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final amenity = details.amenity;
 
     return SafeArea(
@@ -108,30 +127,32 @@ class _AmenityDetailContent extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: GatesSpacing.space24),
-                      _Identity(amenity: amenity),
-                      const _Section(),
+                      AmenityIdentity(amenity: amenity),
+                      const AmenitySectionDivider(),
                       if (details.services.isNotEmpty) ...[
-                        _FeaturedServices(services: details.services),
-                        const _Section(),
+                        AmenityFeaturedServices(services: details.services),
+                        const AmenitySectionDivider(),
                       ],
                       if (amenity.description != null) ...[
-                        _Description(html: amenity.description!),
-                        const _Section(),
+                        AmenityDescription(html: amenity.description!),
+                        const AmenitySectionDivider(),
                       ],
                       if (amenity.effectiveSchedule.isNotEmpty) ...[
-                        _Schedule(amenity: amenity),
-                        const _Section(),
+                        AmenitySchedule(amenity: amenity),
+                        const AmenitySectionDivider(),
                       ],
                       if (amenity.requiresBooking) ...[
-                        _BookingRules(details: details),
-                        const _Section(),
+                        AmenityBookingRules(details: details),
+                        const AmenitySectionDivider(),
                       ],
                       // Cost is about the booking, so free-access amenities
                       // skip it (the section above already ended in a divider).
-                      if (amenity.requiresBooking) _Cost(amenity: amenity),
+                      if (amenity.requiresBooking)
+                        AmenityCost(amenity: amenity),
                       if (amenity.terms != null) ...[
-                        if (amenity.requiresBooking) const _Section(),
-                        _TermsButton(terms: amenity.terms!),
+                        if (amenity.requiresBooking)
+                          const AmenitySectionDivider(),
+                        AmenityTermsButton(terms: amenity.terms!),
                       ],
                       const SizedBox(height: GatesSpacing.space24),
                     ],
@@ -140,37 +161,9 @@ class _AmenityDetailContent extends ConsumerWidget {
               ],
             ),
           ),
-          if (amenity.requiresBooking) _FixedActionBar(details: details),
+          if (amenity.requiresBooking) AmenityActionBar(details: details),
         ],
       ),
-    );
-  }
-}
-
-/// A hairline divider with the vertical rhythm the design uses between
-/// stacked sections (24px gaps, the divider itself sitting in the middle).
-class _Section extends StatelessWidget {
-  const _Section();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: GatesSpacing.space12),
-      child: Divider(height: 1, color: context.palette.borderSubtle),
-    );
-  }
-}
-
-class _SectionHeading extends StatelessWidget {
-  const _SectionHeading(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: GatesSpacing.space16),
-      child: Text(text, style: GatesTypography.headingSmall),
     );
   }
 }
@@ -187,7 +180,6 @@ class _Gallery extends ConsumerStatefulWidget {
 
 class _GalleryState extends ConsumerState<_Gallery> {
   final _pageController = PageController();
-  int _page = 0;
 
   @override
   void dispose() {
@@ -199,20 +191,16 @@ class _GalleryState extends ConsumerState<_Gallery> {
   Widget build(BuildContext context) {
     if (widget.imageCount == 0) return const _GalleryPlaceholder();
 
-    final urlsAsync = ref.watch(amenityImageUrlsProvider(widget.amenityId));
+    final page = ref.watch(
+      amenityDetailControllerProvider(widget.amenityId)
+          .select((s) => s.galleryPage),
+    );
+    final urlsAsync = ref.watch(amenityGalleryUrlsProvider(widget.amenityId));
     return urlsAsync.when(
       loading: () => const SizedBox(height: 260, child: LoadingView()),
       error: (e, _) =>
           const _GalleryPlaceholder(icon: Icons.broken_image_outlined),
-      data: (urls) {
-        final details = ref
-            .watch(amenityDetailsProvider(widget.amenityId))
-            .value;
-        final images = details?.images ?? const [];
-        final photoUrls = images
-            .map((image) => urls[image.storagePath])
-            .whereType<String>()
-            .toList();
+      data: (photoUrls) {
         if (photoUrls.isEmpty) return const _GalleryPlaceholder();
 
         return SizedBox(
@@ -222,7 +210,12 @@ class _GalleryState extends ConsumerState<_Gallery> {
               PageView.builder(
                 controller: _pageController,
                 itemCount: photoUrls.length,
-                onPageChanged: (page) => setState(() => _page = page),
+                onPageChanged: ref
+                    .read(
+                      amenityDetailControllerProvider(widget.amenityId)
+                          .notifier,
+                    )
+                    .setGalleryPage,
                 itemBuilder: (context, index) => Semantics(
                   button: true,
                   label: context.l10n.amenitiesPhotoLabel(
@@ -261,7 +254,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      '${_page + 1} / ${photoUrls.length}',
+                      '${page + 1} / ${photoUrls.length}',
                       style: GatesTypography.label.copyWith(
                         color: context.palette.textBrand,
                       ),
@@ -335,415 +328,6 @@ class _PhotoViewer extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _Identity extends StatelessWidget {
-  const _Identity({required this.amenity});
-
-  final Amenity amenity;
-
-  @override
-  Widget build(BuildContext context) {
-    final metaParts = [
-      if (amenity.capacity != null)
-        context.l10n.amenitiesCapacity(amenity.capacity!),
-      amenity.requiresBooking
-          ? context.l10n.amenitiesBookingRequired
-          : context.l10n.amenitiesFreeAccess,
-    ].join(' · ');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(amenity.name, style: GatesTypography.headingLarge),
-        if (amenity.location != null) ...[
-          const SizedBox(height: GatesSpacing.space8),
-          Text(amenity.location!, style: _bodySecondary(context)),
-        ],
-        const SizedBox(height: GatesSpacing.space4),
-        Text(metaParts, style: context.gatesText.labelSecondary),
-      ],
-    );
-  }
-}
-
-class _FeaturedServices extends StatelessWidget {
-  const _FeaturedServices({required this.services});
-
-  final List<AmenityService> services;
-
-  @override
-  Widget build(BuildContext context) {
-    final featured = services.where((s) => s.isFeatured).toList();
-    final visible = featured.isEmpty ? services : featured;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeading(context.l10n.amenitiesOffersHeading),
-        for (final entry in visible)
-          Padding(
-            padding: const EdgeInsets.only(bottom: GatesSpacing.space16),
-            child: Row(
-              children: [
-                Icon(
-                  serviceIconFor(entry.service.icon),
-                  size: 24,
-                  color: context.palette.textSecondary,
-                ),
-                const SizedBox(width: GatesSpacing.space16),
-                Expanded(
-                  child: Text(entry.service.name, style: GatesTypography.body),
-                ),
-              ],
-            ),
-          ),
-        if (services.length > visible.length)
-          SizedBox(
-            width: double.infinity,
-            child: GatesButton(
-              label: context.l10n.amenitiesViewAllServices,
-              style: GatesButtonStyle.secondary,
-              onPressed: () => _showAllServicesSheet(context, services),
-            ),
-          ),
-      ],
-    );
-  }
-
-  void _showAllServicesSheet(
-    BuildContext context,
-    List<AmenityService> services,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(GatesRadius.radius24),
-        ),
-      ),
-      builder: (context) => _AllServicesSheet(services: services),
-    );
-  }
-}
-
-class _AllServicesSheet extends StatelessWidget {
-  const _AllServicesSheet({required this.services});
-
-  final List<AmenityService> services;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(GatesSpacing.space24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  context.l10n.amenitiesAllServices,
-                  style: GatesTypography.headingSmall,
-                ),
-                IconButton(
-                  tooltip: context.l10n.amenitiesClose,
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: GatesSpacing.space12),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: services.length,
-                itemBuilder: (context, index) {
-                  final service = services[index].service;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      serviceIconFor(service.icon),
-                      color: context.palette.textSecondary,
-                    ),
-                    title: Text(service.name, style: GatesTypography.body),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Description extends StatelessWidget {
-  const _Description({required this.html});
-
-  final String html;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeading(context.l10n.amenitiesAboutHeading),
-        Html(
-          data: html,
-          style: {
-            'body': Style(
-              margin: Margins.zero,
-              padding: HtmlPaddings.zero,
-              fontFamily: 'Manrope',
-              fontSize: FontSize(16),
-              color: context.palette.textPrimary,
-            ),
-            'a': Style(color: context.palette.textBrand),
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _Schedule extends StatelessWidget {
-  const _Schedule({required this.amenity});
-
-  final Amenity amenity;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeading(context.l10n.amenitiesScheduleHeading),
-        for (final block in amenity.effectiveSchedule)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              amenityScheduleBlockLabel(context.l10n, block),
-              style: GatesTypography.body,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _BookingRules extends StatelessWidget {
-  const _BookingRules({required this.details});
-
-  final AmenityDetails details;
-
-  @override
-  Widget build(BuildContext context) {
-    final amenity = details.amenity;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeading(context.l10n.amenitiesBeforeBookingHeading),
-        if (amenity.bookingDurationMinutes != null) ...[
-          Text(
-            context.l10n.amenitiesDurationPerBooking,
-            style: GatesTypography.label,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            amenityDurationLabel(context.l10n, amenity.bookingDurationMinutes!),
-            style: _bodySecondary(context),
-          ),
-          const SizedBox(height: GatesSpacing.space16),
-        ],
-        if (details.bookingLimits.isNotEmpty) ...[
-          Text(
-            context.l10n.amenitiesLimitPerResident,
-            style: GatesTypography.label,
-          ),
-          const SizedBox(height: 4),
-          for (final limit in details.bookingLimits)
-            Text(
-              amenityBookingLimitLabel(context.l10n, limit),
-              style: _bodySecondary(context),
-            ),
-          const SizedBox(height: GatesSpacing.space16),
-        ],
-        if (details.blackouts.isNotEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(GatesSpacing.space16),
-            decoration: BoxDecoration(
-              color: context.palette.statusWarningBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.amenitiesClosedDates,
-                  style: GatesTypography.label.copyWith(
-                    color: context.palette.statusWarning,
-                  ),
-                ),
-                const SizedBox(height: GatesSpacing.space8),
-                for (final blackout in details.blackouts)
-                  Text(
-                    amenityBlackoutLabel(context.l10n, blackout),
-                    style: context.gatesText.labelSecondary.copyWith(
-                      color: context.palette.statusWarning,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _Cost extends StatelessWidget {
-  const _Cost({required this.amenity});
-
-  final Amenity amenity;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasCost = amenity.requiresPayment && amenity.price != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeading(context.l10n.amenitiesCostHeading),
-        Text(
-          hasCost
-              ? _currencyFormat.format(amenity.price)
-              : context.l10n.amenitiesNoCost,
-          style: GatesTypography.headingMedium,
-        ),
-        if (hasCost && amenity.bookingDurationMinutes != null) ...[
-          const SizedBox(height: GatesSpacing.space8),
-          Text(
-            context.l10n.amenitiesPerBookingOf(
-              amenityDurationLabel(
-                context.l10n,
-                amenity.bookingDurationMinutes!,
-              ),
-            ),
-            style: context.gatesText.labelSecondary,
-          ),
-        ],
-        if (hasCost && amenity.paymentMethods.isNotEmpty) ...[
-          const SizedBox(height: GatesSpacing.space16),
-          Text(
-            context.l10n.amenitiesAcceptedMethods,
-            style: GatesTypography.label,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            amenity.paymentMethods
-                .map((m) => amenityPaymentMethodLabel(context.l10n, m))
-                .join(' · '),
-            style: context.gatesText.labelSecondary,
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _TermsButton extends StatelessWidget {
-  const _TermsButton({required this.terms});
-
-  final String terms;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: GatesButton(
-        label: context.l10n.amenitiesTerms,
-        style: GatesButtonStyle.secondary,
-        onPressed: () => showTermsSheet(context, terms),
-      ),
-    );
-  }
-}
-
-class _FixedActionBar extends StatelessWidget {
-  const _FixedActionBar({required this.details});
-
-  final AmenityDetails details;
-
-  Amenity get amenity => details.amenity;
-
-  Future<void> _pickDateTime(BuildContext context) async {
-    final selection = await showBookingDateTimeSheet(
-      context,
-      amenity: amenity,
-      blackouts: details.blackouts,
-    );
-    if (selection == null || !context.mounted) return;
-    context.push(
-      '/amenities/${amenity.id}/review',
-      extra: ReviewBookingArgs(details: details, selection: selection),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final priceLabel = amenity.requiresPayment && amenity.price != null
-        ? _currencyFormat.format(amenity.price)
-        : context.l10n.amenitiesNoCost;
-    final durationLabel = amenity.bookingDurationMinutes != null
-        ? context.l10n.amenitiesPerBookingDuration(
-            amenityDurationLabel(context.l10n, amenity.bookingDurationMinutes!),
-          )
-        : context.l10n.amenitiesPerBooking;
-
-    // The design's own 24px bottom padding already reads as "clear of the
-    // home indicator" on non-notched devices; on devices with a real inset
-    // (the home indicator itself) that inset already provides ≥24px, so we
-    // take whichever is larger instead of stacking both — otherwise the row
-    // ends up sitting far closer to the top padding (12px) than the bottom.
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final bottomPadding = math.max(GatesSpacing.space24, bottomInset);
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        GatesSpacing.space24,
-        GatesSpacing.space12,
-        GatesSpacing.space24,
-        bottomPadding,
-      ),
-      decoration: BoxDecoration(
-        color: context.palette.bgSurface,
-        border: Border(top: BorderSide(color: context.palette.borderSubtle)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(priceLabel, style: GatesTypography.headingSmall),
-                Text(durationLabel, style: context.gatesText.caption),
-              ],
-            ),
-          ),
-          const SizedBox(width: GatesSpacing.space12),
-          SizedBox(
-            width: 176,
-            child: GatesButton(
-              label: context.l10n.amenitiesPickDate,
-              onPressed: () => _pickDateTime(context),
-            ),
-          ),
-        ],
       ),
     );
   }

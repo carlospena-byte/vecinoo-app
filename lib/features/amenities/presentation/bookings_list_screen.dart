@@ -13,8 +13,7 @@ import '../../../l10n/l10n.dart';
 import '../domain/amenity_booking.dart';
 import 'amenities_controller.dart';
 import 'booking_bottom_sheets.dart';
-
-enum _BookingsTab { pending, confirmed, history }
+import 'bookings_list_controller.dart';
 
 final _shortDateFormat = DateFormat('EEE d MMM y', 'es');
 final _timeFormat = DateFormat('HH:mm', 'es');
@@ -34,18 +33,12 @@ String _timeRangeLabel(AmenityBooking booking) =>
 /// starts a new booking, then Pendientes / Confirmadas / Historial. Figma
 /// nodes R04B (Confirmadas) and R04C (Historial); Pendientes reuses the
 /// same card/tab shell.
-class BookingsListScreen extends ConsumerStatefulWidget {
+class BookingsListScreen extends ConsumerWidget {
   const BookingsListScreen({super.key});
 
   @override
-  ConsumerState<BookingsListScreen> createState() => _BookingsListScreenState();
-}
-
-class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
-  _BookingsTab _tab = _BookingsTab.pending;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tab = ref.watch(bookingsListControllerProvider);
     final bookingsAsync = ref.watch(myBookingsProvider);
 
     return Scaffold(
@@ -89,23 +82,25 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
                   GatesSpacing.space24,
                   0,
                 ),
-                child: GatesSegmentedTabs<_BookingsTab>(
+                child: GatesSegmentedTabs<BookingsTab>(
                   options: [
                     GatesSegmentedTabOption(
-                      value: _BookingsTab.pending,
+                      value: BookingsTab.pending,
                       label: context.l10n.amenitiesTabPending,
                     ),
                     GatesSegmentedTabOption(
-                      value: _BookingsTab.confirmed,
+                      value: BookingsTab.confirmed,
                       label: context.l10n.amenitiesTabConfirmed,
                     ),
                     GatesSegmentedTabOption(
-                      value: _BookingsTab.history,
+                      value: BookingsTab.history,
                       label: context.l10n.amenitiesTabHistory,
                     ),
                   ],
-                  selected: _tab,
-                  onSelect: (tab) => setState(() => _tab = tab),
+                  selected: tab,
+                  onSelect: ref
+                      .read(bookingsListControllerProvider.notifier)
+                      .select,
                 ),
               ),
             ),
@@ -118,21 +113,11 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
                   onRetry: () => ref.invalidate(myBookingsProvider),
                 ),
                 data: (bookings) {
-                  final filtered = switch (_tab) {
-                    _BookingsTab.pending =>
-                      bookings.where(_isPending).toList()
-                        ..sort((a, b) => a.startTime.compareTo(b.startTime)),
-                    _BookingsTab.confirmed =>
-                      bookings.where(_isConfirmed).toList()
-                        ..sort((a, b) => a.startTime.compareTo(b.startTime)),
-                    _BookingsTab.history =>
-                      bookings.where(_isHistory).toList()
-                        ..sort((a, b) => b.startTime.compareTo(a.startTime)),
-                  };
+                  final filtered = bookingsForTab(bookings, tab);
                   if (filtered.isEmpty) {
                     return EmptyView(
                       key: const ValueKey('body-empty'),
-                      message: _emptyMessage(context, _tab),
+                      message: _emptyMessage(context, tab),
                       icon: Icons.event_busy_outlined,
                     );
                   }
@@ -163,29 +148,23 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
   }
 }
 
-bool _isPending(AmenityBooking b) =>
-    b.status == BookingStatus.pending && b.isUpcoming;
-bool _isConfirmed(AmenityBooking b) =>
-    b.status == BookingStatus.confirmed && b.isUpcoming;
-bool _isHistory(AmenityBooking b) => !_isPending(b) && !_isConfirmed(b);
-
-String _emptyMessage(BuildContext context, _BookingsTab tab) => switch (tab) {
-  _BookingsTab.pending => context.l10n.amenitiesEmptyPending,
-  _BookingsTab.confirmed => context.l10n.amenitiesEmptyConfirmed,
-  _BookingsTab.history => context.l10n.amenitiesEmptyHistory,
+String _emptyMessage(BuildContext context, BookingsTab tab) => switch (tab) {
+  BookingsTab.pending => context.l10n.amenitiesEmptyPending,
+  BookingsTab.confirmed => context.l10n.amenitiesEmptyConfirmed,
+  BookingsTab.history => context.l10n.amenitiesEmptyHistory,
 };
 
 /// "Reservation card / Compact" — Figma node 292:861.
-class _BookingCard extends ConsumerWidget {
+class _BookingCard extends StatelessWidget {
   const _BookingCard({required this.booking});
 
   final AmenityBooking booking;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(GatesRadius.radius16),
-      onTap: () => showBookingDetailSheet(context, ref, booking),
+      onTap: () => showBookingDetailSheet(context, booking),
       child: Container(
         padding: const EdgeInsets.all(GatesSpacing.space16),
         decoration: BoxDecoration(

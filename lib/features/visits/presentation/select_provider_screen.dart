@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'visit_failure_text.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
@@ -131,7 +132,11 @@ class _SelectProviderScreenState extends ConsumerState<SelectProviderScreen> {
                 child: catalogAsync.when(
                   loading: () => const LoadingView(),
                   error: (e, _) => ErrorView(
-                    message: context.l10n.visitsCatalogLoadError,
+                    message: withErrorDetail(
+                      context.l10n,
+                      e,
+                      context.l10n.visitsCatalogLoadError,
+                    ),
                     onRetry: () => ref.invalidate(
                       providersCatalogProvider((
                         residentialId: membership.residentialId,

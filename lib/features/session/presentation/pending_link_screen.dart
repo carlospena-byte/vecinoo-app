@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/error/failure.dart';
+import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_text_field.dart';
@@ -57,11 +59,23 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
       _errorText = null;
     });
     try {
-      await ref.read(sessionRepositoryProvider).acceptInvitation(code.trim());
-      ref.invalidate(myMembershipsProvider);
-    } catch (e) {
+      final accepted = await ref
+          .read(sessionRepositoryProvider)
+          .acceptInvitation(code.trim());
+      if (accepted) {
+        ref.invalidate(myMembershipsProvider);
+      } else if (mounted) {
+        setState(() => _errorText = context.l10n.authInvitationInvalid);
+      }
+    } catch (error) {
       if (!mounted) return;
-      setState(() => _errorText = context.l10n.authInvitationInvalid);
+      final l10n = context.l10n;
+      setState(
+        () => _errorText = withFailureDetail(
+          failureDetail(l10n, Failure.from(error)),
+          l10n.authInvitationInvalid,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isRedeeming = false);
     }
@@ -86,7 +100,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
                     Icons.logout,
                     color: context.palette.textSecondary,
                   ),
-                  onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                  onPressed: () => signOutReportingErrors(context, ref),
                 ),
               ),
               Column(

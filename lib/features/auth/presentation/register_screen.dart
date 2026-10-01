@@ -1,26 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/keyboard_safe_column.dart';
 import '../../../core/widgets/otp_code_field.dart';
 import '../../../core/widgets/vecinoo_brand.dart';
-import '../../session/presentation/session_controller.dart';
+import '../../../core/error/failure_messages.dart';
 import 'auth_controller.dart';
-import 'otp_verify_screen.dart';
+import 'register_controller.dart';
 import '../../../core/widgets/gates_toast.dart';
 import '../../../l10n/l10n.dart';
 
-/// SharedPreferences key for an already-validated invitation code, saved
-/// right before we navigate to the OTP screen (there's no active session
-/// yet — passwordless sign-in only completes once the code is verified)
-/// — see pending_link_screen.dart, which redeems it after that happens.
-const pendingInvitationCodePrefsKey = 'pending_invitation_code';
-
-const _invitationCodeLength = 6;
+export 'register_controller.dart' show pendingInvitationCodePrefsKey;
 
 /// "Validar invitación / Código no válido" screen from Figma (file
 /// `Bla1GPfXA7JkuZcYpVi2DS`, node `61:454`): a resident proves they hold a
@@ -38,61 +33,47 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _codeController = TextEditingController();
 
-  bool _isSubmitting = false;
-  String? _errorText;
+  StreamSubscription<RegisterEvent>? _events;
+
+  @override
+  void initState() {
+    super.initState();
+    _events = ref
+        .read(registerControllerProvider.notifier)
+        .events
+        .listen(_onEvent);
+  }
 
   @override
   void dispose() {
+    _events?.cancel();
     _codeController.dispose();
     super.dispose();
   }
 
-  Future<void> _acceptInvitation() async {
-    if (_codeController.text.length != _invitationCodeLength) {
-      setState(
-        () => _errorText = context.l10n.authEnterDigits(_invitationCodeLength),
-      );
-      return;
+  void _onEvent(RegisterEvent event) {
+    if (!mounted) return;
+    switch (event) {
+      case RegisterCodeSent(:final args):
+        context.push('/verify-otp', extra: args);
     }
-    setState(() {
-      _isSubmitting = true;
-      _errorText = null;
-    });
-    final code = _codeController.text.trim();
-    try {
-      final invitation = await ref
-          .read(sessionRepositoryProvider)
-          .validateInvitation(code: code);
-      await ref.read(authRepositoryProvider).sendEmailOtp(invitation.email);
+  }
 
-      // No active session until the code is verified on the next screen,
-      // so save the already-validated invitation code for
-      // pending_link_screen.dart to redeem once sign-in actually completes.
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(pendingInvitationCodePrefsKey, code);
+  void _acceptInvitation() => ref
+      .read(registerControllerProvider.notifier)
+      .acceptInvitation(_codeController.text);
 
-      if (!mounted) return;
-      context.push(
-        '/verify-otp',
-        extra: OtpVerifyArgs(
-          identifier: invitation.email,
-          channel: OtpChannel.email,
-          registration: RegistrationContext(
-            residentialName: invitation.residentialName,
-            unitName: invitation.unitName,
-            fullName: invitation.fullName,
-          ),
-        ),
-      );
-    } catch (e) {
-      // The message below is deliberately generic, but this keeps real
-      // bugs — like an unreachable Supabase URL — from looking identical
-      // to a bad invitation code in the debug console.
-      debugPrint('Accept invitation failed: $e');
-      setState(() => _errorText = context.l10n.authInvitationInvalid);
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+  String? _errorText(RegisterError? error) {
+    final l10n = context.l10n;
+    return switch (error) {
+      null => null,
+      InvitationIncomplete() => l10n.authEnterDigits(invitationCodeLength),
+      InvitationRejected() => l10n.authInvitationInvalid,
+      RegisterFailed(:final failure) => withFailureDetail(
+        failureDetail(l10n, failure),
+        l10n.authInvitationInvalid,
+      ),
+    };
   }
 
   void _contactSupport() {
@@ -106,6 +87,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(registerControllerProvider);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -123,28 +105,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  context.l10n.authValidateCodeBody(_invitationCodeLength),
+                  context.l10n.authValidateCodeBody(invitationCodeLength),
                   style: context.gatesText.labelSecondary,
                 ),
                 const SizedBox(height: 16),
                 OtpCodeField(
                   controller: _codeController,
                   label: context.l10n.authInvitationCode,
-                  length: _invitationCodeLength,
+                  length: invitationCodeLength,
                   accentColor: context.palette.accentCoral,
                   helper: context.l10n.authInvitationHelper,
-                  errorText: _errorText,
+                  errorText: _errorText(state.error),
                   onCompleted: (_) => _acceptInvitation(),
                 ),
                 const SizedBox(height: 16),
                 GatesButton(
                   label: context.l10n.authAcceptInvitation,
                   onPressed:
-                      (_isSubmitting ||
-                          _codeController.text.length != _invitationCodeLength)
+                      (state.isSubmitting ||
+                          _codeController.text.length != invitationCodeLength)
                       ? null
                       : _acceptInvitation,
-                  loading: _isSubmitting,
+                  loading: state.isSubmitting,
                 ),
                 Center(
                   child: TextButton(
