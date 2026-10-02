@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gates_app/core/app_info.dart';
 import 'package:gates_app/core/error/failure.dart';
 import 'package:gates_app/core/theme/theme_mode_controller.dart';
 import 'package:gates_app/features/auth/domain/auth_repository.dart';
@@ -189,6 +190,7 @@ void main() {
         authRepositoryProvider.overrideWithValue(auth),
         sessionRepositoryProvider.overrideWithValue(session),
         profileRepositoryProvider.overrideWithValue(profiles),
+        appVersionProvider.overrideWith((ref) async => '1.0.0'),
       ],
     );
 
@@ -200,13 +202,15 @@ void main() {
       expect(find.text('A-204'), findsOneWidget);
       expect(find.text('Los Olivos'), findsOneWidget);
       expect(find.text(_es.profileChangeUnit), findsNothing);
+      expect(find.text(_es.profileUnitManagedNote), findsOneWidget);
     });
 
     testWidgets('hides absent contact rows', (tester) async {
       profiles.profile = const Profile(userId: 'u');
       await pump(tester, mode: ThemeMode.dark);
-      expect(find.byIcon(TablerIcons.mail), findsNothing);
       expect(find.byIcon(TablerIcons.phone), findsNothing);
+      // The email row stays, as the way to add/change it.
+      expect(find.text(_es.profileChangeEmail), findsOneWidget);
       expect(find.text('Residente'), findsOneWidget);
     });
 
@@ -224,12 +228,18 @@ void main() {
 
     testWidgets('appearance selector persists the choice', (tester) async {
       await pump(tester);
+      await tester.ensureVisible(find.text(_es.profileThemeDark));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(_es.profileThemeDark));
       await tester.pumpAndSettle();
       expect(await ThemeModeStorage.read(), ThemeMode.dark);
+      await tester.ensureVisible(find.text(_es.profileThemeSystem));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(_es.profileThemeSystem));
       await tester.pumpAndSettle();
       expect(await ThemeModeStorage.read(), ThemeMode.system);
+      await tester.ensureVisible(find.text(_es.profileThemeLight));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(_es.profileThemeLight));
       await tester.pumpAndSettle();
       expect(await ThemeModeStorage.read(), ThemeMode.light);
@@ -237,8 +247,11 @@ void main() {
 
     testWidgets('sign out calls the repository', (tester) async {
       await pump(tester);
-      await tester.ensureVisible(find.text(_es.commonLogout));
+      await tester.scrollUntilVisible(find.text(_es.commonLogout), 200);
       await tester.tap(find.text(_es.commonLogout));
+      await tester.pumpAndSettle();
+      expect(auth.calls, isEmpty, reason: 'asks for confirmation first');
+      await tester.tap(find.text(_es.commonLogout).last);
       await tester.pumpAndSettle();
       expect(auth.calls, ['signOut']);
     });
@@ -246,8 +259,10 @@ void main() {
     testWidgets('sign out failure toasts the cause', (tester) async {
       auth.signOutError = const ServerFailure();
       await pump(tester);
-      await tester.ensureVisible(find.text(_es.commonLogout));
+      await tester.scrollUntilVisible(find.text(_es.commonLogout), 200);
       await tester.tap(find.text(_es.commonLogout));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_es.commonLogout).last);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text(_es.commonErrorServer), findsOneWidget);

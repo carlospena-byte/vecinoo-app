@@ -88,6 +88,7 @@ class _PendingLinkScreenState extends ConsumerState<PendingLinkScreen> {
       backgroundColor: context.palette.bgSubtle,
       body: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
