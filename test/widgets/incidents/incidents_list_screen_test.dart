@@ -123,8 +123,6 @@ void main() {
   testWidgets('load error shows a retry that refetches', (tester) async {
     final repo = await pump(tester, error: const NetworkFailure());
     expect(find.text(l10n.incidentsListLoadError), findsOneWidget);
-    // Tabs are hidden while there is no data.
-    expect(find.text(l10n.incidentsTabHistory), findsNothing);
     final before = repo.listFetches;
 
     repo.listError = null;
@@ -180,6 +178,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Visita cancelada'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('each tab loads its own 10 at a time', (tester) async {
+    final repo = await pump(
+      tester,
+      data: [
+        for (var i = 0; i < 25; i++)
+          makeIncident(
+            id: 'p$i',
+            title: 'Aviso $i',
+            createdAt: DateTime(2026, 1, 1).add(Duration(days: 30 - i)),
+          ),
+        makeIncident(
+          id: 'h',
+          title: 'Historial uno',
+          status: IncidentStatus.resolved,
+        ),
+      ],
+    );
+    expect(repo.pageRequests, [(IncidentGroup.pending, 0)]);
+    expect(find.text('Aviso 0'), findsOneWidget);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -3000));
+    await tester.pumpAndSettle();
+    expect(repo.pageRequests.take(2), [
+      (IncidentGroup.pending, 0),
+      (IncidentGroup.pending, 10),
+    ]);
+
+    await tester.tap(find.text(l10n.incidentsTabHistory));
+    await tester.pumpAndSettle();
+    expect(repo.pageRequests.last, (IncidentGroup.history, 0));
+    expect(find.text('Historial uno'), findsOneWidget);
+    expect(find.text('Aviso 0'), findsNothing);
+  });
+
+  testWidgets('a failing next page shows a retry footer', (tester) async {
+    final repo = await pump(
+      tester,
+      data: [
+        for (var i = 0; i < 12; i++)
+          makeIncident(
+            id: 'p$i',
+            title: 'Aviso $i',
+            createdAt: DateTime(2026, 1, 1).add(Duration(days: 30 - i)),
+          ),
+      ],
+    );
+    repo.listError = const NetworkFailure();
+    await tester.drag(find.byType(ListView), const Offset(0, -3000));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.commonLoadMoreError), findsOneWidget);
+
+    repo.listError = null;
+    await tester.tap(find.text(l10n.commonRetry));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.commonLoadMoreError), findsNothing);
   });
 
   testWidgets('status badge renders every status', (tester) async {

@@ -50,12 +50,28 @@ class FakeIncidentsRepository implements IncidentsRepository {
 
   final calls = <String>[];
   int listFetches = 0;
+  final pageRequests = <(IncidentGroup, int)>[];
 
   @override
   Future<List<Incident>> fetchIncidents(String residentialId) async {
     listFetches++;
     if (listError != null) throw listError!;
     return incidents;
+  }
+
+  @override
+  Future<List<Incident>> fetchIncidentsPage(
+    String residentialId, {
+    required IncidentGroup group,
+    required int limit,
+    int offset = 0,
+  }) async {
+    listFetches++;
+    pageRequests.add((group, offset));
+    if (listError != null) throw listError!;
+    final inGroup = incidents.where((i) => group.contains(i.status)).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return inGroup.skip(offset).take(limit).toList();
   }
 
   @override

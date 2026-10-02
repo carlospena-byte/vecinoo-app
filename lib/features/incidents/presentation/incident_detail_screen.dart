@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:tabler_icons_plus/tabler_icons_plus.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/error/failure.dart';
 import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
+import '../../../core/widgets/gates_full_width_image.dart';
+import '../../../core/widgets/gates_html.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_text_action.dart';
 import '../../../core/widgets/gates_toast.dart';
@@ -54,10 +53,9 @@ class IncidentDetailScreen extends ConsumerWidget {
           SafeArea(
             top: false,
             child: ListView(
-              padding: const EdgeInsets.all(GatesSpacing.space24)
-                  .copyWith(top: 0),
+              padding: const EdgeInsets.only(bottom: GatesSpacing.space24),
               children: [
-                _SummaryCard(
+                _IncidentContent(
                   incident: incident,
                   photos: attachments.value ?? const [],
                 ),
@@ -180,9 +178,10 @@ class IncidentDetailScreen extends ConsumerWidget {
       );
 }
 
-/// Same card shape as the invitation's "Resumen y estado" (Figma 402:1939).
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.incident, required this.photos});
+/// The report laid out edge to edge: text with the page margins, photos at
+/// the full screen width (tap to zoom).
+class _IncidentContent extends StatelessWidget {
+  const _IncidentContent({required this.incident, required this.photos});
 
   final Incident incident;
   final List<IncidentAttachment> photos;
@@ -190,141 +189,65 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final description = incident.description;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.palette.bgSurface,
-        border: Border.all(color: context.palette.borderDefault),
-        borderRadius: BorderRadius.circular(GatesRadius.radius16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.incidentsDetailReportedOn(
-              _dateFormat.format(incident.createdAt),
-            ),
-            style: context.gatesText.caption.copyWith(fontSize: 13),
-          ),
-          const SizedBox(height: GatesSpacing.space4),
-          Text(
-            incident.title,
-            style: GatesTypography.body.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              height: 26 / 18,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: GatesSpacing.space12,
-            runSpacing: GatesSpacing.space8,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: GatesSpacing.space24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IncidentStatusBadge(status: incident.status),
-              if (incident.incidentTypeName != null)
-                Text(
-                  incident.incidentTypeName!,
-                  style: context.gatesText.labelSecondary,
+              Text(
+                context.l10n.incidentsDetailReportedOn(
+                  _dateFormat.format(incident.createdAt),
                 ),
+                style: context.gatesText.caption,
+              ),
+              const SizedBox(height: GatesSpacing.space4),
+              Text(
+                incident.title,
+                style: GatesTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: GatesSpacing.space12,
+                runSpacing: GatesSpacing.space8,
+                children: [
+                  IncidentStatusBadge(status: incident.status),
+                  if (incident.incidentTypeName != null)
+                    Text(
+                      incident.incidentTypeName!,
+                      style: context.gatesText.labelSecondary,
+                    ),
+                ],
+              ),
+              if (description != null && description.trim().isNotEmpty) ...[
+                const SizedBox(height: 20),
+                Text(
+                  context.l10n.incidentsDetailDescription,
+                  style: context.gatesText.caption,
+                ),
+                const SizedBox(height: GatesSpacing.space4),
+                GatesHtml(description),
+              ],
             ],
           ),
-          if (description != null && description.trim().isNotEmpty) ...[
-            const SizedBox(height: 20),
-            Text(
-              context.l10n.incidentsDetailDescription,
-              style: context.gatesText.caption,
-            ),
-            const SizedBox(height: GatesSpacing.space4),
-            Html(
-              data: description,
-              onLinkTap: (url, _, _) {
-                final uri = url == null ? null : Uri.tryParse(url);
-                if (uri != null) {
-                  launchUrl(uri, mode: LaunchMode.externalApplication);
-                }
-              },
-              style: {
-                'body': Style(
-                  margin: Margins.zero,
-                  padding: HtmlPaddings.zero,
-                  fontFamily: 'Manrope',
-                  fontSize: FontSize(14),
-                  lineHeight: const LineHeight(21 / 14),
-                  color: context.palette.textPrimary,
-                ),
-                'p': Style(margin: Margins.only(bottom: 4)),
-                'ul': Style(
-                  margin: Margins.zero,
-                  padding: HtmlPaddings.only(left: 16),
-                ),
-                'li': Style(padding: HtmlPaddings.zero),
-                'a': Style(color: context.palette.textBrand),
-              },
-            ),
-          ],
-          if (photos.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            Text(
-              context.l10n.incidentsDetailPhotos,
-              style: context.gatesText.caption,
-            ),
-            const SizedBox(height: GatesSpacing.space8),
-            Wrap(
-              spacing: GatesSpacing.space12,
-              runSpacing: GatesSpacing.space12,
-              children: [for (final a in photos) _AttachmentThumb(url: a.url)],
+        ),
+        if (photos.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          for (final (i, photo) in photos.indexed) ...[
+            if (i > 0) const SizedBox(height: GatesSpacing.space8),
+            GatesFullWidthImage(
+              url: photo.url,
+              semanticLabel: context.l10n.incidentsAttachedPhoto,
+              semanticHint: context.l10n.incidentsAttachedPhotoHint,
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _AttachmentThumb extends StatelessWidget {
-  const _AttachmentThumb({required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: context.l10n.incidentsAttachedPhoto,
-      hint: context.l10n.incidentsAttachedPhotoHint,
-      child: GestureDetector(
-        onTap: () => showDialog<void>(
-          context: context,
-          builder: (_) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(GatesSpacing.space16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(GatesRadius.radius16),
-              child: InteractiveViewer(child: Image.network(url)),
-            ),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            url,
-            width: 104,
-            height: 100,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
-              width: 104,
-              height: 100,
-              color: context.palette.bgSubtle,
-              child: Icon(
-                TablerIcons.photoOff,
-                color: context.palette.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

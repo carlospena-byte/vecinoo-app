@@ -85,6 +85,14 @@ class _FakeRepository implements IncidentsRepository {
   Future<List<Incident>> fetchIncidents(String residentialId) async => [];
 
   @override
+  Future<List<Incident>> fetchIncidentsPage(
+    String residentialId, {
+    required IncidentGroup group,
+    required int limit,
+    int offset = 0,
+  }) async => [];
+
+  @override
   Future<Incident> fetchIncident(String incidentId) =>
       throw UnimplementedError();
 

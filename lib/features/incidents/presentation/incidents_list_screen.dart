@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_add_button.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
+import '../../../core/paging/paged_notifier.dart';
+import '../../../core/widgets/gates_paged_list.dart';
 import '../../../core/widgets/nav_clearance.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../session/presentation/session_controller.dart';
@@ -15,16 +17,10 @@ import '../../../l10n/l10n.dart';
 import 'incident_labels.dart';
 import 'incidents_controller.dart';
 
-enum _IncidentsTab { pending, inProgress, history }
-
-bool _isPending(Incident i) => i.status == IncidentStatus.newIncident;
-bool _isInProgress(Incident i) => i.status == IncidentStatus.inProgress;
-bool _isHistory(Incident i) => !_isPending(i) && !_isInProgress(i);
-
-String _emptyMessage(AppLocalizations l10n, _IncidentsTab tab) => switch (tab) {
-  _IncidentsTab.pending => l10n.incidentsListEmptyPending,
-  _IncidentsTab.inProgress => l10n.incidentsListEmptyInProgress,
-  _IncidentsTab.history => l10n.incidentsListEmptyHistory,
+String _emptyMessage(AppLocalizations l10n, IncidentGroup tab) => switch (tab) {
+  IncidentGroup.pending => l10n.incidentsListEmptyPending,
+  IncidentGroup.inProgress => l10n.incidentsListEmptyInProgress,
+  IncidentGroup.history => l10n.incidentsListEmptyHistory,
 };
 
 final _dateFormat = DateFormat('d MMM y, HH:mm', 'es');
@@ -42,7 +38,17 @@ class IncidentsListScreen extends ConsumerStatefulWidget {
 }
 
 class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
-  _IncidentsTab _tab = _IncidentsTab.pending;
+  IncidentGroup _tab = IncidentGroup.pending;
+
+  /// Back from the report flow or a detail: anything may have changed
+  /// (status, new report), so every tab starts over and the Home summary
+  /// refetches.
+  void _reload(String residentialId) {
+    ref.invalidate(incidentsListProvider(residentialId));
+    for (final group in IncidentGroup.values) {
+      ref.invalidate(incidentsPagingProvider((residentialId, group)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +56,9 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
     if (membership == null) return const LoadingView();
 
     final residentialId = membership.residentialId;
-    final incidentsAsync = ref.watch(incidentsListProvider(residentialId));
+    final key = (residentialId, _tab);
+    final paging = ref.watch(incidentsPagingProvider(key));
+    final controller = ref.read(incidentsPagingProvider(key).notifier);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -77,94 +85,92 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                     semanticLabel: context.l10n.incidentsReportAction,
                     onTap: () async {
                       await context.push('/incidents/report');
-                      ref.invalidate(incidentsListProvider(residentialId));
+                      _reload(residentialId);
                     },
                   ),
                 ],
               ),
             ),
-            incidentsAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (e, _) => const SizedBox.shrink(),
-              data: (_) => Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  GatesSpacing.space24,
-                  GatesSpacing.space16,
-                  GatesSpacing.space24,
-                  0,
-                ),
-                child: GatesSegmentedTabs<_IncidentsTab>(
-                  options: [
-                    GatesSegmentedTabOption(
-                      value: _IncidentsTab.pending,
-                      label: context.l10n.incidentsTabPending,
-                    ),
-                    GatesSegmentedTabOption(
-                      value: _IncidentsTab.inProgress,
-                      label: context.l10n.incidentsTabInProgress,
-                    ),
-                    GatesSegmentedTabOption(
-                      value: _IncidentsTab.history,
-                      label: context.l10n.incidentsTabHistory,
-                    ),
-                  ],
-                  selected: _tab,
-                  onSelect: (tab) => setState(() => _tab = tab),
-                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                GatesSpacing.space24,
+                GatesSpacing.space16,
+                GatesSpacing.space24,
+                0,
+              ),
+              child: GatesSegmentedTabs<IncidentGroup>(
+                options: [
+                  GatesSegmentedTabOption(
+                    value: IncidentGroup.pending,
+                    label: context.l10n.incidentsTabPending,
+                  ),
+                  GatesSegmentedTabOption(
+                    value: IncidentGroup.inProgress,
+                    label: context.l10n.incidentsTabInProgress,
+                  ),
+                  GatesSegmentedTabOption(
+                    value: IncidentGroup.history,
+                    label: context.l10n.incidentsTabHistory,
+                  ),
+                ],
+                selected: _tab,
+                onSelect: (tab) => setState(() => _tab = tab),
               ),
             ),
             Expanded(
-              child: incidentsAsync.when(
-                loading: () => const LoadingView(),
-                error: (e, _) => ErrorView(
-                  message: context.l10n.incidentsListLoadError,
-                  onRetry: () =>
-                      ref.invalidate(incidentsListProvider(residentialId)),
-                ),
-                data: (incidents) {
-                  final filtered = switch (_tab) {
-                    _IncidentsTab.pending =>
-                      incidents.where(_isPending).toList(),
-                    _IncidentsTab.inProgress =>
-                      incidents.where(_isInProgress).toList(),
-                    _IncidentsTab.history =>
-                      incidents.where(_isHistory).toList(),
-                  }..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-                  if (filtered.isEmpty) {
-                    return EmptyView(
-                      message: _emptyMessage(context.l10n, _tab),
-                      icon: TablerIcons.flagExclamation,
-                    );
-                  }
-                  return RefreshIndicator(
-                    onRefresh: () async =>
-                        ref.invalidate(incidentsListProvider(residentialId)),
-                    child: ListView.separated(
+              child: paging.items.isEmpty
+                  ? _emptyBody(context, paging, controller)
+                  : GatesPagedList<Incident>(
+                      items: paging.items,
+                      state: paging,
+                      onLoadMore: controller.loadMore,
+                      onRefresh: controller.refresh,
                       padding: EdgeInsets.fromLTRB(
                         GatesSpacing.space24,
                         GatesSpacing.space16,
                         GatesSpacing.space24,
                         homeNavClearance(context),
                       ),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: GatesSpacing.space12),
-                      itemBuilder: (context, index) => _IncidentCard(
-                        incident: filtered[index],
+                      itemBuilder: (context, incident) => _IncidentCard(
+                        incident: incident,
                         onTap: () async {
-                          await context.push(
-                            '/incidents/${filtered[index].id}',
-                          );
-                          ref.invalidate(incidentsListProvider(residentialId));
+                          await context.push('/incidents/${incident.id}');
+                          _reload(residentialId);
                         },
                       ),
                     ),
-                  );
-                },
-              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// No items yet: the first load, its failure, or an empty tab.
+  Widget _emptyBody(
+    BuildContext context,
+    PagedState<Incident> paging,
+    IncidentsPagingController controller,
+  ) {
+    if (paging.failure != null) {
+      return ErrorView(
+        message: context.l10n.incidentsListLoadError,
+        onRetry: controller.refresh,
+      );
+    }
+    if (paging.loading) return const LoadingView();
+    return RefreshIndicator(
+      onRefresh: controller.refresh,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: EmptyView(
+              message: _emptyMessage(context.l10n, _tab),
+              icon: TablerIcons.flagExclamation,
+            ),
+          ),
         ),
       ),
     );

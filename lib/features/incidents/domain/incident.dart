@@ -2,6 +2,21 @@ enum IncidentPriority { low, medium, high, urgent }
 
 enum IncidentStatus { newIncident, inProgress, resolved, closed, cancelled }
 
+/// The tabs of the incidents list; each one is paged on its own.
+enum IncidentGroup {
+  pending,
+  inProgress,
+  history;
+
+  bool contains(IncidentStatus status) => switch (this) {
+    pending => status == IncidentStatus.newIncident,
+    inProgress => status == IncidentStatus.inProgress,
+    history =>
+      status != IncidentStatus.newIncident &&
+          status != IncidentStatus.inProgress,
+  };
+}
+
 IncidentPriority priorityFromString(String value) {
   return IncidentPriority.values.firstWhere(
     (p) => p.name == value,

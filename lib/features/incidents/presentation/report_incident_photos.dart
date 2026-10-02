@@ -44,7 +44,7 @@ class PhotosSection extends StatelessWidget {
             ),
             Text(
               '${photos.length} / $maxIncidentPhotos',
-              style: context.gatesText.caption.copyWith(height: 16 / 12),
+              style: context.gatesText.caption,
             ),
           ],
         ),
@@ -119,9 +119,7 @@ class AddPhotosCard extends StatelessWidget {
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
                       context.l10n.incidentsReportUpToPhotos(maxIncidentPhotos),
-                      style: context.gatesText.caption.copyWith(
-                        height: 16 / 12,
-                      ),
+                      style: context.gatesText.caption.copyWith(),
                     ),
                   ],
                 ),
@@ -257,10 +255,7 @@ class StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: context.gatesText.caption.copyWith(
-          color: foreground,
-          height: 16 / 12,
-        ),
+        style: context.gatesText.caption.copyWith(color: foreground),
       ),
     );
   }

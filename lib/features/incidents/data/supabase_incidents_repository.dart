@@ -31,6 +31,30 @@ class SupabaseIncidentsRepository implements IncidentsRepository {
       });
 
   @override
+  Future<List<Incident>> fetchIncidentsPage(
+    String residentialId, {
+    required IncidentGroup group,
+    required int limit,
+    int offset = 0,
+  }) => guardFailure(() async {
+    final query = _client
+        .from('incidents')
+        .select('*, incident_types(name)')
+        .eq('residential_id', residentialId);
+    final filtered = switch (group) {
+      IncidentGroup.pending => query.eq('status', 'new'),
+      IncidentGroup.inProgress => query.eq('status', 'in_progress'),
+      IncidentGroup.history => query.not('status', 'in', '(new,in_progress)'),
+    };
+    final rows = await filtered
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+    return (rows as List)
+        .map((row) => Incident.fromMap(row as Map<String, dynamic>))
+        .toList();
+  });
+
+  @override
   Future<Incident> fetchIncident(String incidentId) => guardFailure(() async {
     final row = await _client
         .from('incidents')

@@ -433,6 +433,11 @@ class IncidentRichEditor extends StatelessWidget {
                 isDense: true,
                 isCollapsed: true,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
                 hintText: context.l10n.incidentsEditorDescriptionHint,
                 hintStyle: context.gatesText.labelSecondary.copyWith(
                   color: context.palette.textSecondary,
@@ -519,7 +524,8 @@ class _LinkSheetState extends State<_LinkSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.fromLTRB(
         GatesSpacing.space24,
         0,

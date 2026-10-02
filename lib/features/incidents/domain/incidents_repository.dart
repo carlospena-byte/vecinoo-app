@@ -8,6 +8,15 @@ abstract interface class IncidentsRepository {
   /// Incidents visible to the current user in this residential.
   Future<List<Incident>> fetchIncidents(String residentialId);
 
+  /// One page of the incidents in [group], newest first. A page shorter
+  /// than [limit] is the last one.
+  Future<List<Incident>> fetchIncidentsPage(
+    String residentialId, {
+    required IncidentGroup group,
+    required int limit,
+    int offset = 0,
+  });
+
   Future<Incident> fetchIncident(String incidentId);
 
   Future<List<IncidentAttachment>> fetchAttachments(String incidentId);

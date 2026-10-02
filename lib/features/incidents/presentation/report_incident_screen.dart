@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../../../core/widgets/keyboard_aware_action.dart';
+
 import 'package:flutter/material.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/error/failure_messages.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/edge_swipe_back.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_select_field.dart';
 import '../../../core/widgets/gates_sheet.dart';
@@ -210,18 +213,31 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && _confirmsExit(s)) _confirmDiscard();
       },
-      child: switch (s.phase) {
-        ReportPhase.form => _buildForm(context, s),
-        ReportPhase.sending => _buildSending(context, s),
-        ReportPhase.photoError => _buildPhotoError(context, s),
-        ReportPhase.sent => _buildSent(context, s),
-      },
+      child: EdgeSwipeBack(
+        enabled: _confirmsExit(s),
+        onBack: _confirmDiscard,
+        child: switch (s.phase) {
+          ReportPhase.form => _buildForm(context, s),
+          ReportPhase.sending => _buildSending(context, s),
+          ReportPhase.photoError => _buildPhotoError(context, s),
+          ReportPhase.sent => _buildSent(context, s),
+        },
+      ),
     );
   }
 
   // ---------------------------------------------------------------- form
 
   Widget _buildForm(BuildContext context, ReportIncidentState s) {
+    final action = ListenableBuilder(
+      listenable: _titleController,
+      builder: (context, _) => GatesButton(
+        label: _isEditing
+            ? context.l10n.incidentsReportSaveChanges
+            : context.l10n.incidentsReportAction,
+        onPressed: _titleController.text.trim().isEmpty ? null : _submit,
+      ),
+    );
     final membership = ref.watch(selectedMembershipProvider).value;
     final types = membership == null
         ? const <IncidentType>[]
@@ -243,6 +259,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         top: false,
         bottom: false,
         child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             GatesSpacing.space24,
             0,
@@ -278,20 +295,11 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
               onAdd: _pickPhotos,
               onRemove: (photo) => _controller.removePhoto(photo.id),
             ),
+            GatesInlineAction(child: action),
           ],
         ),
       ),
-      bottomNavigationBar: _FixedAction(
-        child: ListenableBuilder(
-          listenable: _titleController,
-          builder: (context, _) => GatesButton(
-            label: _isEditing
-                ? context.l10n.incidentsReportSaveChanges
-                : context.l10n.incidentsReportAction,
-            onPressed: _titleController.text.trim().isEmpty ? null : _submit,
-          ),
-        ),
-      ),
+      bottomNavigationBar: GatesFixedAction(child: action),
     );
   }
 
@@ -306,6 +314,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         title: Text(context.l10n.incidentsReportAction, style: _appBarTitle),
       ),
       body: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
         children: [
           Text(
@@ -323,7 +332,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           PhotosSection(photos: s.photos, showAdd: false),
         ],
       ),
-      bottomNavigationBar: _FixedAction(
+      bottomNavigationBar: GatesFixedAction(
         child: GatesButton(
           label: context.l10n.incidentsReportSendingButton,
           onPressed: null,
@@ -343,6 +352,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         title: Text(context.l10n.incidentsDetailPhotos, style: _appBarTitle),
       ),
       body: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
         children: [
           if (s.hasPhotoErrors) ...[
@@ -391,7 +401,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           ],
         ],
       ),
-      bottomNavigationBar: _FixedAction(
+      bottomNavigationBar: GatesFixedAction(
         child: GatesButton(
           label: context.l10n.incidentsReportDone,
           onPressed: s.hasPhotoErrors ? null : _controller.finish,
@@ -419,6 +429,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           ),
         ),
         body: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(GatesSpacing.space24).copyWith(top: 0),
           children: [
             Row(
@@ -497,7 +508,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             ),
           ],
         ),
-        bottomNavigationBar: _FixedAction(
+        bottomNavigationBar: GatesFixedAction(
           child: GatesButton(
             label: context.l10n.incidentsReportBackHome,
             onPressed: _goHome,
@@ -510,31 +521,3 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
 
 /// AppBar title in the Figma AppBar: Heading/Small (20 / semibold).
 final _appBarTitle = GatesTypography.headingSmall;
-
-/// Figma "Acción fija": white bar pinned above the system inset holding the
-/// primary button.
-class _FixedAction extends StatelessWidget {
-  const _FixedAction({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: context.palette.bgSurface,
-      child: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.only(bottom: GatesSpacing.space24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            GatesSpacing.space24,
-            GatesSpacing.space12,
-            GatesSpacing.space24,
-            0,
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}

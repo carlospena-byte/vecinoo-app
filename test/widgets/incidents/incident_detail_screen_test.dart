@@ -4,6 +4,7 @@ import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gates_app/core/error/failure.dart';
+import 'package:gates_app/core/widgets/gates_full_width_image.dart';
 import 'package:gates_app/features/incidents/domain/incident.dart';
 import 'package:gates_app/features/incidents/presentation/incident_detail_screen.dart';
 import 'package:gates_app/features/incidents/presentation/incident_edit_args.dart';
@@ -150,7 +151,9 @@ void main() {
     expect(find.text(l10n.incidentsEditAction), findsNothing);
   });
 
-  testWidgets('attachments render and open a preview dialog', (tester) async {
+  testWidgets('photos render at full width and open the viewer', (
+    tester,
+  ) async {
     await pump(
       tester,
       makeIncident(),
@@ -159,15 +162,16 @@ void main() {
         IncidentAttachment(id: 'a2', storagePath: 'p/2.jpg', url: 'http://x/2'),
       ],
     );
-    expect(find.text(l10n.incidentsDetailPhotos), findsOneWidget);
     final thumbs = find.bySemanticsLabel(l10n.incidentsAttachedPhoto);
     expect(thumbs, findsNWidgets(2));
     // Test HTTP returns an error, so the fallback icon is shown.
     expect(find.byIcon(TablerIcons.photoOff), findsNWidgets(2));
+    // The fallback fills the screen width like the photo would.
+    expect(tester.getSize(find.byType(GatesFullWidthImage).first).width, 390);
 
     await tester.tap(thumbs.first);
-    await tester.pump();
-    expect(find.byType(Dialog), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(GatesImageViewerScreen), findsOneWidget);
     tester.takeException();
   });
 
