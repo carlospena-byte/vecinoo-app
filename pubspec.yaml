@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.13.0
@@ -53,6 +53,8 @@ dependencies:
   tabler_icons_plus: ^3.48.0
   local_auth: ^3.0.2
   package_info_plus: ^10.2.1
+  pdfrx: ^2.6.5
+  connectivity_plus: ^7.3.1
 dependency_overrides:
   # flutter_html 3.0.0 calls the old top-level `matches(Element, String)`
   # function from package:html's internal query_selector.dart. That function
@@ -84,7 +86,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
+    - .env.development
+    - .env.production
     - assets/icons/home/
 
   # To add assets to your application, add an assets section, like this:

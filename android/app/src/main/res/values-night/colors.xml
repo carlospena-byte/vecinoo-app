@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Same as the dark palette's bg/canvas, so dark mode never flashes white. -->
-    <color name="launch_background">#141C17</color>
+    <!-- Brand green (palette bgBrand, light). Splash and adaptive icon background; same in dark mode. -->
+    <color name="launch_background">#344F40</color>
+    <color name="ic_launcher_background">#344F40</color>
 </resources>

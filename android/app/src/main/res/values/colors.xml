@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Window colour shown while the app starts (light mode). -->
-    <color name="launch_background">#FFFFFF</color>
+    <!-- Brand green (palette bgBrand, light). Splash and adaptive icon background; same in dark mode. -->
+    <color name="launch_background">#344F40</color>
+    <color name="ic_launcher_background">#344F40</color>
 </resources>

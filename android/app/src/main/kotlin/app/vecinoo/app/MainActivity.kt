@@ -1,4 +1,4 @@
-package com.gates.gates_app
+package app.vecinoo.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

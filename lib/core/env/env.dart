@@ -2,10 +2,19 @@ import 'dart:io';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Reads Supabase connection settings from the `.env` file (see
-/// `.env.example`), loaded once in `main()` before `runApp`.
+/// Reads Supabase connection settings from `.env.development` or
+/// `.env.production` (see `.env.example`), loaded once in `main()` before
+/// `runApp`. The file is picked at build time with `--dart-define=ENV=…`
+/// (default: `development`).
 class Env {
   Env._();
+
+  static const environment = String.fromEnvironment(
+    'ENV',
+    defaultValue: 'development',
+  );
+
+  static const fileName = '.env.$environment';
 
   static String get supabaseUrl {
     final url = dotenv.get('SUPABASE_URL');

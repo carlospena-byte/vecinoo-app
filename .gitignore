@@ -47,6 +47,8 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# Local environment (Supabase URL/anon key) — copy from .env.example
+# Environments (Supabase URL/anon key) — copy from .env.example
 .env
+.env.development
+.env.production
 

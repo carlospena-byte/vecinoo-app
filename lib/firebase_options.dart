@@ -47,6 +47,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '169245053017',
     projectId: 'vecino-app-devsignx',
     storageBucket: 'vecino-app-devsignx.firebasestorage.app',
-    iosBundleId: 'com.gates.gatesApp',
+    iosBundleId: 'app.vecinoo.app',
   );
 }
