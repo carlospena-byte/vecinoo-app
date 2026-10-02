@@ -421,6 +421,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonRetry => 'Reintentar';
 
   @override
+  String get commonLoadMoreError => 'No se pudieron cargar más elementos.';
+
+  @override
   String get commonCancel => 'Cancelar';
 
   @override
@@ -758,9 +761,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu unidad la gestiona la administración. Si algo no es correcto, contáctala.';
 
   @override
-  String get profileEmailLabel => 'Correo';
-
-  @override
   String get profileChangeEmail => 'Cambiar correo';
 
   @override
@@ -886,6 +886,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileLogoutConfirmTitle => '¿Cerrar sesión?';
 
   @override
+  String get appStatusMaintenanceTitle => 'Estamos en mantenimiento';
+
+  @override
+  String get appStatusMaintenanceBody =>
+      'Volveremos muy pronto. Gracias por tu paciencia.';
+
+  @override
+  String get appStatusUpdateTitle => 'Hay una nueva versión';
+
+  @override
+  String appStatusUpdateBody(String version) {
+    return 'Ya está disponible la versión $version de Vecinoo con mejoras y correcciones.';
+  }
+
+  @override
+  String get appStatusUpdateForcedTitle => 'Actualiza para continuar';
+
+  @override
+  String appStatusUpdateForcedBody(String version) {
+    return 'Para seguir usando Vecinoo necesitas instalar la versión $version.';
+  }
+
+  @override
+  String get appStatusUpdateAction => 'Actualizar';
+
+  @override
+  String get appStatusUpdateContinue => 'Continuar';
+
+  @override
+  String get appStatusUpdateOpenFailed =>
+      'No pudimos abrir la tienda. Búscanos en la tienda de aplicaciones.';
+
+  @override
+  String get appStatusOfflineTitle => 'Revisa tu conexión a internet';
+
+  @override
+  String get appStatusOfflineBody =>
+      'No pudimos conectarnos. Verifica tu Wi-Fi o datos móviles e inténtalo de nuevo.';
+
+  @override
   String get lockTitle => 'Vecinoo está bloqueado';
 
   @override
@@ -985,6 +1025,103 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeViewReport => 'Ver reporte';
+
+  @override
+  String get homeBulletins => 'Boletines';
+
+  @override
+  String get homeBulletinsEmpty => 'Aún no hay\nboletines';
+
+  @override
+  String homeBulletinsSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count boletines\nnuevos',
+      one: '1 boletín\nnuevo',
+      zero: 'Sin boletines\nnuevos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeViewBulletins => 'Ver boletines';
+
+  @override
+  String get homeViewBulletin => 'Ver boletín';
+
+  @override
+  String get homeViewBulletinsHistory => 'Ver historial';
+
+  @override
+  String get bulletinsTitle => 'Boletines';
+
+  @override
+  String get bulletinsDetailTitle => 'Boletín';
+
+  @override
+  String get bulletinsEmpty => 'Aún no hay boletines publicados.';
+
+  @override
+  String get bulletinsListLoadError => 'No se pudieron cargar los boletines.';
+
+  @override
+  String get bulletinsDetailLoadError =>
+      'No se pudo cargar el boletín. Puede que ya no esté disponible.';
+
+  @override
+  String bulletinsPublishedOn(String date) {
+    return 'Publicado el $date';
+  }
+
+  @override
+  String bulletinsImageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count imágenes',
+      one: '1 imagen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulletinsPdfCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count PDF',
+      one: '1 PDF',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bulletinsDocumentsSection => 'Documentos';
+
+  @override
+  String get bulletinsAttachedImage => 'Imagen adjunta';
+
+  @override
+  String get bulletinsAttachedImageHint => 'Toca dos veces para ampliar';
+
+  @override
+  String get bulletinsOpenPdfHint => 'Toca dos veces para abrir el documento';
+
+  @override
+  String get bulletinsOpenFailed => 'No se pudo abrir el documento';
+
+  @override
+  String get bulletinsTabNew => 'Nuevos';
+
+  @override
+  String get bulletinsTabHistory => 'Historial';
+
+  @override
+  String get bulletinsEmptyNew => 'No tienes boletines nuevos.';
+
+  @override
+  String get bulletinsEmptyHistory => 'Los boletines que leas aparecerán aquí.';
 
   @override
   String get incidentsStatusNew => 'Nueva';

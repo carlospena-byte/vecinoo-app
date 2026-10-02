@@ -117,7 +117,8 @@ Future<String?> showEditNotesSheet(
     builder: (context) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(GatesSpacing.space24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

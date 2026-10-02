@@ -211,7 +211,7 @@ class AmenityDescription extends StatelessWidget {
               margin: Margins.zero,
               padding: HtmlPaddings.zero,
               fontFamily: 'Manrope',
-              fontSize: FontSize(16),
+              fontSize: FontSize(18),
               color: context.palette.textPrimary,
             ),
             'a': Style(color: context.palette.textBrand),

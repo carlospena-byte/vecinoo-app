@@ -252,7 +252,7 @@ class GatesPalette extends ThemeExtension<GatesPalette> {
     shadow: Color(0x66000000),
     glowStrong: Color(0xFFF8D68F),
     glowSoft: Color(0xFFF8E0A6),
-    glowOpacity: 0.1,
+    glowOpacity: 0.3,
     bgOnBrandAction: Color(0xFF344F40),
     textOnBrandAction: Color(0xFFF0F3E9),
     tonePending: GatesTone(

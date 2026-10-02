@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_svg_icon.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../amenities/presentation/amenities_controller.dart';
+import '../../bulletins/presentation/bulletins_controller.dart';
 import '../../incidents/domain/incident.dart';
 import '../../incidents/presentation/incidents_controller.dart';
 import '../../profile/presentation/profile_controller.dart';
@@ -60,6 +62,7 @@ class HomeScreen extends ConsumerWidget {
               ref.invalidate(myProfileProvider);
               ref.invalidate(myBookingsProvider);
               ref.invalidate(incidentsListProvider(membership.residentialId));
+              ref.invalidate(bulletinsListProvider(membership.residentialId));
             },
             child: ListView(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 140),
@@ -75,9 +78,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Text(
                   _greeting(context, profile.firstName),
-                  style: GatesTypography.headingLarge.copyWith(
-                    fontSize: 28,
-                    height: 36 / 28,
+                  style: GatesTypography.headingMedium.copyWith(
                     letterSpacing: 0,
                   ),
                 ),
@@ -110,6 +111,8 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                _BulletinsCard(residentialId: membership.residentialId),
               ],
             ),
           ),
@@ -317,7 +320,6 @@ class _ReservationCard extends ConsumerWidget {
                     context.l10n.homeReservations,
                     style: context.gatesText.caption.copyWith(
                       color: context.palette.textOnBrand,
-                      height: 16 / 12,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -444,7 +446,7 @@ class _GraphicCard extends StatelessWidget {
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GatesTypography.label.copyWith(fontSize: 16),
+                      style: GatesTypography.label,
                     ),
                     Text(
                       action,
@@ -564,6 +566,103 @@ class _IncidentsSummaryCard extends ConsumerWidget {
       onTap: count == 0
           ? () => context.push('/incidents/report')
           : onViewIncidents,
+    );
+  }
+}
+
+/// Full-width card under Visitas / Incidencias: summarises how many
+/// bulletins are still unread. With none new it opens the history tab.
+class _BulletinsCard extends ConsumerWidget {
+  const _BulletinsCard({required this.residentialId});
+
+  final String residentialId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bulletins = ref.watch(bulletinsListProvider(residentialId)).value;
+    final readIds = ref.watch(bulletinReadIdsProvider(residentialId));
+    final newCount =
+        bulletins?.where((b) => !readIds.contains(b.id)).length ?? 0;
+    final neverPublished = bulletins != null && bulletins.isEmpty;
+
+    final title = neverPublished
+        ? context.l10n.homeBulletinsEmpty
+        : context.l10n.homeBulletinsSummary(newCount);
+    final action = newCount == 0
+        ? context.l10n.homeViewBulletinsHistory
+        : newCount == 1
+        ? context.l10n.homeViewBulletin
+        : context.l10n.homeViewBulletins;
+    final onTap = newCount == 0
+        ? () => context.push('/bulletins?tab=history')
+        : () => context.push('/bulletins');
+
+    return Semantics(
+      button: true,
+      label: context.l10n.homeBulletins,
+      value: title,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: context.palette.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(GatesRadius.radius24),
+          side: BorderSide(color: context.palette.borderDefault),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.homeBulletins,
+                        style: context.gatesText.caption.copyWith(
+                          color: context.palette.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GatesTypography.label,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        action,
+                        style: GatesTypography.label.copyWith(
+                          color: context.palette.textBrand,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: context.palette.bgAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    TablerIcons.news,
+                    size: 20,
+                    color: context.palette.iconBrand,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

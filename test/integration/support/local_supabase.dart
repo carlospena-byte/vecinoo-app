@@ -13,10 +13,10 @@ const demoResidentialId = '550e8400-e29b-41d4-a716-446655440000';
 const demoUnitId = '791d1d08-5a10-487d-8d17-039b9e637030';
 
 String _readEnv(String key) {
-  for (final line in File('.env').readAsLinesSync()) {
+  for (final line in File('.env.development').readAsLinesSync()) {
     if (line.startsWith('$key=')) return line.substring(key.length + 1).trim();
   }
-  throw StateError('$key missing in .env');
+  throw StateError('$key missing in .env.development');
 }
 
 /// Local-stack service-role key: the CLI's well-known demo key unless

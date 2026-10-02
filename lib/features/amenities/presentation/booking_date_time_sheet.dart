@@ -123,6 +123,7 @@ class _BookingDateTimeSheetState extends ConsumerState<BookingDateTimeSheet> {
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             GatesSpacing.space24,
             GatesSpacing.space24,

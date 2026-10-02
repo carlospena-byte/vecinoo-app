@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../../../core/widgets/keyboard_aware_action.dart';
+
 import 'package:flutter/material.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -150,6 +152,14 @@ class _CreateFastlaneVisitScreenState
     );
     final membership = ref.watch(selectedMembershipProvider).value;
 
+    final action = GatesButton(
+      label: _isEditing
+          ? context.l10n.visitsSaveChanges
+          : context.l10n.visitsFastlaneCreate,
+      loading: state.isSubmitting,
+      onPressed: state.isSubmitting ? null : _submit,
+    );
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -165,6 +175,7 @@ class _CreateFastlaneVisitScreenState
         child: Form(
           key: _formKey,
           child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.all(GatesSpacing.space24),
             children: [
               if (membership != null) ...[
@@ -191,6 +202,7 @@ class _CreateFastlaneVisitScreenState
                 label: context.l10n.visitsFastlaneNameLabel,
                 hintText: context.l10n.visitsFastlaneNameHint,
                 textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.done,
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? context.l10n.visitsFastlaneNameRequired
                     : null,
@@ -214,21 +226,13 @@ class _CreateFastlaneVisitScreenState
                 controller: _notesController,
                 maxLength: _notesMaxLength,
               ),
+              GatesInlineAction(child: action),
               const SizedBox(height: GatesSpacing.space8),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(GatesSpacing.space24),
-        child: GatesButton(
-          label: _isEditing
-              ? context.l10n.visitsSaveChanges
-              : context.l10n.visitsFastlaneCreate,
-          loading: state.isSubmitting,
-          onPressed: state.isSubmitting ? null : _submit,
-        ),
-      ),
+      bottomNavigationBar: GatesFixedAction(child: action),
     );
   }
 }

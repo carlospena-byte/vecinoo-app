@@ -20,6 +20,7 @@ class KeyboardSafeColumn extends StatelessWidget {
         // an overflow (and a forced scroll) by exactly that padding amount
         // even when the content would otherwise fit on screen.
         return SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: IntrinsicHeight(

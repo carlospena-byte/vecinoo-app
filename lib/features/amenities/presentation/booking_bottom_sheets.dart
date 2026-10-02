@@ -29,16 +29,16 @@ TextStyle _detailHeaderStyle(BuildContext context) => TextStyle(
 TextStyle _detailLabelStyle(BuildContext context) => TextStyle(
   fontFamily: 'Manrope',
   fontWeight: FontWeight.w500,
-  fontSize: 12,
-  height: 16 / 12,
+  fontSize: 14,
+  height: 20 / 14,
   color: context.palette.textSecondary,
 );
 
 TextStyle _detailValueStyle(BuildContext context) => TextStyle(
   fontFamily: 'Manrope',
   fontWeight: FontWeight.w600,
-  fontSize: 15,
-  height: 22 / 15,
+  fontSize: 16,
+  height: 22 / 16,
   color: context.palette.textPrimary,
 );
 
@@ -157,12 +157,13 @@ class _BookingDetailSheetBodyState
     final pill = _statusPillSpec(context, booking);
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
+      child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: EdgeInsets.fromLTRB(
           GatesSpacing.space24,
           0,
           GatesSpacing.space24,
-          GatesSpacing.space24,
+          GatesSpacing.space24 + MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -276,8 +277,8 @@ class _StatusPill extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
-              fontSize: 13,
-              height: 18 / 13,
+              fontSize: 14,
+              height: 20 / 14,
               color: spec.foreground,
             ),
           ),

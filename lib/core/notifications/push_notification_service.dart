@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../firebase_options.dart';
+import 'push_navigation.dart';
 
 const _androidChannel = AndroidNotificationChannel(
   'default_channel',
@@ -123,16 +124,24 @@ class PushNotificationService {
 
       FirebaseMessaging.onMessageOpenedApp.listen((message) {
         debugPrint('[push] notification tapped: ${message.messageId}');
+        _openFromMessage(message);
         onNotificationTap?.call(message);
       });
 
       final initialMessage = await _messaging.getInitialMessage();
       if (initialMessage != null) {
+        _openFromMessage(initialMessage);
         onNotificationTap?.call(initialMessage);
       }
     } catch (error, stackTrace) {
       debugPrint('[push] initialization failed: $error\n$stackTrace');
     }
+  }
+
+  /// Queues the notification's destination; `HomeShell` opens it.
+  static void _openFromMessage(RemoteMessage message) {
+    final route = notificationRoute(message.data);
+    if (route != null) PushNavigation.pendingRoute.value = route;
   }
 
   static Future<void> _initLocalNotifications() async {
@@ -147,6 +156,13 @@ class PushNotificationService {
           requestSoundPermission: false,
         ),
       ),
+      // Tapping the banner we show for a foreground push.
+      onDidReceiveNotificationResponse: (response) {
+        final route = response.payload;
+        if (route != null && route.isNotEmpty) {
+          PushNavigation.pendingRoute.value = route;
+        }
+      },
     );
     await _localNotifications
         .resolvePlatformSpecificImplementation<
@@ -172,6 +188,7 @@ class PushNotificationService {
         ),
         iOS: const DarwinNotificationDetails(),
       ),
+      payload: notificationRoute(message.data),
     );
   }
 

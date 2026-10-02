@@ -224,6 +224,7 @@
   "commonBack": "Volver",
   "commonClose": "Cerrar",
   "commonRetry": "Reintentar",
+  "commonLoadMoreError": "No se pudieron cargar más elementos.",
   "commonCancel": "Cancelar",
   "commonDone": "Listo",
   "commonContinue": "Continuar",
@@ -370,7 +371,6 @@
   "profileSectionResidence": "Mi residencia",
   "profileSectionSecurity": "Seguridad",
   "profileUnitManagedNote": "Tu unidad la gestiona la administración. Si algo no es correcto, contáctala.",
-  "profileEmailLabel": "Correo",
   "profileChangeEmail": "Cambiar correo",
   "profileEmailChangeBody": "Te enviaremos un código al nuevo correo. Tu correo solo cambia cuando lo confirmes.",
   "profileNewEmail": "Nuevo correo",
@@ -442,6 +442,31 @@
   "profileDeleteCancelled": "Solicitud cancelada",
   "profileDeleteCancelFailed": "No se pudo cancelar la solicitud.",
   "profileLogoutConfirmTitle": "¿Cerrar sesión?",
+  "appStatusMaintenanceTitle": "Estamos en mantenimiento",
+  "appStatusMaintenanceBody": "Volveremos muy pronto. Gracias por tu paciencia.",
+  "appStatusUpdateTitle": "Hay una nueva versión",
+  "appStatusUpdateBody": "Ya está disponible la versión {version} de Vecinoo con mejoras y correcciones.",
+  "@appStatusUpdateBody": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appStatusUpdateForcedTitle": "Actualiza para continuar",
+  "appStatusUpdateForcedBody": "Para seguir usando Vecinoo necesitas instalar la versión {version}.",
+  "@appStatusUpdateForcedBody": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appStatusUpdateAction": "Actualizar",
+  "appStatusUpdateContinue": "Continuar",
+  "appStatusUpdateOpenFailed": "No pudimos abrir la tienda. Búscanos en la tienda de aplicaciones.",
+  "appStatusOfflineTitle": "Revisa tu conexión a internet",
+  "appStatusOfflineBody": "No pudimos conectarnos. Verifica tu Wi-Fi o datos móviles e inténtalo de nuevo.",
   "lockTitle": "Vecinoo está bloqueado",
   "lockBody": "Desbloquea con tu rostro o huella para continuar.",
   "lockUnlock": "Desbloquear",
@@ -490,6 +515,57 @@
   "homeViewVisits": "Ver visitas",
   "homeReport": "Reportar",
   "homeViewReport": "Ver reporte",
+  "homeBulletins": "Boletines",
+  "homeBulletinsEmpty": "Aún no hay\nboletines",
+  "homeBulletinsSummary": "{count, plural, =0{Sin boletines\nnuevos} =1{1 boletín\nnuevo} other{{count} boletines\nnuevos}}",
+  "@homeBulletinsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeViewBulletins": "Ver boletines",
+  "homeViewBulletin": "Ver boletín",
+  "homeViewBulletinsHistory": "Ver historial",
+  "bulletinsTitle": "Boletines",
+  "bulletinsDetailTitle": "Boletín",
+  "bulletinsEmpty": "Aún no hay boletines publicados.",
+  "bulletinsListLoadError": "No se pudieron cargar los boletines.",
+  "bulletinsDetailLoadError": "No se pudo cargar el boletín. Puede que ya no esté disponible.",
+  "bulletinsPublishedOn": "Publicado el {date}",
+  "@bulletinsPublishedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bulletinsImageCount": "{count, plural, =1{1 imagen} other{{count} imágenes}}",
+  "@bulletinsImageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulletinsPdfCount": "{count, plural, =1{1 PDF} other{{count} PDF}}",
+  "@bulletinsPdfCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulletinsDocumentsSection": "Documentos",
+  "bulletinsAttachedImage": "Imagen adjunta",
+  "bulletinsAttachedImageHint": "Toca dos veces para ampliar",
+  "bulletinsOpenPdfHint": "Toca dos veces para abrir el documento",
+  "bulletinsOpenFailed": "No se pudo abrir el documento",
+  "bulletinsTabNew": "Nuevos",
+  "bulletinsTabHistory": "Historial",
+  "bulletinsEmptyNew": "No tienes boletines nuevos.",
+  "bulletinsEmptyHistory": "Los boletines que leas aparecerán aquí.",
   "incidentsStatusNew": "Nueva",
   "incidentsStatusInProgress": "En progreso",
   "incidentsStatusResolved": "Resuelta",

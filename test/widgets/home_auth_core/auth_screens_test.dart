@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gates_app/core/error/failure.dart';
+import 'package:gates_app/core/security/biometric_service.dart';
 import 'package:gates_app/core/widgets/otp_code_field.dart';
 import 'package:gates_app/features/auth/domain/auth_repository.dart';
 import 'package:gates_app/features/auth/presentation/auth_controller.dart';
@@ -469,20 +470,49 @@ void main() {
   });
 
   group('BiometricSetupScreen', () {
-    testWidgets('both buttons continue into the app', (tester) async {
-      final visited = <String>[];
-      for (final label in [_es.authBiometricSetup, _es.authBiometricSkip]) {
-        visited.clear();
-        await pumpApp(
-          tester,
-          const BiometricSetupScreen(),
-          visited: visited,
-          routes: {'/': (_) => const Text('x')},
-        );
-        expect(find.text(_es.authBiometricTitle), findsOneWidget);
-        await tester.tap(find.text(label));
-        await tester.pumpAndSettle();
-      }
+    Future<void> pump(
+      WidgetTester tester,
+      FakeBiometricAuthenticator authenticator,
+    ) async {
+      await pumpApp(
+        tester,
+        const BiometricSetupScreen(),
+        overrides: [
+          biometricAuthenticatorProvider.overrideWithValue(authenticator),
+        ],
+      );
+    }
+
+    testWidgets('set up turns biometrics on and continues', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final authenticator = FakeBiometricAuthenticator();
+      await pump(tester, authenticator);
+      expect(find.text(_es.authBiometricTitle), findsOneWidget);
+      await tester.tap(find.text(_es.authBiometricSetup));
+      await tester.pumpAndSettle();
+      expect(authenticator.prompts, 1);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(biometricEnabledPrefsKey), isTrue);
+    });
+
+    testWidgets('a device without biometrics stays and warns', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await pump(tester, FakeBiometricAuthenticator(available: false));
+      await tester.tap(find.text(_es.authBiometricSetup));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text(_es.profileBiometricUnavailable), findsOneWidget);
+    });
+
+    testWidgets('skip continues without enabling', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final authenticator = FakeBiometricAuthenticator();
+      await pump(tester, authenticator);
+      await tester.tap(find.text(_es.authBiometricSkip));
+      await tester.pumpAndSettle();
+      expect(authenticator.prompts, 0);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey(biometricEnabledPrefsKey), isFalse);
     });
 
     testWidgets('dark theme smoke', (tester) async {

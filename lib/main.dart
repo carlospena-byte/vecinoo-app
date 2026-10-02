@@ -10,15 +10,17 @@ import 'core/error/provider_retry.dart';
 import 'l10n/l10n.dart';
 import 'core/notifications/push_notification_service.dart';
 import 'core/router/app_router.dart';
+import 'core/security/biometric_lock_gate.dart';
 import 'core/supabase/supabase_providers.dart';
 import 'core/theme/theme_mode_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/vecinoo_brand.dart';
+import 'features/app_status/presentation/app_status_gate.dart';
 import 'features/auth/presentation/auth_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: Env.fileName);
   await initializeDateFormatting('es');
   await Supabase.initialize(
     url: Env.supabaseUrl,
@@ -66,7 +68,15 @@ class GatesApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('es'),
       routerConfig: router,
-      builder: (context, child) => GatesBackground(child: child),
+      // Tapping any non-interactive area drops the keyboard, so users can
+      // leave a field (and reach the next input or the action button).
+      builder: (context, child) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: GatesBackground(
+          child: AppStatusGate(child: BiometricLockGate(child: child)),
+        ),
+      ),
     );
   }
 }

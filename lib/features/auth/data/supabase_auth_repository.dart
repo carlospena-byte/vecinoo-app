@@ -9,6 +9,14 @@ class SupabaseAuthRepository implements AuthRepository {
 
   final SupabaseClient _client;
 
+  /// Store-review account. Its code is fixed and checked server-side by the
+  /// `review-login` Edge Function (gates-admin), which hands back a real
+  /// one-time token; no email is sent for it.
+  static const _reviewEmail = 'demo@vecinoo.app';
+
+  static bool _isReviewEmail(String email) =>
+      email.trim().toLowerCase() == _reviewEmail;
+
   static SignedInUser? _toUser(User? user) =>
       user == null ? null : SignedInUser(id: user.id, email: user.email);
 
@@ -24,17 +32,34 @@ class SupabaseAuthRepository implements AuthRepository {
   /// in gates-admin, which overrides Supabase's default link-only template
   /// to show `{{ .Token }}`). Creates the auth user on first use.
   @override
-  Future<OtpSendOutcome> sendEmailOtp(String email) =>
-      _send(() => _client.auth.signInWithOtp(email: email));
+  Future<OtpSendOutcome> sendEmailOtp(String email) => _isReviewEmail(email)
+      ? Future.value(OtpSendOutcome.sent)
+      : _send(() => _client.auth.signInWithOtp(email: email));
 
   @override
   Future<OtpVerifyOutcome> verifyEmailOtp({
     required String email,
     required String token,
-  }) => _verify(
-    () =>
-        _client.auth.verifyOTP(email: email, token: token, type: OtpType.email),
-  );
+  }) => _verify(() async {
+    var otp = token;
+    if (_isReviewEmail(email)) {
+      try {
+        final res = await _client.functions.invoke(
+          'review-login',
+          body: {'email': email, 'code': token},
+        );
+        otp = (res.data as Map)['token'] as String;
+      } on FunctionException catch (e) {
+        // Wrong code (401) or account not provisioned (404): surface it as a
+        // rejected code rather than a generic failure.
+        if (e.status == 401 || e.status == 404) {
+          throw const AuthApiException('invalid code', statusCode: '400');
+        }
+        rethrow;
+      }
+    }
+    await _client.auth.verifyOTP(email: email, token: otp, type: OtpType.email);
+  });
 
   @override
   Future<OtpSendOutcome> sendPhoneOtp(String phone) =>

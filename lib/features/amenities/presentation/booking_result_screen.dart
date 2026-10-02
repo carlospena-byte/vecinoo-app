@@ -211,7 +211,7 @@ class _StatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 72,
+      constraints: const BoxConstraints(minHeight: 72),
       padding: const EdgeInsets.all(GatesSpacing.space16),
       decoration: BoxDecoration(
         color: confirmed

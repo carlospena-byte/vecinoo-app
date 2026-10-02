@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:gates_app/core/security/biometric_service.dart';
 import 'package:gates_app/features/auth/domain/auth_repository.dart';
 import 'package:gates_app/features/profile/domain/profile.dart';
 import 'package:gates_app/features/profile/domain/profile_repository.dart';
@@ -133,10 +135,74 @@ class FakeProfileRepo implements ProfileRepository {
         );
   }
 
+  final calls = <String>[];
+  Object? updateError;
+  Object? deletionError;
+  OtpSendOutcome emailSendOutcome = OtpSendOutcome.sent;
+  OtpVerifyOutcome emailVerifyOutcome = OtpVerifyOutcome.verified;
+  Object? emailError;
+  DateTime deletionDate = DateTime(2027, 5, 31);
+
   @override
   Future<void> updateMine({
     String? firstName,
     String? lastName,
     String? phone,
-  }) async {}
+  }) async {
+    calls.add('update:$firstName:$lastName:$phone');
+    if (updateError != null) throw updateError!;
+  }
+
+  @override
+  Future<String> uploadAvatar(Uint8List bytes, String extension) async {
+    calls.add('avatar:${bytes.length}:$extension');
+    return 'https://example.com/avatar.$extension';
+  }
+
+  @override
+  Future<OtpSendOutcome> requestEmailChange(String newEmail) async {
+    calls.add('requestEmail:$newEmail');
+    if (emailError != null) throw emailError!;
+    return emailSendOutcome;
+  }
+
+  @override
+  Future<OtpVerifyOutcome> confirmEmailChange({
+    required String newEmail,
+    required String token,
+  }) async {
+    calls.add('confirmEmail:$newEmail:$token');
+    if (emailError != null) throw emailError!;
+    return emailVerifyOutcome;
+  }
+
+  @override
+  Future<DateTime> requestAccountDeletion() async {
+    calls.add('requestDeletion');
+    if (deletionError != null) throw deletionError!;
+    return deletionDate;
+  }
+
+  @override
+  Future<void> cancelAccountDeletion() async {
+    calls.add('cancelDeletion');
+    if (deletionError != null) throw deletionError!;
+  }
+}
+
+class FakeBiometricAuthenticator implements BiometricAuthenticator {
+  FakeBiometricAuthenticator({this.available = true, this.passes = true});
+
+  bool available;
+  bool passes;
+  int prompts = 0;
+
+  @override
+  Future<bool> isAvailable() async => available;
+
+  @override
+  Future<bool> authenticate(String reason) async {
+    prompts++;
+    return passes;
+  }
 }

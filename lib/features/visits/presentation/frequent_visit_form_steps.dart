@@ -117,6 +117,7 @@ class FrequentDataStep extends StatelessWidget {
           hintText: l10n.visitsFrequentPlateHint,
           enabled: state.hasVehicle,
           textCapitalization: TextCapitalization.characters,
+          textInputAction: TextInputAction.done,
           validator: (v) => state.hasVehicle && (v == null || v.trim().isEmpty)
               ? l10n.visitsFrequentPlateRequired
               : null,

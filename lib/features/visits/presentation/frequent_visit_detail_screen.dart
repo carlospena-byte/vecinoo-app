@@ -224,16 +224,12 @@ class _SummaryCard extends StatelessWidget {
             role == null
                 ? context.l10n.visitsFrequentVisitCaption
                 : context.l10n.visitsFrequentVisitCaptionRole(role),
-            style: context.gatesText.caption.copyWith(fontSize: 13),
+            style: context.gatesText.caption,
           ),
           const SizedBox(height: GatesSpacing.space4),
           Text(
             visit.name ?? context.l10n.visitsFrequentNoName,
-            style: GatesTypography.body.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              height: 26 / 18,
-            ),
+            style: GatesTypography.body.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 20),
           Container(
@@ -260,10 +256,8 @@ class _SummaryCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               context.l10n.visitsFrequentValidUntilCancelled,
-              style: GatesTypography.body.copyWith(
-                fontSize: 14,
+              style: GatesTypography.label.copyWith(
                 color: context.palette.textSecondary,
-                height: 21 / 14,
               ),
             ),
           ],
@@ -305,11 +299,9 @@ class _Row extends StatelessWidget {
           const SizedBox(height: GatesSpacing.space4),
           Text(
             value,
-            style: GatesTypography.body.copyWith(
-              fontSize: 13,
+            style: GatesTypography.caption.copyWith(
               fontWeight: FontWeight.w600,
               color: context.palette.textSecondary,
-              height: 20 / 13,
             ),
           ),
         ],

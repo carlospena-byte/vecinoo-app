@@ -802,6 +802,12 @@ abstract class AppLocalizations {
   /// **'Reintentar'**
   String get commonRetry;
 
+  /// No description provided for @commonLoadMoreError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar más elementos.'**
+  String get commonLoadMoreError;
+
   /// No description provided for @commonCancel.
   ///
   /// In es, this message translates to:
@@ -1426,12 +1432,6 @@ abstract class AppLocalizations {
   /// **'Tu unidad la gestiona la administración. Si algo no es correcto, contáctala.'**
   String get profileUnitManagedNote;
 
-  /// No description provided for @profileEmailLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Correo'**
-  String get profileEmailLabel;
-
   /// No description provided for @profileChangeEmail.
   ///
   /// In es, this message translates to:
@@ -1648,6 +1648,72 @@ abstract class AppLocalizations {
   /// **'¿Cerrar sesión?'**
   String get profileLogoutConfirmTitle;
 
+  /// No description provided for @appStatusMaintenanceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Estamos en mantenimiento'**
+  String get appStatusMaintenanceTitle;
+
+  /// No description provided for @appStatusMaintenanceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Volveremos muy pronto. Gracias por tu paciencia.'**
+  String get appStatusMaintenanceBody;
+
+  /// No description provided for @appStatusUpdateTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay una nueva versión'**
+  String get appStatusUpdateTitle;
+
+  /// No description provided for @appStatusUpdateBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya está disponible la versión {version} de Vecinoo con mejoras y correcciones.'**
+  String appStatusUpdateBody(String version);
+
+  /// No description provided for @appStatusUpdateForcedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualiza para continuar'**
+  String get appStatusUpdateForcedTitle;
+
+  /// No description provided for @appStatusUpdateForcedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Para seguir usando Vecinoo necesitas instalar la versión {version}.'**
+  String appStatusUpdateForcedBody(String version);
+
+  /// No description provided for @appStatusUpdateAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar'**
+  String get appStatusUpdateAction;
+
+  /// No description provided for @appStatusUpdateContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get appStatusUpdateContinue;
+
+  /// No description provided for @appStatusUpdateOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos abrir la tienda. Búscanos en la tienda de aplicaciones.'**
+  String get appStatusUpdateOpenFailed;
+
+  /// No description provided for @appStatusOfflineTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu conexión a internet'**
+  String get appStatusOfflineTitle;
+
+  /// No description provided for @appStatusOfflineBody.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos conectarnos. Verifica tu Wi-Fi o datos móviles e inténtalo de nuevo.'**
+  String get appStatusOfflineBody;
+
   /// No description provided for @lockTitle.
   ///
   /// In es, this message translates to:
@@ -1809,6 +1875,144 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ver reporte'**
   String get homeViewReport;
+
+  /// No description provided for @homeBulletins.
+  ///
+  /// In es, this message translates to:
+  /// **'Boletines'**
+  String get homeBulletins;
+
+  /// No description provided for @homeBulletinsEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay\nboletines'**
+  String get homeBulletinsEmpty;
+
+  /// No description provided for @homeBulletinsSummary.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin boletines\nnuevos} =1{1 boletín\nnuevo} other{{count} boletines\nnuevos}}'**
+  String homeBulletinsSummary(int count);
+
+  /// No description provided for @homeViewBulletins.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver boletines'**
+  String get homeViewBulletins;
+
+  /// No description provided for @homeViewBulletin.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver boletín'**
+  String get homeViewBulletin;
+
+  /// No description provided for @homeViewBulletinsHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver historial'**
+  String get homeViewBulletinsHistory;
+
+  /// No description provided for @bulletinsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Boletines'**
+  String get bulletinsTitle;
+
+  /// No description provided for @bulletinsDetailTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Boletín'**
+  String get bulletinsDetailTitle;
+
+  /// No description provided for @bulletinsEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay boletines publicados.'**
+  String get bulletinsEmpty;
+
+  /// No description provided for @bulletinsListLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar los boletines.'**
+  String get bulletinsListLoadError;
+
+  /// No description provided for @bulletinsDetailLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar el boletín. Puede que ya no esté disponible.'**
+  String get bulletinsDetailLoadError;
+
+  /// No description provided for @bulletinsPublishedOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicado el {date}'**
+  String bulletinsPublishedOn(String date);
+
+  /// No description provided for @bulletinsImageCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 imagen} other{{count} imágenes}}'**
+  String bulletinsImageCount(int count);
+
+  /// No description provided for @bulletinsPdfCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 PDF} other{{count} PDF}}'**
+  String bulletinsPdfCount(int count);
+
+  /// No description provided for @bulletinsDocumentsSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos'**
+  String get bulletinsDocumentsSection;
+
+  /// No description provided for @bulletinsAttachedImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen adjunta'**
+  String get bulletinsAttachedImage;
+
+  /// No description provided for @bulletinsAttachedImageHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca dos veces para ampliar'**
+  String get bulletinsAttachedImageHint;
+
+  /// No description provided for @bulletinsOpenPdfHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca dos veces para abrir el documento'**
+  String get bulletinsOpenPdfHint;
+
+  /// No description provided for @bulletinsOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir el documento'**
+  String get bulletinsOpenFailed;
+
+  /// No description provided for @bulletinsTabNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevos'**
+  String get bulletinsTabNew;
+
+  /// No description provided for @bulletinsTabHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial'**
+  String get bulletinsTabHistory;
+
+  /// No description provided for @bulletinsEmptyNew.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes boletines nuevos.'**
+  String get bulletinsEmptyNew;
+
+  /// No description provided for @bulletinsEmptyHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Los boletines que leas aparecerán aquí.'**
+  String get bulletinsEmptyHistory;
 
   /// No description provided for @incidentsStatusNew.
   ///

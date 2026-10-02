@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
+import '../../core/notifications/push_navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../amenities/presentation/bookings_list_screen.dart';
 import '../incidents/presentation/incidents_list_screen.dart';
@@ -35,6 +37,29 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   late int _index = widget.tabRequest?.index ?? 0;
+
+  @override
+  void initState() {
+    super.initState();
+    PushNavigation.pendingRoute.addListener(_openPendingRoute);
+    // A cold start from a notification tap queued its route before this
+    // shell existed.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openPendingRoute());
+  }
+
+  @override
+  void dispose() {
+    PushNavigation.pendingRoute.removeListener(_openPendingRoute);
+    super.dispose();
+  }
+
+  /// Opens the screen a tapped push notification points at (e.g. a bulletin).
+  void _openPendingRoute() {
+    final route = PushNavigation.pendingRoute.value;
+    if (route == null || !mounted) return;
+    PushNavigation.pendingRoute.value = null;
+    context.push(route);
+  }
 
   @override
   void didUpdateWidget(HomeShell oldWidget) {

@@ -184,7 +184,6 @@ class _BookingCard extends StatelessWidget {
                     booking.amenityName,
                     style: GatesTypography.body.copyWith(
                       fontWeight: FontWeight.w600,
-                      height: 24 / 16,
                     ),
                   ),
                   const SizedBox(height: GatesSpacing.space4),

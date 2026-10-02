@@ -158,7 +158,14 @@ class _GatesTextFieldState extends State<GatesTextField> {
                       decoration: InputDecoration(
                         isDense: true,
                         isCollapsed: true,
+                        // The theme sets focusedBorder; `border` alone doesn't
+                        // override it and a second outline shows on focus.
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        focusedErrorBorder: InputBorder.none,
                         hintText: widget.hintText,
                         hintStyle: GatesTypography.body.copyWith(
                           color: context.palette.textSecondary,

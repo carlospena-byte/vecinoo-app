@@ -157,10 +157,7 @@ class _BookingStatusBadge extends StatelessWidget {
             requiresBooking
                 ? context.l10n.amenitiesBookingRequiredBadge
                 : context.l10n.amenitiesNoBookingBadge,
-            style: context.gatesText.caption.copyWith(
-              color: foreground,
-              height: 16 / 12,
-            ),
+            style: context.gatesText.caption.copyWith(color: foreground),
           ),
         ],
       ),

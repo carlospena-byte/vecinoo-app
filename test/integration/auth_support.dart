@@ -134,7 +134,7 @@ class _MemoryAsyncStorage extends GotrueAsyncStorage {
 /// `signInWithOtp`.
 SupabaseClient newPkceAnonClient() {
   String? key;
-  for (final line in File('.env').readAsLinesSync()) {
+  for (final line in File('.env.development').readAsLinesSync()) {
     if (line.startsWith('SUPABASE_PUBLISHABLE_KEY=')) {
       key = line.substring('SUPABASE_PUBLISHABLE_KEY='.length).trim();
     }

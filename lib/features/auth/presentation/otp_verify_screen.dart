@@ -141,7 +141,6 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 Text(
                   widget.args.identifier,
                   style: GatesTypography.label.copyWith(
-                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: context.palette.textPrimary,
                   ),

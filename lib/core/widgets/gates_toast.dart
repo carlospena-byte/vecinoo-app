@@ -108,10 +108,7 @@ class _GatesToast extends StatelessWidget {
                   ),
                 ),
                 if (message != null)
-                  Text(
-                    message!,
-                    style: context.gatesText.caption.copyWith(height: 16 / 12),
-                  ),
+                  Text(message!, style: context.gatesText.caption),
               ],
             ),
           ),

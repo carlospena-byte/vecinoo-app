@@ -217,10 +217,7 @@ class _StatusBanner extends StatelessWidget {
             ),
           ),
           const SizedBox(height: GatesSpacing.space8),
-          Text(
-            detail,
-            style: GatesTypography.body.copyWith(fontSize: 13, height: 19 / 13),
-          ),
+          Text(detail, style: GatesTypography.caption),
         ],
       ),
     );
@@ -244,11 +241,7 @@ class _Field extends StatelessWidget {
           const SizedBox(height: GatesSpacing.space4),
           Text(
             value,
-            style: GatesTypography.body.copyWith(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              height: 22 / 15,
-            ),
+            style: GatesTypography.label.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),

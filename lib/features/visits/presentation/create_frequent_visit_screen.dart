@@ -1,3 +1,5 @@
+import '../../../core/widgets/edge_swipe_back.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_button.dart';
 import '../../../core/widgets/gates_sheet.dart';
 import '../../../core/widgets/gates_toast.dart';
+import '../../../core/widgets/keyboard_aware_action.dart';
 import '../../../l10n/l10n.dart';
 import '../../home/home_shell.dart';
 import '../domain/visit.dart';
@@ -175,72 +178,77 @@ class _CreateFrequentVisitScreenState
     final controller = _controller;
     final isFirstStep = state.step == 0;
     final isEditing = widget.editing != null;
+    final action = GatesButton(
+      label: isFirstStep
+          ? context.l10n.visitsContinue
+          : (isEditing
+                ? context.l10n.visitsSaveChanges
+                : context.l10n.visitsFrequentAuthorize),
+      loading: state.isSubmitting,
+      onPressed: state.isSubmitting
+          ? null
+          : (isFirstStep ? _continue : _submit),
+    );
     return PopScope(
       canPop: isFirstStep || state.isSubmitting,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) controller.backToFirstStep();
       },
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+      child: EdgeSwipeBack(
+        enabled: !isFirstStep && !state.isSubmitting,
+        onBack: controller.backToFirstStep,
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          title: Text(
-            isFirstStep
-                ? context.l10n.visitsFrequentAccess
-                : context.l10n.visitsFrequentDaysAndHours,
-          ),
-        ),
-        body: SafeArea(
-          top: false,
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                GatesSpacing.space24,
-                GatesSpacing.space8,
-                GatesSpacing.space24,
-                GatesSpacing.space24,
-              ),
-              children: [
-                Text(
-                  isFirstStep
-                      ? context.l10n.visitsFrequentStep1
-                      : context.l10n.visitsFrequentStep2,
-                  style: context.gatesText.caption,
-                ),
-                const SizedBox(height: GatesSpacing.space16),
-                if (isFirstStep)
-                  FrequentDataStep(
-                    state: state,
-                    controller: controller,
-                    nameController: _nameController,
-                    phoneController: _phoneController,
-                    plateController: _plateController,
-                    onPickDocument: _pickDocument,
-                  )
-                else
-                  FrequentScheduleStep(
-                    state: state,
-                    controller: controller,
-                    notesController: _notesController,
-                  ),
-              ],
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            title: Text(
+              isFirstStep
+                  ? context.l10n.visitsFrequentAccess
+                  : context.l10n.visitsFrequentDaysAndHours,
             ),
           ),
-        ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.all(GatesSpacing.space24),
-          child: GatesButton(
-            label: isFirstStep
-                ? context.l10n.visitsContinue
-                : (isEditing
-                      ? context.l10n.visitsSaveChanges
-                      : context.l10n.visitsFrequentAuthorize),
-            loading: state.isSubmitting,
-            onPressed: state.isSubmitting
-                ? null
-                : (isFirstStep ? _continue : _submit),
+          body: SafeArea(
+            top: false,
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(
+                  GatesSpacing.space24,
+                  GatesSpacing.space8,
+                  GatesSpacing.space24,
+                  GatesSpacing.space24,
+                ),
+                children: [
+                  Text(
+                    isFirstStep
+                        ? context.l10n.visitsFrequentStep1
+                        : context.l10n.visitsFrequentStep2,
+                    style: context.gatesText.caption,
+                  ),
+                  const SizedBox(height: GatesSpacing.space16),
+                  if (isFirstStep)
+                    FrequentDataStep(
+                      state: state,
+                      controller: controller,
+                      nameController: _nameController,
+                      phoneController: _phoneController,
+                      plateController: _plateController,
+                      onPickDocument: _pickDocument,
+                    )
+                  else
+                    FrequentScheduleStep(
+                      state: state,
+                      controller: controller,
+                      notesController: _notesController,
+                    ),
+                  GatesInlineAction(child: action),
+                ],
+              ),
+            ),
           ),
+          bottomNavigationBar: GatesFixedAction(child: action),
         ),
       ),
     );

@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gates_app/features/amenities/domain/amenity_booking.dart';
 import 'package:gates_app/features/amenities/presentation/amenities_controller.dart';
+import 'package:gates_app/features/bulletins/domain/bulletin.dart';
+import 'package:gates_app/features/bulletins/presentation/bulletins_controller.dart';
 import 'package:gates_app/features/home/home_shell.dart';
 import 'package:gates_app/features/home/presentation/home_screen.dart';
 import 'package:gates_app/features/incidents/domain/incident.dart';
@@ -17,6 +19,7 @@ import 'package:gates_app/features/visits/presentation/visits_controller.dart';
 import 'package:gates_app/l10n/app_localizations_es.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../incidents/fakes.dart';
 import '../../helpers/fonts.dart';
 import '../../helpers/pump_app.dart';
 
@@ -70,6 +73,7 @@ List<Override> _data({
   Future<List<AmenityBooking>>? bookingsGate,
   List<Visit> visits = const [],
   List<Incident> incidents = const [],
+  List<Bulletin> bulletins = const [],
 }) => [
   ...membershipOverrides(),
   myProfileProvider.overrideWith((ref) async {
@@ -85,6 +89,10 @@ List<Override> _data({
   }),
   visitsListProvider.overrideWith((ref, unitId) => Stream.value(visits)),
   incidentsListProvider.overrideWith((ref, rid) async => incidents),
+  incidentsRepositoryProvider.overrideWithValue(
+    FakeIncidentsRepository()..incidents = incidents,
+  ),
+  bulletinsListProvider.overrideWith((ref, rid) async => bulletins),
 ];
 
 Future<void> _pumpHome(
@@ -106,6 +114,7 @@ Future<void> _pumpHome(
     '/amenities': (_) => const Text('amenities-route'),
     '/visits/new': (_) => const Text('new-visit-route'),
     '/incidents/report': (_) => const Text('report-route'),
+    '/bulletins': (_) => const Text('bulletins-route'),
   },
 );
 
@@ -398,6 +407,41 @@ void main() {
         );
         expect(find.text(_es.homeVisitsSummary(1)), findsOneWidget);
         expect(find.text(_es.homeIncidentsSummary(1)), findsOneWidget);
+      });
+    });
+
+    group('bulletins card', () {
+      testWidgets('empty: says so and opens the history', (tester) async {
+        final visited = <String>[];
+        await _pumpHome(tester, overrides: _data(), visited: visited);
+        expect(find.text(_es.homeBulletins), findsOneWidget);
+        expect(find.text(_es.homeBulletinsEmpty), findsOneWidget);
+        await tester.tap(find.text(_es.homeViewBulletinsHistory));
+        await tester.pumpAndSettle();
+        expect(visited, ['/bulletins?tab=history']);
+        expect(find.text('bulletins-route'), findsOneWidget);
+      });
+
+      testWidgets('counts the unread bulletins', (tester) async {
+        await _pumpHome(
+          tester,
+          overrides: _data(
+            bulletins: [
+              Bulletin(
+                id: 'b2',
+                title: 'Asamblea general',
+                publishedAt: DateTime(2026, 3, 5),
+              ),
+              Bulletin(
+                id: 'b1',
+                title: 'Corte de agua',
+                publishedAt: DateTime(2026, 3, 1),
+              ),
+            ],
+          ),
+        );
+        expect(find.text(_es.homeBulletinsSummary(2)), findsOneWidget);
+        expect(find.text(_es.homeViewBulletins), findsOneWidget);
       });
     });
 

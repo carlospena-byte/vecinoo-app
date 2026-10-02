@@ -46,7 +46,7 @@ const gatesCountryCodes = [
 /// Figma "Input/Phone": country-code chip (opens a picker) + IFTA phone field.
 /// [controller] holds only the local number; the caller combines it with
 /// [GatesPhoneField.country] when saving.
-class GatesPhoneField extends StatelessWidget {
+class GatesPhoneField extends StatefulWidget {
   const GatesPhoneField({
     super.key,
     required this.controller,
@@ -61,6 +61,32 @@ class GatesPhoneField extends StatelessWidget {
   final ValueChanged<GatesCountryCode> onCountryChanged;
   final String hintText;
   final String? Function(String?)? validator;
+
+  @override
+  State<GatesPhoneField> createState() => _GatesPhoneFieldState();
+}
+
+class _GatesPhoneFieldState extends State<GatesPhoneField> {
+  final _focusNode = FocusNode();
+
+  TextEditingController get controller => widget.controller;
+  GatesCountryCode get country => widget.country;
+  String get hintText => widget.hintText;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() => setState(() {});
 
   Future<void> _pickCountry(BuildContext context) async {
     final picked = await showGatesSheet<GatesCountryCode>(
@@ -82,7 +108,7 @@ class GatesPhoneField extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                       leading: Text(
                         c.flag,
-                        style: const TextStyle(fontSize: 20),
+                        style: GatesTypography.headingSmall,
                       ),
                       title: Text(
                         c.localizedName(context),
@@ -99,15 +125,16 @@ class GatesPhoneField extends StatelessWidget {
         ),
       ),
     );
-    if (picked != null) onCountryChanged(picked);
+    if (picked != null) widget.onCountryChanged(picked);
   }
 
   @override
   Widget build(BuildContext context) {
     return FormField<String>(
-      validator: (_) => validator?.call(controller.text),
+      validator: (_) => widget.validator?.call(controller.text),
       builder: (field) {
         final hasError = field.hasError;
+        final isFocused = _focusNode.hasFocus;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -118,7 +145,10 @@ class GatesPhoneField extends StatelessWidget {
                 border: Border.all(
                   color: hasError
                       ? context.palette.statusError
+                      : isFocused
+                      ? context.palette.borderFocus
                       : context.palette.borderDefault,
+                  width: isFocused ? 2 : 1,
                 ),
                 borderRadius: BorderRadius.circular(GatesRadius.radius16),
               ),
@@ -138,7 +168,7 @@ class GatesPhoneField extends StatelessWidget {
                           children: [
                             Text(
                               country.flag,
-                              style: const TextStyle(fontSize: 20),
+                              style: GatesTypography.headingSmall,
                             ),
                             const SizedBox(width: GatesSpacing.space8),
                             Text(
@@ -179,6 +209,7 @@ class GatesPhoneField extends StatelessWidget {
                             label: context.l10n.commonPhone,
                             child: TextField(
                               controller: controller,
+                              focusNode: _focusNode,
                               keyboardType: TextInputType.phone,
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
@@ -193,6 +224,11 @@ class GatesPhoneField extends StatelessWidget {
                                 isDense: true,
                                 isCollapsed: true,
                                 border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
                                 hintText: hintText,
                                 hintStyle: GatesTypography.body.copyWith(
                                   color: context.palette.textSecondary,

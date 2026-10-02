@@ -1,3 +1,5 @@
+import 'gates_page_transitions.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -31,49 +33,49 @@ class GatesTypography {
 
   static const TextStyle headingLarge = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: FontWeight.w600,
-    height: 40 / 32,
+    height: 42 / 34,
     letterSpacing: -0.4,
   );
 
   static const TextStyle headingMedium = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: FontWeight.w600,
-    height: 32 / 24,
+    height: 34 / 26,
     letterSpacing: -0.2,
   );
 
   static const TextStyle headingSmall = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: FontWeight.w600,
-    height: 28 / 20,
+    height: 30 / 22,
     letterSpacing: -0.1,
   );
 
   static const TextStyle label = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w500,
-    height: 20 / 14,
+    height: 22 / 16,
     letterSpacing: 0,
   );
 
   static const TextStyle body = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.w400,
-    height: 24 / 16,
+    height: 26 / 18,
     letterSpacing: 0,
   );
 
   static const TextStyle caption = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.w500,
-    height: 18 / 12,
+    height: 20 / 14,
     letterSpacing: 0.1,
   );
 
@@ -169,6 +171,9 @@ class AppTheme {
       extensions: [p],
       // Every screen sits on the canvas painted once by `GatesBackground`.
       scaffoldBackgroundColor: Colors.transparent,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {TargetPlatform.iOS: GatesPageTransitionsBuilder()},
+      ),
       textTheme: _textTheme(p),
       iconTheme: IconThemeData(color: p.iconDefault),
       dividerTheme: DividerThemeData(color: p.borderSubtle),
@@ -186,8 +191,11 @@ class AppTheme {
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
       ),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+      inputDecorationTheme: InputDecorationTheme(
+        border: const OutlineInputBorder(),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: p.borderFocus, width: 2),
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,

@@ -240,7 +240,9 @@ class _TimeField extends StatelessWidget {
                     const SizedBox(height: GatesSpacing.space4),
                     Text(
                       value,
-                      style: GatesTypography.body.copyWith(fontSize: 14),
+                      style: GatesTypography.label.copyWith(
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ],
                 ),

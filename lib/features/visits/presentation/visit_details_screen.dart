@@ -186,6 +186,8 @@ class _VisitDetailsScreenState extends ConsumerState<VisitDetailsScreen> {
             const SizedBox(height: 20),
             Expanded(
               child: ListView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.fromLTRB(
                   GatesSpacing.space24,
                   0,
