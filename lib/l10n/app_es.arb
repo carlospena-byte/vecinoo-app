@@ -237,6 +237,8 @@
   "commonToastError": "Error",
   "commonMonth": "Mes",
   "commonDate": "Fecha",
+  "commonDateRange": "Rango de fechas",
+  "commonApply": "Aplicar",
   "commonCountry": "País",
   "commonPhone": "Teléfono",
   "commonCountryCode": "Código de país {dialCode}",
@@ -475,7 +477,6 @@
   "homeIncidents": "Incidencias",
   "homeReservations": "Reservas",
   "homeVisits": "Visitas",
-  "homeComingSoon": "Próximamente",
   "homeGreeting": "Hola",
   "homeGreetingNamed": "Hola, {name}",
   "@homeGreetingNamed": {
@@ -545,6 +546,7 @@
       }
     }
   },
+  "homeBillingSettled": "Al día",
   "homeBillingUpcoming": "Sin pagos vencidos",
   "billingTitle": "Cobros",
   "billingBalanceLabel": "Saldo pendiente",
@@ -563,7 +565,19 @@
   "billingTabPending": "Pendientes",
   "billingTabHistory": "Historial",
   "billingEmptyPending": "No tienes cobros pendientes.",
-  "billingEmptyHistory": "Tus cobros pagados aparecerán aquí.",
+  "billingEmptyHistory": "No hay pagos en este rango de fechas.",
+  "billingFilterByDates": "Filtrar por fechas",
+  "billingRangeLabel": "{start} – {end}",
+  "@billingRangeLabel": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
   "billingLoadError": "No se pudieron cargar tus cobros.",
   "billingDueOn": "Vence el {date}",
   "@billingDueOn": {
@@ -607,6 +621,23 @@
     "placeholders": {
       "amount": {
         "type": "String"
+      }
+    }
+  },
+  "notificationsTitle": "Notificaciones",
+  "notificationsTabNew": "Nuevas",
+  "notificationsTabHistory": "Historial",
+  "notificationsEmptyNew": "No tienes notificaciones nuevas.",
+  "notificationsEmptyHistory": "Aún no hay notificaciones en el historial.",
+  "notificationsEmpty": "Aún no tienes notificaciones.",
+  "notificationsLoadError": "No se pudieron cargar las notificaciones.",
+  "notificationsMarkAllRead": "Marcar todas",
+  "notificationsMarkAllReadFailed": "No se pudieron marcar como leídas.",
+  "notificationsUnreadCount": "{count, plural, =1{1 sin leer} other{{count} sin leer}}",
+  "@notificationsUnreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },

@@ -24,11 +24,29 @@ final billingBalanceProvider =
           .whenData(BillingBalance.fromOpen),
     );
 
-/// Pages through the settled installments (the payment history).
-class BillingHistoryController extends PagedNotifier<Installment> {
-  BillingHistoryController(this.unitId);
+/// Which unit's history, and the days it covers.
+class BillingHistoryQuery {
+  const BillingHistoryQuery(this.unitId, this.range);
 
   final String unitId;
+  final DateRange range;
+
+  @override
+  bool operator ==(Object other) =>
+      other is BillingHistoryQuery &&
+      other.unitId == unitId &&
+      other.range == range;
+
+  @override
+  int get hashCode => Object.hash(unitId, range);
+}
+
+/// Pages through the settled installments (the payment history) inside a date
+/// range, most recent payment first.
+class BillingHistoryController extends PagedNotifier<Installment> {
+  BillingHistoryController(this.query);
+
+  final BillingHistoryQuery query;
 
   @override
   Future<List<Installment>> fetchPage({
@@ -36,10 +54,17 @@ class BillingHistoryController extends PagedNotifier<Installment> {
     required int limit,
   }) => ref
       .read(billingRepositoryProvider)
-      .fetchHistory(unitId, limit: limit, offset: offset);
+      .fetchHistory(
+        query.unitId,
+        range: query.range,
+        limit: limit,
+        offset: offset,
+      );
 }
 
 final billingHistoryProvider = NotifierProvider.autoDispose
-    .family<BillingHistoryController, PagedState<Installment>, String>(
-      BillingHistoryController.new,
-    );
+    .family<
+      BillingHistoryController,
+      PagedState<Installment>,
+      BillingHistoryQuery
+    >(BillingHistoryController.new);

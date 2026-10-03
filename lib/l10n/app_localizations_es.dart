@@ -460,6 +460,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonDate => 'Fecha';
 
   @override
+  String get commonDateRange => 'Rango de fechas';
+
+  @override
+  String get commonApply => 'Aplicar';
+
+  @override
   String get commonCountry => 'País';
 
   @override
@@ -950,9 +956,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeVisits => 'Visitas';
 
   @override
-  String get homeComingSoon => 'Próximamente';
-
-  @override
   String get homeGreeting => 'Hola';
 
   @override
@@ -1067,6 +1070,9 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get homeBillingSettled => 'Al día';
+
+  @override
   String get homeBillingUpcoming => 'Sin pagos vencidos';
 
   @override
@@ -1099,7 +1105,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get billingEmptyPending => 'No tienes cobros pendientes.';
 
   @override
-  String get billingEmptyHistory => 'Tus cobros pagados aparecerán aquí.';
+  String get billingEmptyHistory => 'No hay pagos en este rango de fechas.';
+
+  @override
+  String get billingFilterByDates => 'Filtrar por fechas';
+
+  @override
+  String billingRangeLabel(String start, String end) {
+    return '$start – $end';
+  }
 
   @override
   String get billingLoadError => 'No se pudieron cargar tus cobros.';
@@ -1148,6 +1162,47 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String billingPaidSoFar(String amount) {
     return 'Abonado $amount';
+  }
+
+  @override
+  String get notificationsTitle => 'Notificaciones';
+
+  @override
+  String get notificationsTabNew => 'Nuevas';
+
+  @override
+  String get notificationsTabHistory => 'Historial';
+
+  @override
+  String get notificationsEmptyNew => 'No tienes notificaciones nuevas.';
+
+  @override
+  String get notificationsEmptyHistory =>
+      'Aún no hay notificaciones en el historial.';
+
+  @override
+  String get notificationsEmpty => 'Aún no tienes notificaciones.';
+
+  @override
+  String get notificationsLoadError =>
+      'No se pudieron cargar las notificaciones.';
+
+  @override
+  String get notificationsMarkAllRead => 'Marcar todas';
+
+  @override
+  String get notificationsMarkAllReadFailed =>
+      'No se pudieron marcar como leídas.';
+
+  @override
+  String notificationsUnreadCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sin leer',
+      one: '1 sin leer',
+    );
+    return '$_temp0';
   }
 
   @override

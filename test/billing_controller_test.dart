@@ -28,6 +28,7 @@ class _FakeBillingRepository implements BillingRepository {
   List<Installment> open = [];
   int historyCount = 0;
   final offsets = <int>[];
+  final ranges = <DateRange>[];
 
   @override
   Future<List<Installment>> fetchOpen(String unitId) async => open;
@@ -35,10 +36,12 @@ class _FakeBillingRepository implements BillingRepository {
   @override
   Future<List<Installment>> fetchHistory(
     String unitId, {
+    required DateRange range,
     required int limit,
     int offset = 0,
   }) async {
     offsets.add(offset);
+    ranges.add(range);
     final end = (offset + limit).clamp(0, historyCount);
     return [
       for (var i = offset; i < end; i++)
@@ -93,13 +96,19 @@ void main() {
       overrides: [billingRepositoryProvider.overrideWithValue(repo)],
     );
     addTearDown(container.dispose);
-    final sub = container.listen(billingHistoryProvider('u'), (_, _) {});
-    final notifier = container.read(billingHistoryProvider('u').notifier);
+    final query = BillingHistoryQuery(
+      'u',
+      DateRange.monthOf(DateTime(2026, 10, 3)),
+    );
+    final sub = container.listen(billingHistoryProvider(query), (_, _) {});
+    final notifier = container.read(billingHistoryProvider(query).notifier);
     await Future<void>.delayed(Duration.zero);
     expect(sub.read().items, hasLength(10));
     await notifier.loadMore();
     expect(sub.read().items, hasLength(12));
     expect(sub.read().hasMore, isFalse);
     expect(repo.offsets, [0, 10]);
+    expect(repo.ranges.first.start, DateTime(2026, 10, 1));
+    expect(repo.ranges.first.end, DateTime(2026, 10, 31));
   });
 }

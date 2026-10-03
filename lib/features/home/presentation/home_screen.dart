@@ -12,13 +12,13 @@ import '../../billing/presentation/billing_controller.dart';
 import '../../billing/presentation/billing_format.dart';
 import '../../bulletins/presentation/bulletins_controller.dart';
 import '../../incidents/domain/incident.dart';
+import '../../notifications/presentation/notifications_controller.dart';
 import '../../incidents/presentation/incidents_controller.dart';
 import '../../profile/presentation/profile_controller.dart';
 import '../../session/domain/membership.dart';
 import '../../session/presentation/session_controller.dart';
 import '../../visits/domain/visit.dart';
 import '../../visits/presentation/visits_controller.dart';
-import '../../../core/widgets/gates_toast.dart';
 import '../../../l10n/l10n.dart';
 
 /// "05 / Home" screen from Figma (file `Bla1GPfXA7JkuZcYpVi2DS`, node `13:14`),
@@ -33,14 +33,6 @@ class HomeScreen extends ConsumerWidget {
   static const _visitsTabIndex = 3;
 
   static final _dayFormat = DateFormat('d MMM', 'es');
-
-  void _showComingSoon(BuildContext context) {
-    showGatesToast(
-      context,
-      type: GatesToastType.info,
-      title: context.l10n.homeComingSoon,
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,7 +67,7 @@ class HomeScreen extends ConsumerWidget {
                   avatarLetter: profile.displayName.isNotEmpty
                       ? profile.displayName[0].toUpperCase()
                       : '?',
-                  onBellTap: () => _showComingSoon(context),
+                  onBellTap: () => context.push('/notifications'),
                   onAvatarTap: () => context.push('/profile'),
                 ),
                 const SizedBox(height: 16),
@@ -181,12 +173,7 @@ class _HeaderRow extends StatelessWidget {
         const SizedBox(width: 12),
         _OwedTag(unitId: membership.unitId),
         const SizedBox(width: 12),
-        _CircleIconButton(
-          semanticLabel: context.l10n.homeNotifications,
-          onTap: onBellTap,
-          backgroundColor: context.palette.bgSurface,
-          child: const GatesSvgIcon('assets/icons/home/bell.svg', size: 20),
-        ),
+        _NotificationsBell(onTap: onBellTap),
         const SizedBox(width: 12),
         _CircleIconButton(
           semanticLabel: context.l10n.commonProfile,
@@ -204,9 +191,10 @@ class _HeaderRow extends StatelessWidget {
   }
 }
 
-/// Amount the unit owes, next to the bell. Hidden once settled; tapping it
-/// opens the payment history. Only an overdue balance gets the alert colour —
-/// one that is not due yet stays neutral.
+/// Amount the unit owes, next to the bell; once settled it reads "Al día" so the
+/// payment history stays reachable. Tapping it opens that history. Only an
+/// overdue balance gets the alert colour — one that is not due yet stays
+/// neutral, and a settled one is success-toned.
 class _OwedTag extends ConsumerWidget {
   const _OwedTag({required this.unitId});
 
@@ -215,8 +203,9 @@ class _OwedTag extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final balance = ref.watch(billingBalanceProvider(unitId)).value;
-    if (balance == null || balance.isSettled) return const SizedBox.shrink();
+    if (balance == null) return const SizedBox.shrink();
     final palette = context.palette;
+    final settled = balance.isSettled;
     final overdue = balance.hasOverdue;
     final amount = formatMoney(balance.total);
     void onTap() => context.push('/billing?tab=history');
@@ -224,14 +213,20 @@ class _OwedTag extends ConsumerWidget {
     return Semantics(
       button: true,
       label: context.l10n.homeBilling,
-      value: overdue
+      value: settled
+          ? context.l10n.homeBillingSettled
+          : overdue
           ? '$amount, ${context.l10n.homeBillingOverdue(formatMoney(balance.overdue))}'
           : amount,
       excludeSemantics: true,
       onTap: onTap,
       // Same 44px height as the circle buttons beside it.
       child: Material(
-        color: overdue ? palette.statusErrorBg : palette.bgAccent,
+        color: settled
+            ? palette.statusSuccessBg
+            : overdue
+            ? palette.statusErrorBg
+            : palette.bgAccent,
         shape: StadiumBorder(
           side: overdue
               ? BorderSide(color: palette.statusError)
@@ -246,19 +241,93 @@ class _OwedTag extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Center(
                 widthFactor: 1,
-                child: Text(
-                  context.l10n.homeBillingOwed(amount),
-                  maxLines: 1,
-                  softWrap: false,
-                  style: GatesTypography.label.copyWith(
-                    color: overdue ? palette.statusError : palette.textBrand,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (settled) ...[
+                      Icon(
+                        Icons.check_circle_outline,
+                        size: 18,
+                        color: palette.statusSuccess,
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      settled
+                          ? context.l10n.homeBillingSettled
+                          : context.l10n.homeBillingOwed(amount),
+                      maxLines: 1,
+                      softWrap: false,
+                      style: GatesTypography.label.copyWith(
+                        color: settled
+                            ? palette.statusSuccess
+                            : overdue
+                            ? palette.statusError
+                            : palette.textBrand,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The bell, with a badge counting unread notifications.
+class _NotificationsBell extends ConsumerWidget {
+  const _NotificationsBell({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadNotificationsCountProvider).value ?? 0;
+    final palette = context.palette;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _CircleIconButton(
+          semanticLabel: unread > 0
+              ? '${context.l10n.homeNotifications}, '
+                    '${context.l10n.notificationsUnreadCount(unread)}'
+              : context.l10n.homeNotifications,
+          onTap: onTap,
+          backgroundColor: palette.bgSurface,
+          child: const GatesSvgIcon('assets/icons/home/bell.svg', size: 20),
+        ),
+        if (unread > 0)
+          PositionedDirectional(
+            top: -2,
+            end: -2,
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 18),
+                  height: 18,
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: palette.statusError,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    unread > 9 ? '9+' : '$unread',
+                    maxLines: 1,
+                    style: GatesTypography.caption.copyWith(
+                      color: palette.textOnDanger,
+                      fontSize: 11,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

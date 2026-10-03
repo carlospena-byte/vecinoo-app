@@ -28,6 +28,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../helpers/fonts.dart';
 import '../../helpers/pump_app.dart' show testMembership;
 import '../incidents/fakes.dart';
+import '../notifications/fakes.dart';
 import '_fakes.dart';
 
 final _es = AppLocalizationsEs();
@@ -58,6 +59,7 @@ class _Harness {
     visitsListProvider.overrideWith((ref, id) => Stream.value(const [])),
     incidentsListProvider.overrideWith((ref, id) async => const []),
     incidentsRepositoryProvider.overrideWithValue(FakeIncidentsRepository()),
+    ...notificationOverrides(),
   ];
 
   Future<void> pump(WidgetTester tester) async {

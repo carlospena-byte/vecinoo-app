@@ -21,17 +21,31 @@ String _monthTitle(DateTime date) {
 class GatesCalendar extends StatelessWidget {
   const GatesCalendar({
     super.key,
-    required this.selectedDay,
     required this.focusedDay,
-    required this.onDaySelected,
     required this.firstDay,
     required this.lastDay,
+    this.selectedDay,
+    this.onDaySelected,
+    this.rangeStart,
+    this.rangeEnd,
+    this.onRangeSelected,
     this.enabledDayPredicate,
-  });
+  }) : assert(
+         onRangeSelected != null ||
+             (selectedDay != null && onDaySelected != null),
+         'Pass selectedDay + onDaySelected, or onRangeSelected',
+       );
 
-  final DateTime selectedDay;
+  final DateTime? selectedDay;
   final DateTime focusedDay;
-  final void Function(DateTime selected, DateTime focused) onDaySelected;
+  final void Function(DateTime selected, DateTime focused)? onDaySelected;
+
+  /// Range mode: set when the calendar picks a span of days instead of one.
+  /// [onRangeSelected] gets the start (and the end once the second tap lands).
+  final DateTime? rangeStart;
+  final DateTime? rangeEnd;
+  final void Function(DateTime start, DateTime? end, DateTime focused)?
+  onRangeSelected;
   final DateTime firstDay;
   final DateTime lastDay;
   final bool Function(DateTime day)? enabledDayPredicate;
@@ -55,6 +69,16 @@ class GatesCalendar extends StatelessWidget {
         rowHeight: 44,
         selectedDayPredicate: (day) => isSameDay(day, selectedDay),
         onDaySelected: onDaySelected,
+        rangeSelectionMode: onRangeSelected == null
+            ? RangeSelectionMode.disabled
+            : RangeSelectionMode.toggledOn,
+        rangeStartDay: rangeStart,
+        rangeEndDay: rangeEnd,
+        onRangeSelected: onRangeSelected == null
+            ? null
+            : (start, end, focused) {
+                if (start != null) onRangeSelected!(start, end, focused);
+              },
         // `day` here is always UTC-normalized by TableCalendar (it calls
         // `DateTime.utc(y, m, d)` internally), so the default predicate must
         // compare against a UTC-normalized "today" too — otherwise a local
@@ -129,6 +153,23 @@ class GatesCalendar extends StatelessWidget {
           selectedTextStyle: GatesTypography.body.copyWith(
             color: context.palette.textOnBrand,
           ),
+          rangeStartDecoration: BoxDecoration(
+            color: context.palette.bgBrand,
+            shape: BoxShape.circle,
+          ),
+          rangeEndDecoration: BoxDecoration(
+            color: context.palette.bgBrand,
+            shape: BoxShape.circle,
+          ),
+          rangeStartTextStyle: GatesTypography.body.copyWith(
+            color: context.palette.textOnBrand,
+          ),
+          rangeEndTextStyle: GatesTypography.body.copyWith(
+            color: context.palette.textOnBrand,
+          ),
+          rangeHighlightColor: context.palette.bgAccent,
+          withinRangeTextStyle: GatesTypography.body,
+          withinRangeDecoration: const BoxDecoration(),
         ),
       ),
     );
@@ -241,6 +282,129 @@ class _GatesDatePickerSheetState extends State<_GatesDatePickerSheet> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet to pick a span of days on [GatesCalendar] — e.g. to filter
+/// the payment history. A single tap picks one day; a second tap closes the
+/// range. Resolves to null when dismissed.
+Future<({DateTime start, DateTime end})?> showGatesDateRangePicker(
+  BuildContext context, {
+  required ({DateTime start, DateTime end}) initialRange,
+  required DateTime firstDate,
+  required DateTime lastDate,
+  String? title,
+  String? primaryLabel,
+}) {
+  return showModalBottomSheet<({DateTime start, DateTime end})>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(GatesRadius.radius24),
+      ),
+    ),
+    builder: (context) => _GatesDateRangePickerSheet(
+      initialRange: initialRange,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      title: title ?? context.l10n.commonDateRange,
+      primaryLabel: primaryLabel ?? context.l10n.commonApply,
+    ),
+  );
+}
+
+class _GatesDateRangePickerSheet extends StatefulWidget {
+  const _GatesDateRangePickerSheet({
+    required this.initialRange,
+    required this.firstDate,
+    required this.lastDate,
+    required this.title,
+    required this.primaryLabel,
+  });
+
+  final ({DateTime start, DateTime end}) initialRange;
+  final DateTime firstDate;
+  final DateTime lastDate;
+  final String title;
+  final String primaryLabel;
+
+  @override
+  State<_GatesDateRangePickerSheet> createState() =>
+      _GatesDateRangePickerSheetState();
+}
+
+class _GatesDateRangePickerSheetState
+    extends State<_GatesDateRangePickerSheet> {
+  late DateTime _start = widget.initialRange.start;
+  late DateTime? _end = widget.initialRange.end;
+  late DateTime _focusedDay = widget.initialRange.start;
+
+  /// TableCalendar hands back UTC days; the app works in local calendar days.
+  static DateTime _local(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          GatesSpacing.space24,
+          GatesSpacing.space24,
+          GatesSpacing.space24,
+          GatesSpacing.space16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: GatesTypography.headingMedium,
+                  ),
+                ),
+                IconButton(
+                  tooltip: context.l10n.commonClose,
+                  icon: const Icon(TablerIcons.x),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: GatesSpacing.space16),
+            GatesCalendar(
+              focusedDay: _focusedDay,
+              firstDay: widget.firstDate,
+              lastDay: widget.lastDate,
+              rangeStart: _start,
+              rangeEnd: _end,
+              enabledDayPredicate: (_) => true,
+              onRangeSelected: (start, end, focused) {
+                setState(() {
+                  _start = _local(start);
+                  _end = end == null ? null : _local(end);
+                  _focusedDay = focused;
+                });
+              },
+            ),
+            const SizedBox(height: GatesSpacing.space24),
+            SizedBox(
+              width: double.infinity,
+              child: GatesButton(
+                label: widget.primaryLabel,
+                // One tap = that single day.
+                onPressed: () =>
+                    Navigator.of(context)
+                        .pop((start: _start, end: _end ?? _start)),
+              ),
+            ),
+          ],
         ),
       ),
     );

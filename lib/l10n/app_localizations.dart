@@ -880,6 +880,18 @@ abstract class AppLocalizations {
   /// **'Fecha'**
   String get commonDate;
 
+  /// No description provided for @commonDateRange.
+  ///
+  /// In es, this message translates to:
+  /// **'Rango de fechas'**
+  String get commonDateRange;
+
+  /// No description provided for @commonApply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get commonApply;
+
   /// No description provided for @commonCountry.
   ///
   /// In es, this message translates to:
@@ -1762,12 +1774,6 @@ abstract class AppLocalizations {
   /// **'Visitas'**
   String get homeVisits;
 
-  /// No description provided for @homeComingSoon.
-  ///
-  /// In es, this message translates to:
-  /// **'Próximamente'**
-  String get homeComingSoon;
-
   /// No description provided for @homeGreeting.
   ///
   /// In es, this message translates to:
@@ -1930,6 +1936,12 @@ abstract class AppLocalizations {
   /// **'{amount} vencido'**
   String homeBillingOverdue(String amount);
 
+  /// No description provided for @homeBillingSettled.
+  ///
+  /// In es, this message translates to:
+  /// **'Al día'**
+  String get homeBillingSettled;
+
   /// No description provided for @homeBillingUpcoming.
   ///
   /// In es, this message translates to:
@@ -1981,8 +1993,20 @@ abstract class AppLocalizations {
   /// No description provided for @billingEmptyHistory.
   ///
   /// In es, this message translates to:
-  /// **'Tus cobros pagados aparecerán aquí.'**
+  /// **'No hay pagos en este rango de fechas.'**
   String get billingEmptyHistory;
+
+  /// No description provided for @billingFilterByDates.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtrar por fechas'**
+  String get billingFilterByDates;
+
+  /// No description provided for @billingRangeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'{start} – {end}'**
+  String billingRangeLabel(String start, String end);
 
   /// No description provided for @billingLoadError.
   ///
@@ -2049,6 +2073,66 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Abonado {amount}'**
   String billingPaidSoFar(String amount);
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificaciones'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsTabNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevas'**
+  String get notificationsTabNew;
+
+  /// No description provided for @notificationsTabHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial'**
+  String get notificationsTabHistory;
+
+  /// No description provided for @notificationsEmptyNew.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes notificaciones nuevas.'**
+  String get notificationsEmptyNew;
+
+  /// No description provided for @notificationsEmptyHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay notificaciones en el historial.'**
+  String get notificationsEmptyHistory;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes notificaciones.'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las notificaciones.'**
+  String get notificationsLoadError;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar todas'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsMarkAllReadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron marcar como leídas.'**
+  String get notificationsMarkAllReadFailed;
+
+  /// No description provided for @notificationsUnreadCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 sin leer} other{{count} sin leer}}'**
+  String notificationsUnreadCount(int count);
 
   /// No description provided for @bulletinsTitle.
   ///

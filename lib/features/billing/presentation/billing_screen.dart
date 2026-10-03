@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/gates_calendar.dart';
 import '../../../core/widgets/gates_paged_list.dart';
 import '../../../core/widgets/gates_segmented_tabs.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../l10n/l10n.dart';
 import '../../session/presentation/session_controller.dart';
+import '../domain/billing_repository.dart';
 import '../domain/installment.dart';
 import 'billing_controller.dart';
 import 'billing_format.dart';
@@ -29,6 +31,21 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   late _BillingTab _tab = widget.startOnHistory
       ? _BillingTab.history
       : _BillingTab.pending;
+
+  /// Days the history covers; the current month until the user picks another.
+  DateRange _range = DateRange.monthOf(DateTime.now());
+
+  Future<void> _pickRange() async {
+    final today = DateTime.now();
+    final picked = await showGatesDateRangePicker(
+      context,
+      initialRange: (start: _range.start, end: _range.end),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(today.year, today.month, today.day),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _range = DateRange(picked.start, picked.end));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +89,22 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                     onSelect: (tab) => setState(() => _tab = tab),
                   ),
                 ),
+                if (_tab == _BillingTab.history)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      GatesSpacing.space24,
+                      GatesSpacing.space12,
+                      GatesSpacing.space24,
+                      0,
+                    ),
+                    child: _RangeChip(range: _range, onTap: _pickRange),
+                  ),
                 Expanded(
                   child: _tab == _BillingTab.pending
                       ? _PendingList(unitId: unitId)
-                      : _HistoryList(unitId: unitId),
+                      : _HistoryList(
+                          query: BillingHistoryQuery(unitId, _range),
+                        ),
                 ),
               ],
             ),
@@ -184,15 +213,79 @@ class _PendingList extends ConsumerWidget {
   }
 }
 
-class _HistoryList extends ConsumerWidget {
-  const _HistoryList({required this.unitId});
+/// The date range filter of the history: shows the active span, tap to change.
+class _RangeChip extends StatelessWidget {
+  const _RangeChip({required this.range, required this.onTap});
 
-  final String unitId;
+  final DateRange range;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final label = context.l10n.billingRangeLabel(
+      formatBillingDay(range.start),
+      formatBillingDay(range.end),
+    );
+    return Semantics(
+      button: true,
+      label: context.l10n.billingFilterByDates,
+      value: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: palette.bgSurface,
+        shape: StadiumBorder(side: BorderSide(color: palette.borderDefault)),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const StadiumBorder(),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: GatesSpacing.space16,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    TablerIcons.calendar,
+                    size: 18,
+                    color: palette.textBrand,
+                  ),
+                  const SizedBox(width: GatesSpacing.space8),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: GatesTypography.label.copyWith(
+                        color: palette.textBrand,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: GatesSpacing.space8),
+                  Icon(
+                    TablerIcons.chevronDown,
+                    size: 18,
+                    color: palette.textBrand,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HistoryList extends ConsumerWidget {
+  const _HistoryList({required this.query});
+
+  final BillingHistoryQuery query;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final paging = ref.watch(billingHistoryProvider(unitId));
-    final controller = ref.read(billingHistoryProvider(unitId).notifier);
+    final paging = ref.watch(billingHistoryProvider(query));
+    final controller = ref.read(billingHistoryProvider(query).notifier);
 
     if (paging.items.isEmpty) {
       if (paging.failure != null) {

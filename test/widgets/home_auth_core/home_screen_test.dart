@@ -24,6 +24,7 @@ import 'package:gates_app/l10n/app_localizations_es.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../incidents/fakes.dart';
+import '../notifications/fakes.dart';
 import '../../helpers/fonts.dart';
 import '../../helpers/pump_app.dart';
 
@@ -95,8 +96,10 @@ List<Override> _data({
   List<Incident> incidents = const [],
   List<Bulletin> bulletins = const [],
   List<Installment>? installments,
+  FakeNotificationsRepository? notifications,
 }) => [
   ...membershipOverrides(),
+  ...notificationOverrides(notifications),
   myProfileProvider.overrideWith((ref) async {
     onProfileLoad?.call();
     if (profileError != null) throw profileError;
@@ -140,6 +143,7 @@ Future<void> _pumpHome(
     '/incidents/report': (_) => const Text('report-route'),
     '/bulletins': (_) => const Text('bulletins-route'),
     '/billing': (_) => const Text('billing-route'),
+    '/notifications': (_) => const Text('notifications-route'),
   },
 );
 
@@ -193,6 +197,7 @@ void main() {
         tester,
         overrides: [
           ...membershipOverrides(),
+          ...notificationOverrides(),
           myProfileProvider.overrideWith((ref) async {
             attempts++;
             if (attempts == 1) throw StateError('boom');
@@ -209,12 +214,24 @@ void main() {
       expect(find.text(_es.homeGreetingNamed('Luis')), findsOneWidget);
     });
 
-    testWidgets('bell shows the coming soon toast', (tester) async {
-      await _pumpHome(tester, overrides: _data());
+    testWidgets('bell opens the notifications inbox', (tester) async {
+      final visited = <String>[];
+      await _pumpHome(tester, overrides: _data(), visited: visited);
       await tester.tap(find.bySemanticsLabel(_es.homeNotifications));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text(_es.homeComingSoon), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('notifications-route'), findsOneWidget);
+      expect(visited, ['/notifications']);
+    });
+
+    testWidgets('bell badge counts unread notifications', (tester) async {
+      final repo = FakeNotificationsRepository();
+      await _pumpHome(tester, overrides: _data(notifications: repo));
+      repo.unread.add(3);
+      await tester.pumpAndSettle();
+      expect(find.text('3'), findsOneWidget);
+      repo.unread.add(12);
+      await tester.pumpAndSettle();
+      expect(find.text('9+'), findsOneWidget);
     });
 
     for (final (mode, color) in [
