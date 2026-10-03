@@ -37,9 +37,9 @@ class Env {
   static String get supabasePublishableKey =>
       dotenv.get('SUPABASE_PUBLISHABLE_KEY');
 
-  /// Base URL of the gates-admin web app, which serves the FastLane
-  /// self-registration page at `#fastlane/<code>` — same link scheme the
+  /// Public base URL (vecinoo.app landing, which redirects
+  /// `#fastlane/<code>` to the gates-admin self-registration page) — same link scheme the
   /// send-visit-notification Edge Function builds server-side.
   static String get publicAppUrl =>
-      dotenv.maybeGet('PUBLIC_APP_URL') ?? 'https://admin.vecinoo.app/';
+      dotenv.maybeGet('PUBLIC_APP_URL') ?? 'https://vecinoo.app/';
 }

@@ -147,7 +147,7 @@ void main() {
       );
       expect(Env.supabaseUrl, 'https://abc.supabase.co');
       expect(Env.supabasePublishableKey, 'pk');
-      expect(Env.publicAppUrl, 'https://admin.vecinoo.app/');
+      expect(Env.publicAppUrl, 'https://vecinoo.app/');
     });
   });
 }

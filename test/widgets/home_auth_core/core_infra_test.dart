@@ -21,7 +21,7 @@ void main() {
 
     test('publicAppUrl defaults, and can be overridden', () {
       dotenv.loadFromString(envString: 'SUPABASE_URL=x\n');
-      expect(Env.publicAppUrl, 'https://admin.vecinoo.app/');
+      expect(Env.publicAppUrl, 'https://vecinoo.app/');
       dotenv.loadFromString(
         envString: 'PUBLIC_APP_URL=https://example.test/\n',
       );

@@ -422,9 +422,9 @@ void main() {
   group('fastlaneLink', () {
     tearDown(() => dotenv.loadFromString(envString: 'OTHER=1'));
 
-    test('defaults to the production admin URL', () {
+    test('defaults to the production public URL', () {
       dotenv.loadFromString(envString: 'OTHER=1');
-      expect(fastlaneLink('ABC'), 'https://admin.vecinoo.app/#fastlane/ABC');
+      expect(fastlaneLink('ABC'), 'https://vecinoo.app/#fastlane/ABC');
     });
 
     test('adds a missing trailing slash and respects PUBLIC_APP_URL', () {
