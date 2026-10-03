@@ -1,3 +1,4 @@
+import 'package:gates_app/core/theme/app_theme.dart';
 import 'package:gates_app/features/billing/domain/installment.dart';
 import 'package:gates_app/features/billing/presentation/billing_controller.dart';
 
@@ -154,8 +155,8 @@ void main() {
     ) async {
       await _pumpHome(tester, overrides: _data());
       expect(find.text(_es.homeGreetingNamed('Ana')), findsOneWidget);
-      expect(find.text(_es.homeTagline), findsOneWidget);
-      expect(find.text('LOS OLIVOS'), findsOneWidget);
+      expect(find.text(_es.homeBrandName), findsOneWidget);
+      expect(find.text('Los Olivos'), findsOneWidget);
       expect(find.text('A-204'), findsOneWidget);
       expect(find.text('A'), findsOneWidget); // avatar letter
     });
@@ -214,6 +215,100 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text(_es.homeComingSoon), findsOneWidget);
+    });
+
+    for (final (mode, color) in [
+      (ThemeMode.light, const Color(0xFF344F40)),
+      (ThemeMode.dark, const Color(0xFFFFFFFF)),
+    ]) {
+      testWidgets('brand wordmark uses the $mode signature', (tester) async {
+        await pumpApp(
+          tester,
+          HomeScreen(onNavigateToTab: (_) {}),
+          overrides: _data(),
+          mode: mode,
+        );
+        final text = tester.widget<Text>(find.text(_es.homeBrandName));
+        expect(text.style?.color, color);
+      });
+    }
+
+    testWidgets('brand wordmark is vertically centred on the header buttons', (
+      tester,
+    ) async {
+      await _pumpHome(tester, overrides: _data());
+      final word = tester.getRect(find.text(_es.homeBrandName));
+      final bell = tester.getRect(find.bySemanticsLabel(_es.homeNotifications));
+      expect(word.center.dy, closeTo(bell.center.dy, 0.5));
+    });
+
+    group('owed tag', () {
+      testWidgets('shows the amount and opens the history', (tester) async {
+        final visited = <String>[];
+        await _pumpHome(
+          tester,
+          overrides: _data(installments: [_installment(balance: 300.5)]),
+          visited: visited,
+        );
+        final tag = find.text(_es.homeBillingOwed(r'$300.50')).first;
+        // Same row as the bell.
+        expect(
+          tester.getCenter(tag).dy,
+          closeTo(
+            tester.getCenter(find.bySemanticsLabel(_es.homeNotifications)).dy,
+            1,
+          ),
+        );
+        // Same height and 12px spacing as the bell button.
+        final tagBox = tester.getRect(
+          find.ancestor(of: tag, matching: find.byType(InkWell)).first,
+        );
+        final bell = tester.getRect(
+          find.bySemanticsLabel(_es.homeNotifications),
+        );
+        expect(tagBox.height, bell.height);
+        expect(bell.left - tagBox.right, 12);
+        await tester.tap(tag);
+        await tester.pumpAndSettle();
+        expect(visited, ['/billing?tab=history']);
+      });
+
+      testWidgets('overdue balances use the alert colour', (tester) async {
+        await _pumpHome(
+          tester,
+          overrides: _data(
+            installments: [
+              _installment(balance: 300, overdue: true),
+              _installment(balance: 50),
+            ],
+          ),
+        );
+        final text = tester.widget<Text>(
+          find.text(_es.homeBillingOwed(r'$350.00')),
+        );
+        final context = tester.element(
+          find.text(_es.homeBillingOwed(r'$350.00')),
+        );
+        expect(text.style!.color, context.palette.statusError);
+      });
+
+      testWidgets('upcoming balances stay neutral', (tester) async {
+        await _pumpHome(
+          tester,
+          overrides: _data(installments: [_installment(balance: 50)]),
+        );
+        final finder = find.text(_es.homeBillingOwed(r'$50.00'));
+        final context = tester.element(finder);
+        expect(
+          tester.widget<Text>(finder).style!.color,
+          context.palette.textBrand,
+        );
+      });
+
+      testWidgets('hidden when settled', (tester) async {
+        await _pumpHome(tester, overrides: _data(installments: const []));
+        expect(find.textContaining(r'$'), findsNothing);
+      });
     });
 
     testWidgets('avatar opens the profile route', (tester) async {
@@ -432,58 +527,6 @@ void main() {
         );
         expect(find.text(_es.homeVisitsSummary(1)), findsOneWidget);
         expect(find.text(_es.homeIncidentsSummary(1)), findsOneWidget);
-      });
-    });
-
-    group('billing card', () {
-      testWidgets('shows the amount owed and opens the billing screen', (
-        tester,
-      ) async {
-        final visited = <String>[];
-        await _pumpHome(
-          tester,
-          overrides: _data(
-            installments: [_installment(balance: 300.5), _installment()],
-          ),
-          visited: visited,
-        );
-        expect(find.text(_es.homeBilling), findsOneWidget);
-        expect(find.text(_es.homeBillingOwed(r'$400.50')), findsOneWidget);
-        expect(find.text(_es.homeBillingUpcoming), findsOneWidget);
-        await tester.ensureVisible(find.text(_es.homeViewBilling));
-        await tester.pump();
-        await tester.tap(find.text(_es.homeViewBilling));
-        await tester.pumpAndSettle();
-        expect(visited, ['/billing']);
-      });
-
-      testWidgets('flags the overdue part', (tester) async {
-        await _pumpHome(
-          tester,
-          overrides: _data(
-            installments: [
-              _installment(balance: 300, overdue: true),
-              _installment(balance: 50),
-            ],
-          ),
-        );
-        expect(find.text(_es.homeBillingOwed(r'$350.00')), findsOneWidget);
-        expect(find.text(_es.homeBillingOverdue(r'$300.00')), findsOneWidget);
-      });
-
-      testWidgets('settled: says so and opens the history', (tester) async {
-        final visited = <String>[];
-        await _pumpHome(
-          tester,
-          overrides: _data(installments: const []),
-          visited: visited,
-        );
-        expect(find.text(_es.homeBillingSettled), findsOneWidget);
-        await tester.ensureVisible(find.text(_es.homeViewBillingHistory));
-        await tester.pump();
-        await tester.tap(find.text(_es.homeViewBillingHistory));
-        await tester.pumpAndSettle();
-        expect(visited, ['/billing?tab=history']);
       });
     });
 

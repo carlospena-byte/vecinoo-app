@@ -485,7 +485,7 @@
       }
     }
   },
-  "homeTagline": "Tu comunidad, más cerca.",
+  "homeBrandName": "vecinoo",
   "homeNotifications": "Notificaciones",
   "homeToday": "Hoy",
   "homeTomorrow": "Mañana",
@@ -537,7 +537,6 @@
       }
     }
   },
-  "homeBillingSettled": "Estás al día",
   "homeBillingOverdue": "{amount} vencido",
   "@homeBillingOverdue": {
     "placeholders": {
@@ -547,8 +546,6 @@
     }
   },
   "homeBillingUpcoming": "Sin pagos vencidos",
-  "homeViewBilling": "Ver cobros",
-  "homeViewBillingHistory": "Ver pagos",
   "billingTitle": "Cobros",
   "billingBalanceLabel": "Saldo pendiente",
   "billingOverdueSummary": "{count, plural, =1{1 cuota vencida · {amount}} other{{count} cuotas vencidas · {amount}}}",

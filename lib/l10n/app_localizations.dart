@@ -1780,11 +1780,11 @@ abstract class AppLocalizations {
   /// **'Hola, {name}'**
   String homeGreetingNamed(String name);
 
-  /// No description provided for @homeTagline.
+  /// No description provided for @homeBrandName.
   ///
   /// In es, this message translates to:
-  /// **'Tu comunidad, más cerca.'**
-  String get homeTagline;
+  /// **'vecinoo'**
+  String get homeBrandName;
 
   /// No description provided for @homeNotifications.
   ///
@@ -1924,12 +1924,6 @@ abstract class AppLocalizations {
   /// **'{amount}'**
   String homeBillingOwed(String amount);
 
-  /// No description provided for @homeBillingSettled.
-  ///
-  /// In es, this message translates to:
-  /// **'Estás al día'**
-  String get homeBillingSettled;
-
   /// No description provided for @homeBillingOverdue.
   ///
   /// In es, this message translates to:
@@ -1941,18 +1935,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sin pagos vencidos'**
   String get homeBillingUpcoming;
-
-  /// No description provided for @homeViewBilling.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver cobros'**
-  String get homeViewBilling;
-
-  /// No description provided for @homeViewBillingHistory.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver pagos'**
-  String get homeViewBillingHistory;
 
   /// No description provided for @billingTitle.
   ///

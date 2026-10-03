@@ -49,12 +49,50 @@ class SupabaseSessionRepository implements SessionRepository {
     if (userId == null) throw const AuthFailure();
     final rows = await _client
         .from('unit_members')
-        .select('units(id, name, residential_id, residentials(id, name))')
+        .select(
+          'units(id, name, location_id, residential_id, residentials(id, name))',
+        )
         .eq('user_id', userId);
-    return (rows as List)
-        .map((row) => Membership.fromMap(row as Map<String, dynamic>))
-        .toList();
+    final memberships = (rows as List).cast<Map<String, dynamic>>();
+    final residentialIds = {
+      for (final row in memberships)
+        (row['units'] as Map<String, dynamic>)['residential_id'] as String,
+    };
+    final locations = residentialIds.isEmpty
+        ? const <String, Map<String, dynamic>>{}
+        : {
+            for (final l
+                in (await _client
+                        .from('locations')
+                        .select('id, name, parent_id')
+                        .inFilter('residential_id', residentialIds.toList()))
+                    as List)
+              (l as Map<String, dynamic>)['id'] as String: l,
+          };
+    return memberships.map((row) {
+      final unit = row['units'] as Map<String, dynamic>;
+      return Membership.fromMap(
+        row,
+        locationPath: _pathTo(unit['location_id'] as String?, locations),
+      );
+    }).toList();
   });
+
+  /// Names from the outermost level down to [locationId] (inclusive).
+  static List<String> _pathTo(
+    String? locationId,
+    Map<String, Map<String, dynamic>> locations,
+  ) {
+    final path = <String>[];
+    final seen = <String>{};
+    var current = locationId == null ? null : locations[locationId];
+    while (current != null && seen.add(current['id'] as String)) {
+      path.insert(0, current['name'] as String);
+      final parent = current['parent_id'] as String?;
+      current = parent == null ? null : locations[parent];
+    }
+    return path;
+  }
 
   /// Consumes an invitation code an admin created in gates-admin, linking
   /// the current user to that unit via unit_members (see

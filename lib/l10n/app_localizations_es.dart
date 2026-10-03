@@ -961,7 +961,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get homeTagline => 'Tu comunidad, más cerca.';
+  String get homeBrandName => 'vecinoo';
 
   @override
   String get homeNotifications => 'Notificaciones';
@@ -1062,21 +1062,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get homeBillingSettled => 'Estás al día';
-
-  @override
   String homeBillingOverdue(String amount) {
     return '$amount vencido';
   }
 
   @override
   String get homeBillingUpcoming => 'Sin pagos vencidos';
-
-  @override
-  String get homeViewBilling => 'Ver cobros';
-
-  @override
-  String get homeViewBillingHistory => 'Ver pagos';
 
   @override
   String get billingTitle => 'Cobros';

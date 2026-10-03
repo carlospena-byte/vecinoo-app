@@ -45,9 +45,13 @@ Future<TimeOfDay?> showGatesTimePicker(
             height: 216,
             child: CupertinoTheme(
               data: CupertinoThemeData(
+                brightness: Theme.of(context).brightness,
                 textTheme: CupertinoTextThemeData(
                   dateTimePickerTextStyle: GatesTypography.headingSmall
-                      .copyWith(fontWeight: FontWeight.w500),
+                      .copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: context.palette.textPrimary,
+                      ),
                 ),
               ),
               child: CupertinoDatePicker(

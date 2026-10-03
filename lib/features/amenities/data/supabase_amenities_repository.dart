@@ -178,6 +178,9 @@ class SupabaseAmenitiesRepository implements AmenitiesRepository {
               'user_id': userId,
               'start_time': startTime.toUtc().toIso8601String(),
               'end_time': endTime.toUtc().toIso8601String(),
+              // Lets the DB's blackout check compare local calendar days
+              // instead of UTC ones.
+              'tz_offset_minutes': startTime.timeZoneOffset.inMinutes,
               'notes': notes,
             })
             .select('*, amenities(name)')

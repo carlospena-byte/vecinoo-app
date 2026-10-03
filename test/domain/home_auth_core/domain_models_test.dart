@@ -5,6 +5,26 @@ import 'package:gates_app/features/session/domain/membership.dart';
 
 void main() {
   group('Membership', () {
+    test('unitPath lists every level before the unit', () {
+      const m = Membership(
+        residentialId: 'r',
+        residentialName: 'Los Olivos',
+        unitId: 'u',
+        unitName: '101',
+        locationPath: ['Torre 1', 'Piso 1'],
+      );
+      expect(m.unitPath, 'Torre 1 → Piso 1 → 101');
+      expect(
+        const Membership(
+          residentialId: 'r',
+          residentialName: 'n',
+          unitId: 'u',
+          unitName: '101',
+        ).unitPath,
+        '101',
+      );
+    });
+
     test('fromMap reads the nested unit and residential', () {
       final m = Membership.fromMap({
         'units': {

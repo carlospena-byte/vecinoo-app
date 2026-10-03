@@ -87,8 +87,15 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  context.l10n.homeTagline,
+                  membership.residentialName,
                   style: context.gatesText.labelSecondary,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  membership.unitPath,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GatesTypography.label,
                 ),
                 const SizedBox(height: 16),
                 _ReservationCard(
@@ -114,8 +121,6 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                _BillingCard(unitId: membership.unitId),
                 const SizedBox(height: 16),
                 _BulletinsCard(residentialId: membership.residentialId),
               ],
@@ -151,20 +156,30 @@ class _HeaderRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // Signature from Figma "06 · Brand / Vecinoo": the lowercase wordmark
+        // in Manrope SemiBold. Light mode uses the primary signature (forest
+        // green); dark mode the inverse one (white).
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                membership.residentialName.toUpperCase(),
-                style: context.gatesText.caption.copyWith(
-                  color: context.palette.textBrand,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                context.l10n.homeBrandName,
+                maxLines: 1,
+                style: GatesTypography.headingMedium.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? context.palette.textInverse
+                      : context.palette.textBrand,
+                  letterSpacing: 0,
                 ),
               ),
-              Text(membership.unitName, style: GatesTypography.label),
-            ],
+            ),
           ),
         ),
+        const SizedBox(width: 12),
+        _OwedTag(unitId: membership.unitId),
         const SizedBox(width: 12),
         _CircleIconButton(
           semanticLabel: context.l10n.homeNotifications,
@@ -185,6 +200,65 @@ class _HeaderRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Amount the unit owes, next to the bell. Hidden once settled; tapping it
+/// opens the payment history. Only an overdue balance gets the alert colour —
+/// one that is not due yet stays neutral.
+class _OwedTag extends ConsumerWidget {
+  const _OwedTag({required this.unitId});
+
+  final String unitId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final balance = ref.watch(billingBalanceProvider(unitId)).value;
+    if (balance == null || balance.isSettled) return const SizedBox.shrink();
+    final palette = context.palette;
+    final overdue = balance.hasOverdue;
+    final amount = formatMoney(balance.total);
+    void onTap() => context.push('/billing?tab=history');
+
+    return Semantics(
+      button: true,
+      label: context.l10n.homeBilling,
+      value: overdue
+          ? '$amount, ${context.l10n.homeBillingOverdue(formatMoney(balance.overdue))}'
+          : amount,
+      excludeSemantics: true,
+      onTap: onTap,
+      // Same 44px height as the circle buttons beside it.
+      child: Material(
+        color: overdue ? palette.statusErrorBg : palette.bgAccent,
+        shape: StadiumBorder(
+          side: overdue
+              ? BorderSide(color: palette.statusError)
+              : BorderSide.none,
+        ),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const StadiumBorder(),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  context.l10n.homeBillingOwed(amount),
+                  maxLines: 1,
+                  softWrap: false,
+                  style: GatesTypography.label.copyWith(
+                    color: overdue ? palette.statusError : palette.textBrand,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -661,122 +735,6 @@ class _BulletinsCard extends ConsumerWidget {
                     TablerIcons.news,
                     size: 20,
                     color: context.palette.iconBrand,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Full-width card under Visitas / Incidencias: what the unit owes. Overdue
-/// balances are flagged; once settled it opens the payment history.
-class _BillingCard extends ConsumerWidget {
-  const _BillingCard({required this.unitId});
-
-  final String unitId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final balance = ref.watch(billingBalanceProvider(unitId)).value;
-    final palette = context.palette;
-
-    final settled = balance?.isSettled ?? false;
-    final overdue = balance?.hasOverdue ?? false;
-    final title = balance == null
-        ? '—'
-        : settled
-        ? context.l10n.homeBillingSettled
-        : context.l10n.homeBillingOwed(formatMoney(balance.total));
-    final subtitle = balance == null || settled
-        ? null
-        : overdue
-        ? context.l10n.homeBillingOverdue(formatMoney(balance.overdue))
-        : context.l10n.homeBillingUpcoming;
-    final action = settled
-        ? context.l10n.homeViewBillingHistory
-        : context.l10n.homeViewBilling;
-    final onTap = settled
-        ? () => context.push('/billing?tab=history')
-        : () => context.push('/billing');
-
-    return Semantics(
-      button: true,
-      label: context.l10n.homeBilling,
-      value: [title, ?subtitle].join(', '),
-      excludeSemantics: true,
-      onTap: onTap,
-      child: Material(
-        color: palette.bgSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(GatesRadius.radius24),
-          side: BorderSide(
-            color: overdue ? palette.statusError : palette.borderDefault,
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.homeBilling,
-                        style: context.gatesText.caption.copyWith(
-                          color: palette.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GatesTypography.headingSmall.copyWith(
-                          letterSpacing: 0,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          style: GatesTypography.label.copyWith(
-                            color: overdue
-                                ? palette.statusError
-                                : palette.textSecondary,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Text(
-                        action,
-                        style: GatesTypography.label.copyWith(
-                          color: palette.textBrand,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: overdue ? palette.statusErrorBg : palette.bgAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    TablerIcons.receipt,
-                    size: 20,
-                    color: overdue ? palette.statusError : palette.iconBrand,
                   ),
                 ),
               ],

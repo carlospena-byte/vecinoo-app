@@ -206,10 +206,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
     final width = _decodeWidth(context);
     for (final i in [page - 1, page + 1]) {
       if (i < 0 || i >= urls.length) continue;
-      precacheImage(
-        ResizeImage(NetworkImage(urls[i]), width: width),
-        context,
-      );
+      precacheImage(ResizeImage(NetworkImage(urls[i]), width: width), context);
     }
   }
 

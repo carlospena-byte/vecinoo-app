@@ -71,6 +71,26 @@ void main() {
       );
     });
 
+    test('deeplink pushes open allowed routes only', () {
+      expect(
+        notificationRoute({'type': 'deeplink', 'route': '/billing'}),
+        '/billing',
+      );
+      expect(
+        notificationRoute({'type': 'deeplink', 'route': '/bulletins/abc-1'}),
+        '/bulletins/abc-1',
+      );
+      expect(notificationRoute({'type': 'deeplink'}), isNull);
+      expect(
+        notificationRoute({'type': 'deeplink', 'route': '/login'}),
+        isNull,
+      );
+      expect(
+        notificationRoute({'type': 'deeplink', 'route': '/bulletins/a/b'}),
+        isNull,
+      );
+    });
+
     test('unknown or incomplete payloads have no destination', () {
       expect(notificationRoute({}), isNull);
       expect(notificationRoute({'type': 'bulletin'}), isNull);
