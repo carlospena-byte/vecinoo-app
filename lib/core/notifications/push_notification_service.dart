@@ -147,7 +147,7 @@ class PushNotificationService {
   static Future<void> _initLocalNotifications() async {
     await _localNotifications.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_notification'),
         // Permissions were already requested above via _messaging.requestPermission();
         // asking again here would show a second, redundant system prompt.
         iOS: DarwinInitializationSettings(

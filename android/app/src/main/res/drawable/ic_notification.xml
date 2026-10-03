@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar notification icon: the Vecinoo "oo" mark (Figma Brand node 178:16,
+     two rings r=20.4 stroke 7.2, centres 24 / 55.2, 79.2x48) as a flat white
+     silhouette. Android tints/flattens notification icons, so it must be
+     single-colour on transparent. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="79.2"
+    android:viewportHeight="79.2">
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7.2"
+        android:pathData="M3.6,39.6a20.4,20.4 0 1,0 40.8,0a20.4,20.4 0 1,0 -40.8,0" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7.2"
+        android:pathData="M34.8,39.6a20.4,20.4 0 1,0 40.8,0a20.4,20.4 0 1,0 -40.8,0" />
+</vector>

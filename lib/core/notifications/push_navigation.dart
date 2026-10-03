@@ -23,7 +23,30 @@ String? notificationRoute(Map<String, dynamic> data) {
         return '/bulletins/${Uri.encodeComponent(id)}';
       }
       return null;
+    case 'payment':
+      return '/billing';
+    case 'deeplink':
+      final route = data['route'];
+      return route is String && _isAllowedRoute(route) ? route : null;
     default:
       return null;
   }
 }
+
+/// Screens an admin-composed push (type `deeplink`) may open. The payload
+/// comes from the network, so anything off this list is ignored instead of
+/// being handed to the router. Keep in sync with `destinationRoute` in the
+/// send-push-announcement edge function.
+const _allowedPushRoutes = {
+  '/bulletins',
+  '/amenities',
+  '/billing',
+  '/incidents/report',
+  '/visits/new',
+  '/profile',
+};
+
+final _bulletinRoute = RegExp(r'^/bulletins/[^/?#]+$');
+
+bool _isAllowedRoute(String route) =>
+    _allowedPushRoutes.contains(route) || _bulletinRoute.hasMatch(route);
