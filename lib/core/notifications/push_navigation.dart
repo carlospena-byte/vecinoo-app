@@ -24,7 +24,14 @@ String? notificationRoute(Map<String, dynamic> data) {
       }
       return null;
     case 'payment':
+    case 'charge':
       return '/billing';
+    case 'visitor_checkin':
+      return _idRoute('/visits', data['visitorId']);
+    case 'incident':
+      return _idRoute('/incidents', data['incident_id']);
+    case 'booking':
+      return '/amenities';
     case 'deeplink':
       final route = data['route'];
       return route is String && _isAllowedRoute(route) ? route : null;
@@ -32,6 +39,9 @@ String? notificationRoute(Map<String, dynamic> data) {
       return null;
   }
 }
+
+String? _idRoute(String base, Object? id) =>
+    id is String && id.isNotEmpty ? '$base/${Uri.encodeComponent(id)}' : null;
 
 /// Screens an admin-composed push (type `deeplink`) may open. The payload
 /// comes from the network, so anything off this list is ignored instead of
