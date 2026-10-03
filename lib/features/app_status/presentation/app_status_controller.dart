@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_info.dart';
 import '../../../core/error/failure.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
@@ -49,7 +50,10 @@ class AppStatusController extends AsyncNotifier<AppStatusState> {
       return AppStatusState(status: status);
     } on NetworkFailure {
       return previous ??
-          const AppStatusState(status: AppStatus.operational, unreachable: true);
+          const AppStatusState(
+            status: AppStatus.operational,
+            unreachable: true,
+          );
     } catch (error) {
       debugPrint('[app-status] check failed, continuing: $error');
       return previous ?? const AppStatusState(status: AppStatus.operational);

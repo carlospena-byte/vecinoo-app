@@ -195,6 +195,24 @@ class _GalleryState extends ConsumerState<_Gallery> {
     super.dispose();
   }
 
+  int _decodeWidth(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    return (mq.size.width * mq.devicePixelRatio).round();
+  }
+
+  /// Decodes the neighbouring photos ahead of the swipe so they are ready
+  /// when the page slides in.
+  void _precacheNeighbours(BuildContext context, List<String> urls, int page) {
+    final width = _decodeWidth(context);
+    for (final i in [page - 1, page + 1]) {
+      if (i < 0 || i >= urls.length) continue;
+      precacheImage(
+        ResizeImage(NetworkImage(urls[i]), width: width),
+        context,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.imageCount == 0) return const _GalleryPlaceholder();
@@ -217,12 +235,15 @@ class _GalleryState extends ConsumerState<_Gallery> {
               PageView.builder(
                 controller: _pageController,
                 itemCount: photoUrls.length,
-                onPageChanged: ref
-                    .read(
-                      amenityDetailControllerProvider(widget.amenityId)
-                          .notifier,
-                    )
-                    .setGalleryPage,
+                onPageChanged: (i) {
+                  ref
+                      .read(
+                        amenityDetailControllerProvider(widget.amenityId)
+                            .notifier,
+                      )
+                      .setGalleryPage(i);
+                  _precacheNeighbours(context, photoUrls, i);
+                },
                 itemBuilder: (context, index) => Semantics(
                   button: true,
                   label: context.l10n.amenitiesPhotoLabel(
@@ -238,6 +259,10 @@ class _GalleryState extends ConsumerState<_Gallery> {
                       photoUrls[index],
                       fit: BoxFit.cover,
                       width: double.infinity,
+                      // Decode at display size, not full resolution:
+                      // decoding multi-MP photos on the raster/UI thread
+                      // while paging is what made the swipe stutter.
+                      cacheWidth: _decodeWidth(context),
                       loadingBuilder: (context, child, progress) =>
                           progress == null ? child : const LoadingView(),
                     ),

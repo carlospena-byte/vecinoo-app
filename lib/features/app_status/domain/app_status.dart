@@ -54,7 +54,9 @@ class AppStatus {
       maintenance: maintenance is Map<String, dynamic>
           ? MaintenanceInfo.fromMap(maintenance)
           : const MaintenanceInfo(enabled: false),
-      update: update is Map<String, dynamic> ? UpdateInfo.fromMap(update) : null,
+      update: update is Map<String, dynamic>
+          ? UpdateInfo.fromMap(update)
+          : null,
     );
   }
 

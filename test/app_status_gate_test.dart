@@ -67,7 +67,11 @@ void main() {
   group('AppStatus.fromMap', () {
     test('parses maintenance and update, blank text becomes null', () {
       final status = AppStatus.fromMap({
-        'maintenance': {'enabled': true, 'title': '  ', 'message': 'Vuelve pronto'},
+        'maintenance': {
+          'enabled': true,
+          'title': '  ',
+          'message': 'Vuelve pronto',
+        },
         'update': {
           'version': '1.2.0',
           'is_forced': true,
@@ -187,7 +191,9 @@ void main() {
       await _pump(tester, repo);
       expect(find.text('APP'), findsOneWidget);
 
-      repo.result = const AppStatus(maintenance: MaintenanceInfo(enabled: true));
+      repo.result = const AppStatus(
+        maintenance: MaintenanceInfo(enabled: true),
+      );
       changes.add(null);
       await tester.pumpAndSettle();
       expect(find.text('Estamos en mantenimiento'), findsOneWidget);

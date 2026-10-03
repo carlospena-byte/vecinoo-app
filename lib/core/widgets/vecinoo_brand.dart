@@ -74,10 +74,13 @@ class AmbientGlow extends StatelessWidget {
       top: 55,
       left: 0,
       right: 0,
+      // Opacity is baked into the gradient alpha: an `Opacity` widget forces
+      // a 680x610 offscreen layer (saveLayer) on every frame this page is
+      // composited, which stutters Android route transitions and swipes.
+      // The RepaintBoundary keeps the glow cached as its own layer.
       child: IgnorePointer(
-        child: Center(
-          child: Opacity(
-            opacity: palette.glowOpacity,
+        child: RepaintBoundary(
+          child: Center(
             child: Container(
               width: 680,
               height: 610,
@@ -85,8 +88,12 @@ class AmbientGlow extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    palette.glowStrong.withValues(alpha: 0.48),
-                    palette.glowSoft.withValues(alpha: 0.2),
+                    palette.glowStrong.withValues(
+                      alpha: 0.48 * palette.glowOpacity,
+                    ),
+                    palette.glowSoft.withValues(
+                      alpha: 0.2 * palette.glowOpacity,
+                    ),
                     palette.glowSoft.withValues(alpha: 0),
                   ],
                   stops: const [0, 0.55, 1],

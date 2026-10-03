@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+
 import 'gates_palette.dart';
 
 /// iOS push / swipe-back with the native slide and edge gesture, plus a soft
