@@ -12,6 +12,7 @@ import '../../features/auth/presentation/biometric_setup_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/otp_verify_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/billing/presentation/billing_screen.dart';
 import '../../features/bulletins/presentation/bulletin_detail_screen.dart';
 import '../../features/bulletins/presentation/bulletins_list_screen.dart';
 import '../../features/home/home_shell.dart';
@@ -201,6 +202,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             : '/amenities/${state.pathParameters['id']}',
         builder: (context, state) =>
             BookingResultScreen(args: state.extra as BookingResultArgs),
+      ),
+      _route(
+        path: '/billing',
+        builder: (context, state) => BillingScreen(
+          startOnHistory: state.uri.queryParameters['tab'] == 'history',
+        ),
       ),
       _route(
         path: '/bulletins',

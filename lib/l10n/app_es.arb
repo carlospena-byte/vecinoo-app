@@ -528,6 +528,91 @@
   "homeViewBulletins": "Ver boletines",
   "homeViewBulletin": "Ver boletín",
   "homeViewBulletinsHistory": "Ver historial",
+  "homeBilling": "Cobros",
+  "homeBillingOwed": "{amount}",
+  "@homeBillingOwed": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeBillingSettled": "Estás al día",
+  "homeBillingOverdue": "{amount} vencido",
+  "@homeBillingOverdue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeBillingUpcoming": "Sin pagos vencidos",
+  "homeViewBilling": "Ver cobros",
+  "homeViewBillingHistory": "Ver pagos",
+  "billingTitle": "Cobros",
+  "billingBalanceLabel": "Saldo pendiente",
+  "billingOverdueSummary": "{count, plural, =1{1 cuota vencida · {amount}} other{{count} cuotas vencidas · {amount}}}",
+  "@billingOverdueSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "billingAllCaughtUp": "Estás al día con tus pagos",
+  "billingTabPending": "Pendientes",
+  "billingTabHistory": "Historial",
+  "billingEmptyPending": "No tienes cobros pendientes.",
+  "billingEmptyHistory": "Tus cobros pagados aparecerán aquí.",
+  "billingLoadError": "No se pudieron cargar tus cobros.",
+  "billingDueOn": "Vence el {date}",
+  "@billingDueOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "billingPaidOn": "Pagado el {date}",
+  "@billingPaidOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "billingStatusPending": "Pendiente",
+  "billingStatusPartial": "Pago parcial",
+  "billingStatusPaid": "Pagado",
+  "billingStatusCancelled": "Cancelado",
+  "billingStatusOverdue": "{days, plural, =1{Vencido hace 1 día} other{Vencido hace {days} días}}",
+  "@billingStatusOverdue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "billingLateFee": "Incluye {amount} de recargo",
+  "@billingLateFee": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "billingSourceBooking": "Reserva",
+  "billingPaidSoFar": "Abonado {amount}",
+  "@billingPaidSoFar": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "bulletinsTitle": "Boletines",
   "bulletinsDetailTitle": "Boletín",
   "bulletinsEmpty": "Aún no hay boletines publicados.",

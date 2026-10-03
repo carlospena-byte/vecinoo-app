@@ -1054,6 +1054,112 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeViewBulletinsHistory => 'Ver historial';
 
   @override
+  String get homeBilling => 'Cobros';
+
+  @override
+  String homeBillingOwed(String amount) {
+    return '$amount';
+  }
+
+  @override
+  String get homeBillingSettled => 'Estás al día';
+
+  @override
+  String homeBillingOverdue(String amount) {
+    return '$amount vencido';
+  }
+
+  @override
+  String get homeBillingUpcoming => 'Sin pagos vencidos';
+
+  @override
+  String get homeViewBilling => 'Ver cobros';
+
+  @override
+  String get homeViewBillingHistory => 'Ver pagos';
+
+  @override
+  String get billingTitle => 'Cobros';
+
+  @override
+  String get billingBalanceLabel => 'Saldo pendiente';
+
+  @override
+  String billingOverdueSummary(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuotas vencidas · $amount',
+      one: '1 cuota vencida · $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get billingAllCaughtUp => 'Estás al día con tus pagos';
+
+  @override
+  String get billingTabPending => 'Pendientes';
+
+  @override
+  String get billingTabHistory => 'Historial';
+
+  @override
+  String get billingEmptyPending => 'No tienes cobros pendientes.';
+
+  @override
+  String get billingEmptyHistory => 'Tus cobros pagados aparecerán aquí.';
+
+  @override
+  String get billingLoadError => 'No se pudieron cargar tus cobros.';
+
+  @override
+  String billingDueOn(String date) {
+    return 'Vence el $date';
+  }
+
+  @override
+  String billingPaidOn(String date) {
+    return 'Pagado el $date';
+  }
+
+  @override
+  String get billingStatusPending => 'Pendiente';
+
+  @override
+  String get billingStatusPartial => 'Pago parcial';
+
+  @override
+  String get billingStatusPaid => 'Pagado';
+
+  @override
+  String get billingStatusCancelled => 'Cancelado';
+
+  @override
+  String billingStatusOverdue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Vencido hace $days días',
+      one: 'Vencido hace 1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingLateFee(String amount) {
+    return 'Incluye $amount de recargo';
+  }
+
+  @override
+  String get billingSourceBooking => 'Reserva';
+
+  @override
+  String billingPaidSoFar(String amount) {
+    return 'Abonado $amount';
+  }
+
+  @override
   String get bulletinsTitle => 'Boletines';
 
   @override

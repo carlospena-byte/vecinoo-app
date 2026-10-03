@@ -8,6 +8,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/gates_svg_icon.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../amenities/presentation/amenities_controller.dart';
+import '../../billing/presentation/billing_controller.dart';
+import '../../billing/presentation/billing_format.dart';
 import '../../bulletins/presentation/bulletins_controller.dart';
 import '../../incidents/domain/incident.dart';
 import '../../incidents/presentation/incidents_controller.dart';
@@ -61,6 +63,7 @@ class HomeScreen extends ConsumerWidget {
             onRefresh: () async {
               ref.invalidate(myProfileProvider);
               ref.invalidate(myBookingsProvider);
+              ref.invalidate(openInstallmentsProvider(membership.unitId));
               ref.invalidate(incidentsListProvider(membership.residentialId));
               ref.invalidate(bulletinsListProvider(membership.residentialId));
             },
@@ -111,6 +114,8 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                _BillingCard(unitId: membership.unitId),
                 const SizedBox(height: 16),
                 _BulletinsCard(residentialId: membership.residentialId),
               ],
@@ -656,6 +661,122 @@ class _BulletinsCard extends ConsumerWidget {
                     TablerIcons.news,
                     size: 20,
                     color: context.palette.iconBrand,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Full-width card under Visitas / Incidencias: what the unit owes. Overdue
+/// balances are flagged; once settled it opens the payment history.
+class _BillingCard extends ConsumerWidget {
+  const _BillingCard({required this.unitId});
+
+  final String unitId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final balance = ref.watch(billingBalanceProvider(unitId)).value;
+    final palette = context.palette;
+
+    final settled = balance?.isSettled ?? false;
+    final overdue = balance?.hasOverdue ?? false;
+    final title = balance == null
+        ? '—'
+        : settled
+        ? context.l10n.homeBillingSettled
+        : context.l10n.homeBillingOwed(formatMoney(balance.total));
+    final subtitle = balance == null || settled
+        ? null
+        : overdue
+        ? context.l10n.homeBillingOverdue(formatMoney(balance.overdue))
+        : context.l10n.homeBillingUpcoming;
+    final action = settled
+        ? context.l10n.homeViewBillingHistory
+        : context.l10n.homeViewBilling;
+    final onTap = settled
+        ? () => context.push('/billing?tab=history')
+        : () => context.push('/billing');
+
+    return Semantics(
+      button: true,
+      label: context.l10n.homeBilling,
+      value: [title, ?subtitle].join(', '),
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: palette.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(GatesRadius.radius24),
+          side: BorderSide(
+            color: overdue ? palette.statusError : palette.borderDefault,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.homeBilling,
+                        style: context.gatesText.caption.copyWith(
+                          color: palette.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GatesTypography.headingSmall.copyWith(
+                          letterSpacing: 0,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: GatesTypography.label.copyWith(
+                            color: overdue
+                                ? palette.statusError
+                                : palette.textSecondary,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Text(
+                        action,
+                        style: GatesTypography.label.copyWith(
+                          color: palette.textBrand,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: overdue ? palette.statusErrorBg : palette.bgAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    TablerIcons.receipt,
+                    size: 20,
+                    color: overdue ? palette.statusError : palette.iconBrand,
                   ),
                 ),
               ],

@@ -1,3 +1,6 @@
+import 'package:gates_app/features/billing/domain/installment.dart';
+import 'package:gates_app/features/billing/presentation/billing_controller.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -64,6 +67,22 @@ Incident _incident(IncidentStatus status, String id) => Incident(
   createdAt: DateTime(2026, 1, 1),
 );
 
+Installment _installment({double balance = 100, bool overdue = false}) =>
+    Installment(
+      id: 'i',
+      chargeName: 'Mantenimiento',
+      period: DateTime(2026, 10),
+      dueDate: DateTime(2026, 10, 10),
+      status: InstallmentStatus.pending,
+      baseAmount: balance,
+      lateFee: 0,
+      totalDue: balance,
+      paidAmount: 0,
+      balance: balance,
+      isOverdue: overdue,
+      daysOverdue: overdue ? 3 : 0,
+    );
+
 List<Override> _data({
   Profile? profile,
   Object? profileError,
@@ -74,6 +93,7 @@ List<Override> _data({
   List<Visit> visits = const [],
   List<Incident> incidents = const [],
   List<Bulletin> bulletins = const [],
+  List<Installment>? installments,
 }) => [
   ...membershipOverrides(),
   myProfileProvider.overrideWith((ref) async {
@@ -93,6 +113,9 @@ List<Override> _data({
     FakeIncidentsRepository()..incidents = incidents,
   ),
   bulletinsListProvider.overrideWith((ref, rid) async => bulletins),
+  openInstallmentsProvider.overrideWith(
+    (ref, unitId) async => installments ?? [_installment(balance: 100)],
+  ),
 ];
 
 Future<void> _pumpHome(
@@ -115,6 +138,7 @@ Future<void> _pumpHome(
     '/visits/new': (_) => const Text('new-visit-route'),
     '/incidents/report': (_) => const Text('report-route'),
     '/bulletins': (_) => const Text('bulletins-route'),
+    '/billing': (_) => const Text('billing-route'),
   },
 );
 
@@ -357,6 +381,7 @@ void main() {
         final visited = <String>[];
         await _pumpHome(tester, overrides: _data(), visited: visited);
         await tester.ensureVisible(find.text(_es.homeReport));
+        await tester.pump();
         await tester.tap(find.text(_es.homeReport));
         await tester.pumpAndSettle();
         expect(visited, ['/incidents/report']);
@@ -410,12 +435,66 @@ void main() {
       });
     });
 
+    group('billing card', () {
+      testWidgets('shows the amount owed and opens the billing screen', (
+        tester,
+      ) async {
+        final visited = <String>[];
+        await _pumpHome(
+          tester,
+          overrides: _data(
+            installments: [_installment(balance: 300.5), _installment()],
+          ),
+          visited: visited,
+        );
+        expect(find.text(_es.homeBilling), findsOneWidget);
+        expect(find.text(_es.homeBillingOwed(r'$400.50')), findsOneWidget);
+        expect(find.text(_es.homeBillingUpcoming), findsOneWidget);
+        await tester.ensureVisible(find.text(_es.homeViewBilling));
+        await tester.pump();
+        await tester.tap(find.text(_es.homeViewBilling));
+        await tester.pumpAndSettle();
+        expect(visited, ['/billing']);
+      });
+
+      testWidgets('flags the overdue part', (tester) async {
+        await _pumpHome(
+          tester,
+          overrides: _data(
+            installments: [
+              _installment(balance: 300, overdue: true),
+              _installment(balance: 50),
+            ],
+          ),
+        );
+        expect(find.text(_es.homeBillingOwed(r'$350.00')), findsOneWidget);
+        expect(find.text(_es.homeBillingOverdue(r'$300.00')), findsOneWidget);
+      });
+
+      testWidgets('settled: says so and opens the history', (tester) async {
+        final visited = <String>[];
+        await _pumpHome(
+          tester,
+          overrides: _data(installments: const []),
+          visited: visited,
+        );
+        expect(find.text(_es.homeBillingSettled), findsOneWidget);
+        await tester.ensureVisible(find.text(_es.homeViewBillingHistory));
+        await tester.pump();
+        await tester.tap(find.text(_es.homeViewBillingHistory));
+        await tester.pumpAndSettle();
+        expect(visited, ['/billing?tab=history']);
+      });
+    });
+
     group('bulletins card', () {
       testWidgets('empty: says so and opens the history', (tester) async {
         final visited = <String>[];
         await _pumpHome(tester, overrides: _data(), visited: visited);
         expect(find.text(_es.homeBulletins), findsOneWidget);
         expect(find.text(_es.homeBulletinsEmpty), findsOneWidget);
+        await tester.ensureVisible(find.text(_es.homeViewBulletinsHistory));
+        await tester.pump();
         await tester.tap(find.text(_es.homeViewBulletinsHistory));
         await tester.pumpAndSettle();
         expect(visited, ['/bulletins?tab=history']);

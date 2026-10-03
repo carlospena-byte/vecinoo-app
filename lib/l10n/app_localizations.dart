@@ -1912,6 +1912,162 @@ abstract class AppLocalizations {
   /// **'Ver historial'**
   String get homeViewBulletinsHistory;
 
+  /// No description provided for @homeBilling.
+  ///
+  /// In es, this message translates to:
+  /// **'Cobros'**
+  String get homeBilling;
+
+  /// No description provided for @homeBillingOwed.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount}'**
+  String homeBillingOwed(String amount);
+
+  /// No description provided for @homeBillingSettled.
+  ///
+  /// In es, this message translates to:
+  /// **'Estás al día'**
+  String get homeBillingSettled;
+
+  /// No description provided for @homeBillingOverdue.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} vencido'**
+  String homeBillingOverdue(String amount);
+
+  /// No description provided for @homeBillingUpcoming.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin pagos vencidos'**
+  String get homeBillingUpcoming;
+
+  /// No description provided for @homeViewBilling.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver cobros'**
+  String get homeViewBilling;
+
+  /// No description provided for @homeViewBillingHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver pagos'**
+  String get homeViewBillingHistory;
+
+  /// No description provided for @billingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cobros'**
+  String get billingTitle;
+
+  /// No description provided for @billingBalanceLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldo pendiente'**
+  String get billingBalanceLabel;
+
+  /// No description provided for @billingOverdueSummary.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 cuota vencida · {amount}} other{{count} cuotas vencidas · {amount}}}'**
+  String billingOverdueSummary(int count, String amount);
+
+  /// No description provided for @billingAllCaughtUp.
+  ///
+  /// In es, this message translates to:
+  /// **'Estás al día con tus pagos'**
+  String get billingAllCaughtUp;
+
+  /// No description provided for @billingTabPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendientes'**
+  String get billingTabPending;
+
+  /// No description provided for @billingTabHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial'**
+  String get billingTabHistory;
+
+  /// No description provided for @billingEmptyPending.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes cobros pendientes.'**
+  String get billingEmptyPending;
+
+  /// No description provided for @billingEmptyHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus cobros pagados aparecerán aquí.'**
+  String get billingEmptyHistory;
+
+  /// No description provided for @billingLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar tus cobros.'**
+  String get billingLoadError;
+
+  /// No description provided for @billingDueOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence el {date}'**
+  String billingDueOn(String date);
+
+  /// No description provided for @billingPaidOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagado el {date}'**
+  String billingPaidOn(String date);
+
+  /// No description provided for @billingStatusPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente'**
+  String get billingStatusPending;
+
+  /// No description provided for @billingStatusPartial.
+  ///
+  /// In es, this message translates to:
+  /// **'Pago parcial'**
+  String get billingStatusPartial;
+
+  /// No description provided for @billingStatusPaid.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagado'**
+  String get billingStatusPaid;
+
+  /// No description provided for @billingStatusCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelado'**
+  String get billingStatusCancelled;
+
+  /// No description provided for @billingStatusOverdue.
+  ///
+  /// In es, this message translates to:
+  /// **'{days, plural, =1{Vencido hace 1 día} other{Vencido hace {days} días}}'**
+  String billingStatusOverdue(int days);
+
+  /// No description provided for @billingLateFee.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluye {amount} de recargo'**
+  String billingLateFee(String amount);
+
+  /// No description provided for @billingSourceBooking.
+  ///
+  /// In es, this message translates to:
+  /// **'Reserva'**
+  String get billingSourceBooking;
+
+  /// No description provided for @billingPaidSoFar.
+  ///
+  /// In es, this message translates to:
+  /// **'Abonado {amount}'**
+  String billingPaidSoFar(String amount);
+
   /// No description provided for @bulletinsTitle.
   ///
   /// In es, this message translates to:
