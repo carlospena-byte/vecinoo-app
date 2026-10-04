@@ -30,7 +30,10 @@ final _dateFormat = DateFormat('d MMM y, HH:mm', 'es');
 /// Historial. Lives inside [HomeShell]'s tab shell, so it has no app bar or
 /// bottom navigation of its own.
 class IncidentsListScreen extends ConsumerStatefulWidget {
-  const IncidentsListScreen({super.key});
+  const IncidentsListScreen({super.key, this.active = true});
+
+  /// Whether this is the selected tab; becoming active refetches the list.
+  final bool active;
 
   @override
   ConsumerState<IncidentsListScreen> createState() =>
@@ -39,6 +42,19 @@ class IncidentsListScreen extends ConsumerStatefulWidget {
 
 class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
   IncidentGroup _tab = IncidentGroup.pending;
+
+  @override
+  void didUpdateWidget(IncidentsListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      // Providers can't be invalidated while the tree is building.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final membership = ref.read(selectedMembershipProvider).value;
+        if (membership != null) _reload(membership.residentialId);
+      });
+    }
+  }
 
   /// Back from the report flow or a detail: anything may have changed
   /// (status, new report), so every tab starts over and the Home summary

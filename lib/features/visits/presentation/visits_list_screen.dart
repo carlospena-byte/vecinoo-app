@@ -94,7 +94,10 @@ String _visitSubtitle(AppLocalizations l10n, Visit v) {
 /// the app's real providers. Lives inside [HomeShell]'s tab shell, so it has
 /// no app bar or bottom navigation of its own.
 class VisitsListScreen extends ConsumerStatefulWidget {
-  const VisitsListScreen({super.key});
+  const VisitsListScreen({super.key, this.active = true});
+
+  /// Whether this is the selected tab; becoming active refetches the list.
+  final bool active;
 
   @override
   ConsumerState<VisitsListScreen> createState() => _VisitsListScreenState();
@@ -106,6 +109,21 @@ class _VisitsListScreenState extends ConsumerState<VisitsListScreen> {
   /// Frequent (standing) accesses are hidden by default so a handful of them
   /// don't bury the day's visits; the switch below the tabs reveals them.
   bool _showFrequent = false;
+
+  @override
+  void didUpdateWidget(VisitsListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      // Providers can't be invalidated while the tree is building.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final membership = ref.read(selectedMembershipProvider).value;
+        if (membership != null) {
+          ref.invalidate(visitsListProvider(membership.unitId));
+        }
+      });
+    }
+  }
 
   Widget _card(BuildContext context, Visit visit, String unitName) =>
       _VisitCard(

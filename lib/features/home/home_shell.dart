@@ -72,11 +72,13 @@ class _HomeShellState extends State<HomeShell> {
 
   void _goToTab(int index) => setState(() => _index = index);
 
-  late final List<Widget> _screens = [
+  /// The tab screens stay alive in the [IndexedStack], so each one is told
+  /// when it becomes the selected tab and refetches its list.
+  List<Widget> get _screens => [
     HomeScreen(onNavigateToTab: _goToTab),
-    const IncidentsListScreen(),
-    const BookingsListScreen(),
-    const VisitsListScreen(),
+    IncidentsListScreen(active: _index == 1),
+    BookingsListScreen(active: _index == 2),
+    VisitsListScreen(active: _index == 3),
   ];
 
   @override

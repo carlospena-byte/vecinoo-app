@@ -34,11 +34,30 @@ String _timeRangeLabel(AmenityBooking booking) =>
 /// starts a new booking, then Pendientes / Confirmadas / Historial. Figma
 /// nodes R04B (Confirmadas) and R04C (Historial); Pendientes reuses the
 /// same card/tab shell.
-class BookingsListScreen extends ConsumerWidget {
-  const BookingsListScreen({super.key});
+class BookingsListScreen extends ConsumerStatefulWidget {
+  const BookingsListScreen({super.key, this.active = true});
+
+  /// Whether this is the selected tab; becoming active refetches the list.
+  final bool active;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BookingsListScreen> createState() => _BookingsListScreenState();
+}
+
+class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
+  @override
+  void didUpdateWidget(BookingsListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      // Providers can't be invalidated while the tree is building.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.invalidate(myBookingsProvider);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tab = ref.watch(bookingsListControllerProvider);
     final bookingsAsync = ref.watch(myBookingsProvider);
 

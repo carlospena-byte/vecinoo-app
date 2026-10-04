@@ -89,6 +89,25 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
     SystemChannels.textInput.invokeMethod<void>('TextInput.show');
   }
 
+  /// The hidden field sits under [IgnorePointer], so the system paste menu
+  /// can't appear; read the clipboard ourselves and apply the same filtering
+  /// the keyboard path uses.
+  Future<void> _paste() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    var text = (data?.text ?? '').replaceAll(
+      widget.alphanumeric ? RegExp('[^A-Za-z0-9]') : RegExp(r'\D'),
+      '',
+    );
+    if (widget.alphanumeric) text = text.toUpperCase();
+    if (text.length > widget.length) text = text.substring(0, widget.length);
+    if (text.isEmpty || !mounted) return;
+    widget.controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    _focusNode.requestFocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
@@ -177,6 +196,7 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
                       child: GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: () => _selectBox(widget.controller.text.length),
+                        onLongPress: _paste,
                       ),
                     ),
                   ),
@@ -188,6 +208,7 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () => _selectBox(i),
+                            onLongPress: _paste,
                             child: _DigitBox(
                               digit: i < code.length ? code[i] : '',
                               focused: isFocused && i == activeIndex,
