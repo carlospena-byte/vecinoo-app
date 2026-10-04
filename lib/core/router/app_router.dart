@@ -84,6 +84,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     refreshListenable: ref.watch(_routerRefreshProvider),
     initialLocation: '/',
+    // Incoming universal/app links the app has no screen for (vecinoo.app/…)
+    // fall back to home instead of showing go_router's error page.
+    errorBuilder: (context, state) => const _RedirectHome(),
     redirect: (context, state) async {
       final location = state.matchedLocation;
       final user = ref.read(currentUserProvider);
@@ -296,3 +299,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+class _RedirectHome extends StatefulWidget {
+  const _RedirectHome();
+
+  @override
+  State<_RedirectHome> createState() => _RedirectHomeState();
+}
+
+class _RedirectHomeState extends State<_RedirectHome> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go('/');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const Scaffold();
+}
